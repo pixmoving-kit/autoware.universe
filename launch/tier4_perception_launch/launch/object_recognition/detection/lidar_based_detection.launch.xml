@@ -63,7 +63,7 @@
     <push-ros-namespace namespace="centerpoint"/>
     <group>
       <include file="$(find-pkg-share lidar_centerpoint)/launch/lidar_centerpoint.launch.xml">
-        <arg name="input/pointcloud" value="$(var input/pointcloud)"/>
+        <arg name="input/pointcloud" value="/sensing/lidar/concatenated/pointcloud"/>
         <arg name="output/objects" value="objects"/>
         <arg name="score_threshold" value="$(var score_threshold)"/>
         <arg name="model_name" value="$(var centerpoint_model_name)"/>
@@ -103,7 +103,7 @@
 
   <!-- Validator -->
   <group>
-    <let name="validator/input/obstacle_pointcloud" value="/perception/object_recognition/detection/pointcloud_map_filtered/pointcloud" if="$(var use_pointcloud_map)"/>
+    <let name="validator/input/obstacle_pointcloud" value="/sensing/lidar/concatenated/pointcloud" if="$(var use_pointcloud_map)"/>
     <let name="validator/input/obstacle_pointcloud" value="$(var input/obstacle_segmentation/pointcloud)" unless="$(var use_pointcloud_map)"/>
     <include file="$(find-pkg-share detected_object_validation)/launch/obstacle_pointcloud_based_validator.launch.xml" if="$(var use_validator)">
       <arg name="input/detected_objects" value="$(var lidar_detection_model)/objects"/>

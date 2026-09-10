@@ -211,7 +211,7 @@ class GroundSegmentationPipeline:
                 name="crop_box_filter",
                 remappings=[
                     ("input", input_topic),
-                    ("output", "range_cropped/pointcloud"),
+                    ("output", output_topic),
                 ],
                 parameters=[
                     {

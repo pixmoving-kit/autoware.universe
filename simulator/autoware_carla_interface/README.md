@@ -1,52 +1,68 @@
 # autoware_carla_interface
 
-## ROS 2 / Autoware Universe bridge for CARLA simulator
+<a id="ros-2-autoware-universe-bridge-for-carla-simulator"></a>
 
-Thanks to <https://github.com/gezp> for ROS 2 Humble support for CARLA Communication.
-This ros package enables communication between Autoware and CARLA for autonomous driving simulation.
+## CARLA 仿真器的 ROS 2 / Autoware Universe 桥接器
 
-## Supported Environment
+感谢 <https://github.com/gezp> 为 CARLA 通信提供 ROS 2 Humble 支持。
+此 ROS 功能包实现 Autoware 与 CARLA 之间的通信，用于自动驾驶仿真。
+
+<a id="supported-environment"></a>
+
+## 支持的环境
 
 | ubuntu |  ros   | carla  | autoware |
 | :----: | :----: | :----: | :------: |
 | 22.04  | humble | 0.9.15 |   Main   |
 
-## Setup
+<a id="setup"></a>
 
-### Install
+## 配置
 
-#### Prerequisites
+<a id="install"></a>
 
-1. **Install CARLA 0.9.15**: Follow the [CARLA Installation Guide](https://carla.readthedocs.io/en/latest/start_quickstart/)
+### 安装
 
-2. **Install CARLA Python Package**: Install [CARLA 0.9.15 ROS 2 Humble communication package](https://github.com/gezp/carla_ros/releases/tag/carla-0.9.15-ubuntu-22.04)
+<a id="prerequisites"></a>
 
-   - Option A: Install the wheel using pip
-   - Option B: Add the egg file to your `PYTHONPATH`
+#### 前置条件
 
-3. **Download CARLA Lanelet2 Maps**: Get the y-axis inverted maps from [CARLA Autoware Contents](https://bitbucket.org/carla-simulator/autoware-contents/src/master/maps/)
+1. **安装 CARLA 0.9.15**：请按照 [CARLA 安装指南](https://carla.readthedocs.io/en/latest/start_quickstart/)操作。
 
-#### Map Setup
+2. **安装 CARLA Python 包**：安装 [CARLA 0.9.15 ROS 2 Humble 通信包](https://github.com/gezp/carla_ros/releases/tag/carla-0.9.15-ubuntu-22.04)。
 
-1. Download the maps (y-axis inverted version) to an arbitrary location
-2. Create the map folder structure in `$HOME/autoware_data/maps`:
-   - Rename `point_cloud/Town01.pcd` → `$HOME/autoware_data/maps/Town01/pointcloud_map.pcd`
-   - Rename `vector_maps/lanelet2/Town01.osm` → `$HOME/autoware_data/maps/Town01/lanelet2_map.osm`
-3. Create `$HOME/autoware_data/maps/Town01/map_projector_info.yaml` with:
+   - 方式 A：使用 pip 安装 wheel 包。
+   - 方式 B：将 egg 文件添加到 `PYTHONPATH`。
+
+3. **下载 CARLA Lanelet2 地图**：从 [CARLA Autoware 资源](https://bitbucket.org/carla-simulator/autoware-contents/src/master/maps/)获取 y 轴反转版本的地图。
+
+<a id="map-setup"></a>
+
+#### 地图配置
+
+1. 将地图（y 轴反转版本）下载到任意位置。
+2. 在 `$HOME/autoware_data/maps` 中创建地图文件夹结构：
+   - 重命名 `point_cloud/Town01.pcd` → `$HOME/autoware_data/maps/Town01/pointcloud_map.pcd`
+   - 重命名 `vector_maps/lanelet2/Town01.osm` → `$HOME/autoware_data/maps/Town01/lanelet2_map.osm`
+3. 创建 `$HOME/autoware_data/maps/Town01/map_projector_info.yaml`，内容如下：
 
    ```yaml
    projector_type: Local
    ```
 
-### Build
+<a id="build"></a>
+
+### 构建
 
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
 
-### Run
+<a id="run"></a>
 
-1. Run carla, change map, spawn object if you need
+### 运行
+
+1. 运行 CARLA、切换地图，并按需生成目标。
    <!--- cspell:ignore prefernvidia -->
 
    ```bash
@@ -54,7 +70,7 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
    ./CarlaUE4.sh -prefernvidia -quality-level=Low -RenderOffScreen
    ```
 
-2. Run Autoware with CARLA
+2. 运行 Autoware 与 CARLA。
 
    ```bash
    ros2 launch autoware_launch e2e_simulator.launch.xml \
@@ -64,7 +80,7 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
        simulator_type:=carla
    ```
 
-   For E2E planning with VAD:
+   使用 VAD 进行端到端规划时：
 
    ```bash
    ros2 launch autoware_launch e2e_simulator.launch.xml \
@@ -75,123 +91,133 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
        use_e2e_planning:=true
    ```
 
-3. Set initial pose (Init by GNSS)
-4. Set goal position
-5. Wait for planning
-6. Engage
+3. 设置初始位姿（通过 GNSS 初始化）。
+4. 设置目标位置。
+5. 等待规划完成。
+6. 启用自动驾驶。
 
-### Viewing Multi-Camera View in RViz
+<a id="viewing-multi-camera-view-in-rviz"></a>
 
-The `carla_sensor_kit` includes 6 cameras providing 360-degree coverage (Front, Front-Left, Front-Right, Back, Back-Left, Back-Right). A multi-camera combiner node automatically combines all camera feeds into a single 2x3 grid view.
+### 在 RViz 中查看多摄像头画面
 
-To view the combined camera feed in RViz:
+`carla_sensor_kit` 包含 6 个摄像头，覆盖 360 度视野（前、左前、右前、后、左后、右后）。多摄像头合并节点自动将所有摄像头画面合成为一个 2x3 网格视图。
 
-1. In the **Displays** panel (left side), click the **"Add"** button
-2. Select the **"By topic"** tab
-3. Navigate to `/sensing/camera/all_cameras/image_raw`
-4. Select **"Image"** display type
-5. Click **OK**
+在 RViz 中查看合成画面：
 
-![Multi-Camera View in RViz](docs/images/rviz_multi_camera_view.png)
+1. 在左侧 **Displays** 面板中点击 **"Add"** 按钮。
+2. 选择 **"By topic"** 选项卡。
+3. 找到 `/sensing/camera/all_cameras/image_raw`。
+4. 选择 **"Image"** 显示类型。
+5. 点击 **OK**。
 
-The combined view shows all 6 cameras with labels: FL (Front-Left), F (Front), FR (Front-Right), BL (Back-Left), B (Back), BR (Back-Right).
+![RViz 中的多摄像头视图](docs/images/rviz_multi_camera_view.png)
 
-**Note:** If you don't need the multi-camera combiner (to save CPU resources), you can comment out the following line in `launch/autoware_carla_interface.launch.xml`:
+合成视图显示全部 6 个摄像头，并标注 FL（左前）、F（前）、FR（右前）、BL（左后）、B（后）、BR（右后）。
+
+**注意：** 如果不需要多摄像头合并功能（以节省 CPU 资源），可将 `launch/autoware_carla_interface.launch.xml` 中的以下行注释掉：
 
 ```xml
 <!-- Multi-camera combiner for RViz visualization -->
 <!-- <node pkg="autoware_carla_interface" exec="multi_camera_combiner" output="screen"/> -->
 ```
 
-### Following the Ego Vehicle with the CARLA Spectator Camera
+<a id="following-the-ego-vehicle-with-the-carla-spectator-camera"></a>
 
-The `spectator_follow` script locks the CARLA spectator (free) camera to the ego vehicle, so the in-simulator view chases the car automatically instead of having to pan manually. It connects to the running CARLA server, looks up the ego actor by its `role_name`, and updates the spectator transform at a fixed rate.
+### 使用 CARLA 观察者摄像头跟随自车
 
-Run it in a separate terminal while CARLA and the Autoware bridge are running:
+`spectator_follow` 脚本将 CARLA 观察者（自由）摄像头锁定到自车，使仿真器中的视角自动跟随车辆，无需手动平移。它连接正在运行的 CARLA 服务器，通过 `role_name` 查找自车 actor，并以固定频率更新观察者变换。
+
+在 CARLA 与 Autoware 桥接器运行期间，于单独的终端中运行：
 
 ```bash
 ros2 run autoware_carla_interface spectator_follow
 ```
 
-Common options (all optional):
+常用选项（均为可选）：
 
-| Flag         | Default       | Description                                                 |
+| 参数         | 默认值       | 说明                                                 |
 | ------------ | ------------- | ----------------------------------------------------------- |
-| `--host`     | `localhost`   | CARLA server host                                           |
-| `--port`     | `2000`        | CARLA server RPC port                                       |
-| `--role`     | `ego_vehicle` | `role_name` attribute of the ego actor to follow            |
-| `--distance` | `8.0`         | Meters behind the ego vehicle (use `0` for a top-down view) |
-| `--height`   | `4.0`         | Meters above the ego vehicle                                |
-| `--pitch`    | `-15.0`       | Camera pitch in degrees (negative looks down)               |
-| `--rate`     | `30.0`        | Update rate in Hz                                           |
+| `--host`     | `localhost`   | CARLA 服务器主机                                           |
+| `--port`     | `2000`        | CARLA 服务器 RPC 端口                                       |
+| `--role`     | `ego_vehicle` | 要跟随的自车 actor 的 `role_name` 属性            |
+| `--distance` | `8.0`         | 位于自车后方的距离，单位为米（设为 `0` 可获得俯视视角） |
+| `--height`   | `4.0`         | 位于自车上方的高度，单位为米                                |
+| `--pitch`    | `-15.0`       | 摄像头俯仰角，单位为度（负值表示向下看）               |
+| `--rate`     | `30.0`        | 更新频率，单位为 Hz                                           |
 
-For a top-down view directly above the ego vehicle:
+如需位于自车正上方的俯视视角：
 
 ```bash
 ros2 run autoware_carla_interface spectator_follow --distance 0 --height 30 --pitch -90
 ```
 
-Press `Ctrl+C` to stop the script. It will keep retrying if the ego actor is not yet spawned, and re-acquire it if it is removed and respawned.
+按 `Ctrl+C` 停止脚本。如果自车 actor 尚未生成，脚本会持续重试；如果自车被移除后重新生成，脚本会重新获取它。
 
-## Inner-workings / Algorithms
+<a id="inner-workings-algorithms"></a>
 
-The `InitializeInterface` class is key to setting up both the CARLA world and the ego vehicle. It fetches configuration parameters through the `autoware_carla_interface.launch.xml`.
+## 内部机制／算法
 
-The main simulation loop runs within the `carla_ros2_interface` class. This loop ticks simulation time inside the CARLA simulator at `fixed_delta_seconds` time, where data is received and published as ROS 2 messages at frequencies defined in `self.sensor_frequencies`.
+`InitializeInterface` 类是配置 CARLA 世界与自车的核心，通过 `autoware_carla_interface.launch.xml` 获取配置参数。
 
-Ego vehicle commands from Autoware are processed through the `autoware_raw_vehicle_cmd_converter`, which calibrates these commands for CARLA. The calibrated commands are then fed directly into CARLA control via `CarlaDataProvider`.
+主仿真循环在 `carla_ros2_interface` 类中运行，按 `fixed_delta_seconds` 的时间步长推进 CARLA 仿真时间，并以 `self.sensor_frequencies` 定义的频率接收数据并发布为 ROS 2 消息。
 
-### Configurable Parameters for World Loading
+来自 Autoware 的自车控制指令经过 `autoware_raw_vehicle_cmd_converter` 处理，校准为适用于 CARLA 的指令。校准后的指令通过 `CarlaDataProvider` 直接传入 CARLA 控制接口。
 
-All the key parameters can be configured in `autoware_carla_interface.launch.xml`.
+<a id="configurable-parameters-for-world-loading"></a>
 
-| Name                              | Type   | Default Value                                                                     | Description                                                                                                                                                                                                                                                                                                                                                                         |
+### 世界加载的可配置参数
+
+所有关键参数均可在 `autoware_carla_interface.launch.xml` 中配置。
+
+| 名称                              | 类型   | 默认值                                                                     | 说明 |
 | --------------------------------- | ------ | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `host`                            | string | "localhost"                                                                       | Hostname for the CARLA server                                                                                                                                                                                                                                                                                                                                                       |
-| `port`                            | int    | "2000"                                                                            | Port number for the CARLA server                                                                                                                                                                                                                                                                                                                                                    |
-| `timeout`                         | int    | 20                                                                                | Timeout for the CARLA client                                                                                                                                                                                                                                                                                                                                                        |
-| `ego_vehicle_role_name`           | string | "ego_vehicle"                                                                     | Role name for the ego vehicle                                                                                                                                                                                                                                                                                                                                                       |
-| `vehicle_type`                    | string | "vehicle.toyota.prius"                                                            | Blueprint ID of the vehicle to spawn. The Blueprint ID of vehicles can be found in [CARLA Blueprint ID](https://carla.readthedocs.io/en/latest/catalogue_vehicles/)                                                                                                                                                                                                                 |
-| `spawn_point`                     | string | None                                                                              | Coordinates for spawning the ego vehicle (None is random). Format = [x, y, z, roll, pitch, yaw]                                                                                                                                                                                                                                                                                     |
-| `sync_mode`                       | bool   | True                                                                              | Boolean flag to set synchronous mode in CARLA                                                                                                                                                                                                                                                                                                                                       |
-| `fixed_delta_seconds`             | double | 0.05                                                                              | Time step for the simulation (related to client FPS)                                                                                                                                                                                                                                                                                                                                |
-| `use_traffic_manager`             | bool   | False                                                                             | Boolean flag to set traffic manager in CARLA                                                                                                                                                                                                                                                                                                                                        |
-| `max_real_delta_seconds`          | double | 0.05                                                                              | Parameter to limit the simulation speed below `fixed_delta_seconds`                                                                                                                                                                                                                                                                                                                 |
-| `tick_follower`                   | bool   | False                                                                             | If True, the bridge does not tick the CARLA world and instead follows the frames ticked by another client. See [Multi-client co-simulation](#multi-client-co-simulation).                                                                                                                                                                                                           |
-| `carla_map`                       | string | ""                                                                                | Explicit CARLA level name. When non-empty it overrides the name derived from `map_path`; useful for CARLA 0.10 levels whose name differs from the Autoware map directory. Empty reproduces the current behavior.                                                                                                                                                                    |
-| `no_rendering_mode`               | bool   | False                                                                             | Disable CARLA scene rendering via world settings for headless/faster simulation. Applied unconditionally on world load, so the default `False` (re-)enables rendering even if the server was started headless; set `True` to keep rendering off.                                                                                                                                    |
-| `force_load_world`                | bool   | False                                                                             | Always reload the world with `client.load_world()` instead of `load_world_if_different()`. Default False reproduces the current call (with a version-tolerant fallback).                                                                                                                                                                                                            |
-| `map_origin_x`                    | double | 0.0                                                                               | X offset from the CARLA world origin to the Autoware map frame origin, for levels authored with their own local origin. Default 0.0 is the identity (no change).                                                                                                                                                                                                                    |
-| `map_origin_y`                    | double | 0.0                                                                               | Y offset from the CARLA world origin to the Autoware map frame origin. Default 0.0 is the identity (no change).                                                                                                                                                                                                                                                                     |
-| `spawn_point_ground_snap`         | bool   | False                                                                             | Snap the ego spawn point and the RViz initial pose onto CARLA map geometry via `ground_projection` (see [Ground snapping](#ground-snapping)). Default False leaves the spawn point and the fixed z-offset unchanged.                                                                                                                                                                |
-| `spawn_point_ground_offset_z`     | double | 0.5                                                                               | Z offset added above the projected ground when ground-snapping the spawn point (only used when `spawn_point_ground_snap` is True).                                                                                                                                                                                                                                                  |
-| `initial_pose_ground_offset_z`    | double | 1.0                                                                               | Z offset added above the projected ground when ground-snapping the RViz initial pose (only used when `spawn_point_ground_snap` is True).                                                                                                                                                                                                                                            |
-| `sensor_kit_name`                 | string | "carla_sensor_kit_description"                                                    | Name of the sensor kit package to use for sensor configuration. Should be the \*\_description package containing config/sensor_kit_calibration.yaml                                                                                                                                                                                                                                 |
-| `use_light_weight_sensor_mapping` | bool   | False                                                                             | If True, uses `sensor_mapping_light_weight.yaml` instead of the default `sensor_mapping.yaml` to reduce simulator load. See [Sensor Mapping (CARLA-specific)](#2-sensor-mapping-carla-specific) for details.                                                                                                                                                                        |
-| `sensor_mapping_file`             | string | "$(find-pkg-share autoware_carla_interface)/config/sensor_mapping.yaml"           | Path to sensor mapping YAML configuration file. When `use_light_weight_sensor_mapping` is True, this defaults to `config/sensor_mapping_light_weight.yaml`.                                                                                                                                                                                                                         |
-| `publish_ground_truth_objects`    | bool   | False                                                                             | If True, publishes every CARLA vehicle except the ego to `/perception/object_recognition/detection/objects` as ground truth detections, so tracking and prediction run on simulator truth instead of sensor based detection. Pedestrians are not covered.                                                                                                                           |
-| `config_file`                     | string | "$(find-pkg-share autoware_carla_interface)/raw_vehicle_cmd_converter.param.yaml" | Control mapping file to be used in `autoware_raw_vehicle_cmd_converter`. Current control are calibrated based on `vehicle.toyota.prius` Blueprints ID in CARLA. Changing the vehicle type may need a recalibration.                                                                                                                                                                 |
-| `traffic_light.publish`           | bool   | False                                                                             | Publish CARLA traffic-light states on `/perception/traffic_light_recognition/traffic_signals` as an `autoware_perception_msgs/TrafficLightGroupArray`. See [Publishing CARLA Traffic-Light States](#publishing-carla-traffic-light-states).                                                                                                                                         |
-| `traffic_light.force_green`       | bool   | False                                                                             | Set every CARLA traffic light to green and freeze it there at startup. Useful for camera-less closed-loop runs that have no traffic-light recognition and would otherwise hold at every signalized stop line.                                                                                                                                                                       |
-| `traffic_light.map_path`          | string | ""                                                                                | Path to the lanelet2 map (`.osm`). When set, CARLA traffic lights are matched to the map's traffic-light heads **by position** and published under the matched regulatory-element ids. Empty falls back to using the CARLA OpenDRIVE signal id directly as the group id.                                                                                                            |
-| `traffic_light.match_distance`    | double | 5.0                                                                               | Maximum head-to-head distance (m) accepted when matching a CARLA traffic light to a lanelet2 head.                                                                                                                                                                                                                                                                                  |
-| `traffic_light.match_ratio`       | double | 0.6                                                                               | Ambiguity threshold: a match is rejected when the nearest head that resolves to a _different_ signal is nearly as close as the winner (`nearest > ratio * second`). Lower is stricter.                                                                                                                                                                                              |
-| `traffic_light.id_map`            | string | ""                                                                                | Optional override, formatted `opendrive_id:group_id,...`, that pins a CARLA signal id to one or more Autoware group ids and takes precedence over position matching. A single entry can list several group ids (separated with a vertical bar) to map a shared head to all its regulatory elements; use it to recover the few lights the matcher reports as ambiguous or unmatched. |
-| `wake_sleeping_physics`           | bool   | False                                                                             | Nudge the ego physics body awake with a small `set_target_velocity` when launching from standstill. Only needed on CARLA 0.10 (UE5/Chaos), where a stationary body is put to sleep and `VehicleControl` throttle does not wake it. Leave `false` on the supported 0.9.15 environment, whose bodies never sleep, to keep unmodified launch dynamics.                                 |
+| `host`                            | string | "localhost"                                                                       | CARLA 服务器主机名 |
+| `port`                            | int    | "2000"                                                                            | CARLA 服务器端口号 |
+| `timeout`                         | int    | 20                                                                                | CARLA 客户端超时时间 |
+| `ego_vehicle_role_name`           | string | "ego_vehicle"                                                                     | 自车角色名称 |
+| `vehicle_type`                    | string | "vehicle.toyota.prius"                                                            | 待生成车辆的蓝图 ID。车辆蓝图 ID 可在 [CARLA 蓝图 ID](https://carla.readthedocs.io/en/latest/catalogue_vehicles/)中查找。 |
+| `spawn_point`                     | string | None                                                                              | 自车生成坐标（None 表示随机）。格式为 [x, y, z, roll, pitch, yaw]。 |
+| `sync_mode`                       | bool   | True                                                                              | 设置 CARLA 同步模式的布尔标志 |
+| `fixed_delta_seconds`             | double | 0.05                                                                              | 仿真时间步长（与客户端 FPS 有关） |
+| `use_traffic_manager`             | bool   | False                                                                             | 设置 CARLA 交通管理器的布尔标志 |
+| `max_real_delta_seconds`          | double | 0.05                                                                              | 用于将仿真速度限制在 `fixed_delta_seconds` 以下的参数 |
+| `tick_follower`                   | bool   | False                                                                             | 为 True 时，桥接器不主动推进 CARLA 世界，而是跟随另一客户端推进的帧。参见[多客户端联合仿真](#multi-client-co-simulation)。 |
+| `carla_map`                       | string | ""                                                                                | 显式指定 CARLA 关卡名称。非空时会覆盖从 `map_path` 推导出的名称，适用于名称与 Autoware 地图目录不同的 CARLA 0.10 关卡。留空则保持当前行为。 |
+| `no_rendering_mode`               | bool   | False                                                                             | 通过世界设置禁用 CARLA 场景渲染，以进行无界面或更快速的仿真。加载世界时无条件应用，因此即使服务器以无界面方式启动，默认值 `False` 也会（重新）启用渲染；设为 `True` 可保持关闭。 |
+| `force_load_world`                | bool   | False                                                                             | 始终使用 `client.load_world()` 重新加载世界，而不使用 `load_world_if_different()`。默认 False 保持当前调用行为（含兼容不同版本的回退方式）。 |
+| `map_origin_x`                    | double | 0.0                                                                               | 从 CARLA 世界原点到 Autoware 地图坐标系原点的 X 偏移，适用于采用自身局部原点制作的关卡。默认 0.0 表示恒等变换（无变化）。 |
+| `map_origin_y`                    | double | 0.0                                                                               | 从 CARLA 世界原点到 Autoware 地图坐标系原点的 Y 偏移。默认 0.0 表示恒等变换（无变化）。 |
+| `spawn_point_ground_snap`         | bool   | False                                                                             | 通过 `ground_projection` 将自车生成点与 RViz 初始位姿吸附到 CARLA 地图几何表面（参见[地面吸附](#ground-snapping)）。默认 False 保持生成点与固定 z 偏移不变。 |
+| `spawn_point_ground_offset_z`     | double | 0.5                                                                               | 对生成点进行地面吸附时，在投影地面上方增加的 Z 偏移（仅在 `spawn_point_ground_snap` 为 True 时使用）。 |
+| `initial_pose_ground_offset_z`    | double | 1.0                                                                               | 对 RViz 初始位姿进行地面吸附时，在投影地面上方增加的 Z 偏移（仅在 `spawn_point_ground_snap` 为 True 时使用）。 |
+| `sensor_kit_name`                 | string | "carla_sensor_kit_description"                                                    | 用于传感器配置的传感器套件包名称。应为包含 config/sensor_kit_calibration.yaml 的 \*\_description 包。 |
+| `use_light_weight_sensor_mapping` | bool   | False                                                                             | 为 True 时，使用 `sensor_mapping_light_weight.yaml` 替代默认的 `sensor_mapping.yaml`，以减轻仿真器负载。详见[传感器映射（CARLA 专用）](#2-sensor-mapping-carla-specific)。 |
+| `sensor_mapping_file`             | string | "$(find-pkg-share autoware_carla_interface)/config/sensor_mapping.yaml"           | 传感器映射 YAML 配置文件的路径。当 `use_light_weight_sensor_mapping` 为 True 时，默认使用 `config/sensor_mapping_light_weight.yaml`。 |
+| `publish_ground_truth_objects`    | bool   | False                                                                             | 为 True 时，将除自车外的每一辆 CARLA 车辆作为真值检测结果发布到 `/perception/object_recognition/detection/objects`，使跟踪与预测基于仿真器真值运行，而非传感器检测结果。不包含行人。 |
+| `config_file`                     | string | "$(find-pkg-share autoware_carla_interface)/raw_vehicle_cmd_converter.param.yaml" | `autoware_raw_vehicle_cmd_converter` 使用的控制映射文件。当前控制基于 CARLA 中的 `vehicle.toyota.prius` 蓝图 ID 校准。更改车辆类型可能需要重新校准。 |
+| `traffic_light.publish`           | bool   | False                                                                             | 将 CARLA 交通灯状态以 `autoware_perception_msgs/TrafficLightGroupArray` 发布到 `/perception/traffic_light_recognition/traffic_signals`。参见[发布 CARLA 交通灯状态](#publishing-carla-traffic-light-states)。 |
+| `traffic_light.force_green`       | bool   | False                                                                             | 启动时将所有 CARLA 交通灯设为绿灯并冻结在该状态。适用于无摄像头、无交通灯识别的闭环运行，否则车辆会在每条受信号灯控制的停车线处等待。 |
+| `traffic_light.map_path`          | string | ""                                                                                | Lanelet2 地图（`.osm`）的路径。设置后，按**位置**将 CARLA 交通灯与地图中的交通灯灯头匹配，并使用匹配的监管元素 ID 发布。留空时回退为直接使用 CARLA OpenDRIVE 信号 ID 作为组 ID。 |
+| `traffic_light.match_distance`    | double | 5.0                                                                               | 将 CARLA 交通灯匹配到 Lanelet2 灯头时允许的最大灯头间距离（m）。 |
+| `traffic_light.match_ratio`       | double | 0.6                                                                               | 歧义阈值：若最近的、对应于_不同_信号的灯头与最佳候选几乎同样近（`nearest > ratio * second`），则拒绝匹配。值越小越严格。 |
+| `traffic_light.id_map`            | string | ""                                                                                | 可选覆盖配置，格式为 `opendrive_id:group_id,...`，将 CARLA 信号 ID 固定映射到一个或多个 Autoware 组 ID，优先于位置匹配。单个条目可列出多个组 ID（以竖线分隔），将共用灯头映射到其全部监管元素；可用来修复匹配器报告为有歧义或未匹配的少量交通灯。 |
+| `wake_sleeping_physics`           | bool   | False                                                                             | 从静止状态起步时，通过很小的 `set_target_velocity` 唤醒自车物理刚体。仅 CARLA 0.10（UE5/Chaos）需要：其中静止刚体会进入休眠，而 `VehicleControl` 的油门无法将其唤醒。在支持的 0.9.15 环境中，刚体不会休眠，应保持 `false`，以保持原有起步动力学行为。 |
 
-> These `traffic_light.*` launch arguments are the node parameters of the same name, kept grouped together under the `traffic_light.` namespace in `ros2 param list`.
+> 这些 `traffic_light.*` 启动参数也是同名节点参数，在 `ros2 param list` 中统一归入 `traffic_light.` 命名空间。
 
-#### Ground snapping
+<a id="ground-snapping"></a>
 
-When `spawn_point_ground_snap` is enabled, the ego spawn point and the RViz "2D
-Pose Estimate" initial pose are snapped onto the CARLA map geometry instead of
-using a fixed z-offset. This helps on levels (e.g. some CARLA 0.10 maps) where
-the map-frame z does not match the terrain, where a fixed offset can drop the
-vehicle far above or below the road.
+#### 地面吸附
 
-The ground height is obtained with `world.ground_projection`, casting a ray down
-from `z = 1000 m`. Rather than probing only the target `(x, y)`, a small
-cross-shaped neighborhood is sampled and the **highest** ground hit is used:
+启用 `spawn_point_ground_snap` 后，自车生成点以及 RViz 中的 "2D
+Pose Estimate" 初始位姿会吸附到 CARLA 地图几何表面，
+而非使用固定 z 偏移。这有助于处理部分关卡（例如某些 CARLA 0.10 地图）中
+地图坐标系 z 值与地形不一致的问题；固定偏移可能使
+车辆落在远高于或低于道路的位置。
+
+地面高度通过 `world.ground_projection` 获取：从
+`z = 1000 m` 向下投射射线。系统不只探测目标 `(x, y)`，而是采样一个较小的
+十字形邻域，并采用命中的**最高**地面：
 
 ```text
 sample offsets (dx, dy in meters)
@@ -202,49 +228,55 @@ sample offsets (dx, dy in meters)
               (0, -1.5)
 ```
 
-- Sampling a neighborhood (9 points) makes the result robust: a single ray can
-  miss through a mesh gap or land in a gutter/curb seam and return a height
-  below the road.
-- Taking the maximum selects the road surface rather than a lower seam or gap,
-  so the vehicle sits on top of the road instead of sinking into it.
+- 采样邻域（9 个点）可以提高稳健性：单条射线可能
+  穿过网格间隙，或落在排水沟/路缘接缝中，返回
+  低于道路表面的高度。
+- 取最大值可以选中路面，而不是较低的接缝或间隙，
+  从而使车辆位于路面上方，避免陷入路面。
 
-On a CARLA API without `ground_projection`, snapping is skipped and the previous
-fixed z-offset is used, so enabling the flag never raises. The spawn-point path
-logs a warning when it falls back; the RViz initial-pose fallback is silent (and
-with the default random spawn the spawn-point path is not exercised at all).
+如果 CARLA API 不提供 `ground_projection`，则跳过吸附并使用原有
+固定 z 偏移，因此启用该标志不会导致异常。生成点处理流程
+在回退时记录警告；RViz 初始位姿的回退不会输出提示（并且
+使用默认随机生成方式时，完全不会执行生成点处理流程）。
 
-### Multi-client co-simulation
+<a id="multi-client-co-simulation"></a>
 
-By default this bridge owns the CARLA simulation clock: its main loop calls `world.tick()` on every
-cycle. A server in synchronous mode advances one frame per `tick()` call, so a second client that
-also ticks, for example an external traffic simulator feeding background vehicles into the same
-server, makes the simulation advance more than once per intended step.
+### 多客户端联合仿真
 
-Setting `tick_follower` to `True` puts the bridge in a passive mode. It no longer ticks the world in
-its main loop, and instead publishes sensor data, the clock and the ego control for the frames that
-the external client ticks. Exactly one client in the whole setup may own the clock.
+默认情况下，此桥接器控制 CARLA 仿真时钟：主循环在每次
+循环中调用 `world.tick()`。同步模式的服务器每收到一次 `tick()` 调用就推进一帧，因此若第二个客户端
+也推进时钟，例如向同一服务器注入背景车辆的外部交通仿真器，
+就会使仿真在每个预期步长内推进多次。
 
-Two things to keep in mind when using this mode:
+将 `tick_follower` 设为 `True` 会使桥接器进入被动模式。其主循环不再推进世界，
+而是针对外部客户端推进的帧发布传感器数据、
+时钟和自车控制。整个系统中必须恰好只有一个客户端控制时钟。
 
-- **Start the bridge before the tick owner.** Loading the world still ticks it a few times to bring
-  up the ego vehicle and its sensors, and those ticks must not race the external owner.
-- **The cadence belongs to the tick owner**, so `max_real_delta_seconds` no longer paces the loop.
-  Set `fixed_delta_seconds` to the step length that the owner uses.
-- **`/clock` starts at zero on the first frame that the bridge processes.** In this mode it stays a
-  constant offset behind the CARLA elapsed time: the idle time before the owner started.
+使用此模式时需注意以下事项：
 
-If the bridge cannot keep up with the incoming cadence it drops the frames it has fallen behind on
-and reports how many it skipped through a throttled warning.
+- **先启动桥接器，再启动时钟控制端。** 加载世界时仍会推进几次时钟，以启动
+  自车及其传感器；这些推进操作不能与外部控制端竞争。
+- **运行节奏由时钟控制端决定**，因此 `max_real_delta_seconds` 不再控制循环节奏。
+  将 `fixed_delta_seconds` 设置为时钟控制端使用的步长。
+- **`/clock` 在桥接器处理第一帧时从零开始。** 此模式下，它与
+  CARLA 已用时间之间保持固定偏移，偏移量等于时钟控制端启动前的空闲时间。
 
-### Sensor Configuration
+如果桥接器跟不上输入帧的节奏，会丢弃已经落后的帧，
+并通过限频警告报告跳过的帧数。
 
-The interface uses the **`carla_sensor_kit`** which provides 6 cameras for 360-degree coverage, LiDAR, IMU, and GNSS sensors. Sensor configurations are dynamically loaded from Autoware sensor kit calibration files through two configuration files:
+<a id="sensor-configuration"></a>
 
-#### 1. Sensor Kit Calibration (from Autoware sensor kit)
+### 传感器配置
 
-Located in `<sensor_kit_name>_description/config/sensor_kit_calibration.yaml`
+此接口使用 **`carla_sensor_kit`**，提供覆盖 360 度视野的 6 个摄像头，以及激光雷达、IMU 和 GNSS 传感器。传感器配置通过以下两个配置文件，从 Autoware 传感器套件标定文件动态加载：
 
-Defines sensor positions and orientations relative to `base_link` (rear axle center). Example:
+<a id="1-sensor-kit-calibration-from-autoware-sensor-kit"></a>
+
+#### 1. 传感器套件标定（来自 Autoware 传感器套件）
+
+位于 `<sensor_kit_name>_description/config/sensor_kit_calibration.yaml`。
+
+定义传感器相对于 `base_link`（后轴中心）的位置与姿态。例如：
 
 ```yaml
 sensor_kit_base_link:
@@ -257,18 +289,20 @@ sensor_kit_base_link:
     yaw: 0.000 # Angles in radians
 ```
 
-#### 2. Sensor Mapping (CARLA-specific)
+<a id="2-sensor-mapping-carla-specific"></a>
 
-Located in `config/sensor_mapping.yaml`
+#### 2. 传感器映射（CARLA 专用）
 
-Maps Autoware sensors to CARLA sensor types and parameters. Key sections:
+位于 `config/sensor_mapping.yaml`。
 
-- `default_sensor_kit_name`: Default sensor kit to use (e.g., `carla_sensor_kit_description`)
-- `sensor_mappings`: Maps each sensor to CARLA type and ROS topics
-- `enabled_sensors`: List of sensors to spawn in CARLA
-- `vehicle_config` (optional): Vehicle parameters like wheelbase
+将 Autoware 传感器映射到 CARLA 传感器类型和参数。主要部分：
 
-Example sensor mapping:
+- `default_sensor_kit_name`：使用的默认传感器套件（例如 `carla_sensor_kit_description`）。
+- `sensor_mappings`：将每个传感器映射到 CARLA 类型和 ROS 话题。
+- `enabled_sensors`：要在 CARLA 中生成的传感器列表。
+- `vehicle_config`（可选）：轴距等车辆参数。
+
+传感器映射示例：
 
 ```yaml
 sensor_mappings:
@@ -288,25 +322,27 @@ sensor_mappings:
       fov: 70.0
 ```
 
-`image_encoding` applies to cameras and accepts `bgra8` (default, what CARLA
-renders) or `mono8`. Publishing `mono8` converts once in the bridge and sends a
-quarter of the bytes, which is worth it when every consumer of that camera
-works on luminance alone, such as feature tracking or visual odometry. A
-1600x900 frame is 5,760,000 bytes as `bgra8` and 1,440,000 bytes as `mono8`.
+`image_encoding` 适用于摄像头，可设为 `bgra8`（默认值，也是 CARLA
+渲染的格式）或 `mono8`。发布 `mono8` 时在桥接器中转换一次，发送的
+字节数为原来的四分之一；当摄像头的所有下游使用方都仅处理亮度时，
+例如特征跟踪或视觉里程计，这种方式很有价值。
+1600x900 图像帧使用 `bgra8` 时为 5,760,000 字节，使用 `mono8` 时为 1,440,000 字节。
 
-For CARLA sensor parameters, see [CARLA Sensor Reference](https://carla.readthedocs.io/en/latest/ref_sensors/).
+CARLA 传感器参数请参见 [CARLA 传感器参考](https://carla.readthedocs.io/en/latest/ref_sensors/)。
 
-##### Capture Rate
+<a id="capture-rate"></a>
 
-`frequency_hz` throttles what the bridge publishes; it does not change how often
-CARLA captures. A sensor left at CARLA's default captures on every simulation
-step, so at a 1/600 s step a camera renders 600 frames a second and the bridge
-discards all but a few. The throttle can also only drop whole frames, so a
-mapping asking for 60 Hz at that step publishes at 85.7 Hz and a 200 Hz IMU at
-300 Hz.
+##### 采集频率
 
-Set `sensor_tick` (seconds between captures) under the sensor's `parameters` to
-have CARLA generate at the rate the mapping wants:
+`frequency_hz` 限制桥接器的发布频率，并不改变
+CARLA 的采集频率。保持 CARLA 默认设置的传感器在每个仿真
+步都会采集，因此在 1/600 s 步长下，摄像头每秒渲染 600 帧，而桥接器
+仅保留少量帧，其余全部丢弃。限频只能丢弃完整帧，因此
+在该步长下，要求 60 Hz 的映射会以 85.7 Hz 发布，而 200 Hz 的 IMU 会以
+300 Hz 发布。
+
+在传感器的 `parameters` 中设置 `sensor_tick`（两次采集之间的秒数），
+让 CARLA 按映射所需频率生成数据：
 
 ```yaml
 parameters:
@@ -316,27 +352,29 @@ parameters:
   sensor_tick: 0.0166667
 ```
 
-Sensors without a `sensor_tick` keep capturing every step, as before. Avoid a
-`sensor_tick` exactly equal to `fixed_delta_seconds`: CARLA compares the tick
-interval against the elapsed time with a float, and a sensor whose tick equals
-the step can miss frames
-([carla#3653](https://github.com/carla-simulator/carla/issues/3653)).
+未设置 `sensor_tick` 的传感器仍与之前一样，每个仿真步都进行采集。避免将
+`sensor_tick` 设为与 `fixed_delta_seconds` 完全相等：CARLA 使用浮点数比较采集
+间隔和已用时间，采集周期与仿真步长相等的传感器
+可能漏帧
+（[carla#3653](https://github.com/carla-simulator/carla/issues/3653)）。
 
-CARLA cannot capture between steps, so it holds the requested average by
-alternating shorter and longer gaps -- a 0.04 s tick at a 1/60 s step arrives
-after two steps and then three. The publish throttle allows a frame of such a
-sensor to be up to half its own tick early, so those arrivals are published
-instead of dropped.
+CARLA 无法在两个仿真步之间采集，因此通过
+交替使用较短和较长的间隔保持所需平均频率——在 1/60 s 步长下，0.04 s 的采集周期会
+交替在两个和三个仿真步后到达。发布限频允许此类传感器的帧
+最多提前半个自身采集周期到达，这样这些帧就会被发布，
+而非被丢弃。
 
-##### Sensor Noise
+<a id="sensor-noise"></a>
 
-The IMU and GNSS are spawned noise-free unless the mapping says otherwise, which
-is what reproducing a run wants. It also means anything consuming those sensors
-sees a measurement no hardware produces: a localization or odometry stack scored
-against a perfect gyro reports an accuracy it will not reach on a vehicle.
+##### 传感器噪声
 
-Set any of the CARLA noise attributes under the sensor's `parameters` to get a
-sensor that behaves like hardware:
+除非映射另有设置，IMU 和 GNSS 默认生成无噪声数据，
+这有助于复现运行结果。但也意味着这些传感器的使用方
+看到的是任何实际硬件都无法产生的测量值：使用完美陀螺仪进行评估的
+定位或里程计系统，会报告实车无法达到的精度。
+
+在传感器的 `parameters` 中设置相应 CARLA 噪声属性，
+可使传感器表现更接近硬件：
 
 ```yaml
 sensor_mappings:
@@ -355,21 +393,23 @@ sensor_mappings:
       noise_accel_stddev_x: 0.01
 ```
 
-Recognized names are `noise_accel_stddev_{x,y,z}`, `noise_gyro_stddev_{x,y,z}`
-and `noise_gyro_bias_{x,y,z}` for the IMU, and `noise_{alt,lat,lon}_stddev` and
-`noise_{alt,lat,lon}_bias` for the GNSS. Anything left out stays at zero.
+IMU 支持的名称为 `noise_accel_stddev_{x,y,z}`、`noise_gyro_stddev_{x,y,z}`
+和 `noise_gyro_bias_{x,y,z}`；GNSS 支持 `noise_{alt,lat,lon}_stddev` 和
+`noise_{alt,lat,lon}_bias`。未设置的属性保持为零。
 
-##### Light-Weight Sensor Mapping
+<a id="light-weight-sensor-mapping"></a>
 
-For machines with limited GPU/CPU resources, an alternative `config/sensor_mapping_light_weight.yaml` is provided to reduce simulator load. Compared to the default mapping, it:
+##### 轻量级传感器映射
 
-- Uses a **single front camera** (`CAM_FRONT`) instead of the 6-camera 360-degree setup, with a wider FOV (120°) and lower resolution (1080x720) to roughly cover the area in front of the vehicle.
-- Lowers sensor frequencies (e.g., LiDAR/camera at 10 Hz instead of 11 Hz).
-- Keeps the same LiDAR, IMU, and GNSS configuration as the default mapping.
+针对 GPU/CPU 资源有限的机器，另提供 `config/sensor_mapping_light_weight.yaml`，用于降低仿真器负载。与默认映射相比，它：
 
-When enabled via `use_light_weight_sensor_mapping:=True`, the launch file also skips the `image_transport` republish nodes for the disabled cameras and the `multi_camera_combiner` node automatically.
+- 使用**单个前置摄像头**（`CAM_FRONT`）替代 6 摄像头 360 度配置，并采用更宽的视场角（120°）和更低的分辨率（1080x720），大致覆盖车辆前方区域。
+- 降低传感器频率（例如激光雷达/摄像头从 11 Hz 降为 10 Hz）。
+- 保留与默认映射相同的激光雷达、IMU 和 GNSS 配置。
 
-Example usage:
+通过 `use_light_weight_sensor_mapping:=True` 启用后，启动文件还会自动跳过已禁用摄像头的 `image_transport` 重发布节点，以及 `multi_camera_combiner` 节点。
+
+使用示例：
 
 ```bash
 ros2 launch autoware_launch e2e_simulator.launch.xml \
@@ -380,38 +420,40 @@ ros2 launch autoware_launch e2e_simulator.launch.xml \
     use_light_weight_sensor_mapping:=True
 ```
 
-Note that with this configuration, features that depend on the surround cameras (such as the multi-camera RViz view) are unavailable.
+请注意，使用此配置时，依赖环视摄像头的功能（例如 RViz 多摄像头视图）不可用。
 
-### World Loading
+<a id="world-loading"></a>
 
-The `carla_ros.py` sets up the CARLA world:
+### 世界加载
 
-1. **Client Connection**:
+`carla_ros.py` 负责配置 CARLA 世界：
+
+1. **客户端连接**：
 
    ```python
    client = carla.Client(self.local_host, self.port)
    client.set_timeout(self.timeout)
    ```
 
-2. **Load the Map**:
+2. **加载地图**：
 
-   Map loaded in CARLA world with map according to `carla_map` parameter.
+   根据 `carla_map` 参数，在 CARLA 世界中加载相应地图。
 
    ```python
    client.load_world(self.map_name)
    self.world = client.get_world()
    ```
 
-   After loading, the interface checks that the map CARLA is actually running is
-   the one that was requested. If it is not - the level does not exist, the
-   server failed to switch, or the connection dropped - the mismatch is logged to
-   `rosout` and the node aborts with `CarlaWorldLoadError`. Running Autoware
-   against a map the simulator is not simulating would silently invalidate the
-   whole run, so it is treated as fatal rather than tolerated.
+   加载后，接口会检查 CARLA 实际运行的地图是否
+   与请求一致。若不一致——例如关卡不存在、
+   服务器切换失败或连接中断——会将不匹配信息记录到
+   `rosout`，并以 `CarlaWorldLoadError` 中止节点。如果 Autoware 使用的
+   地图与仿真器实际仿真的地图不同，整个运行结果就会在没有明显提示的情况下失效，
+   因此该问题被视为致命错误，不予容忍。
 
-3. **Spawn Ego Vehicle**:
+3. **生成自车**：
 
-   Vehicle are spawn according to `vehicle_type`, `spawn_point`, and `agent_role_name` parameter.
+   根据 `vehicle_type`、`spawn_point` 和 `agent_role_name` 参数生成车辆。
 
    ```python
    spawn_point = carla.Transform()
@@ -426,77 +468,85 @@ The `carla_ros.py` sets up the CARLA world:
    CarlaDataProvider.request_new_actor(self.vehicle_type, spawn_point, self.agent_role_name)
    ```
 
-## Traffic Light Recognition
+<a id="traffic-light-recognition"></a>
 
-The maps provided by the Carla Simulator ([Carla Lanelet2 Maps](https://bitbucket.org/carla-simulator/autoware-contents/src/master/maps/)) currently lack proper traffic light components for Autoware and have different latitude and longitude coordinates compared to the pointcloud map. To enable traffic light recognition, follow the steps below to modify the maps.
+## 交通灯识别
 
-- Options to Modify the Map
+Carla 仿真器提供的地图（[Carla Lanelet2 地图](https://bitbucket.org/carla-simulator/autoware-contents/src/master/maps/)）目前缺少适用于 Autoware 的完整交通灯组件，且经纬度坐标与点云地图不同。要启用交通灯识别，请按以下步骤修改地图。
 
-  - A. Create a New Map from Scratch
-  - Use the [TIER IV Vector Map Builder](https://tools.tier4.jp/feature/vector_map_builder_ll2/) to create a new map.
+- 修改地图的方式
 
-  - B. Modify the Existing Carla Lanelet2 Maps
-  - Adjust the longitude and latitude of the [Carla Lanelet2 Maps](https://bitbucket.org/carla-simulator/autoware-contents/src/master/maps/) to align with the PCD (origin).
-    - Use this [tool](https://github.com/mraditya01/offset_lanelet2/tree/main) to modify the coordinates.
-    - Snap Lanelet with PCD and add the traffic lights using the [TIER IV Vector Map Builder](https://tools.tier4.jp/feature/vector_map_builder_ll2/).
+  - A. 从零创建新地图
+  - 使用 [TIER IV Vector Map Builder](https://tools.tier4.jp/feature/vector_map_builder_ll2/) 创建新地图。
 
-- When using the TIER IV Vector Map Builder, you must convert the PCD format from `binary_compressed` to `ascii`. You can use `pcl_tools` for this conversion.
-- For reference, an example of Town01 with added traffic lights at one intersection can be downloaded [here](https://drive.google.com/drive/folders/1QFU0p3C8NW71sT5wwdnCKXoZFQJzXfTG?usp=sharing).
+  - B. 修改现有 Carla Lanelet2 地图
+  - 调整 [Carla Lanelet2 地图](https://bitbucket.org/carla-simulator/autoware-contents/src/master/maps/)的经纬度，使其与 PCD（原点）对齐。
+    - 使用此[工具](https://github.com/mraditya01/offset_lanelet2/tree/main)修改坐标。
+    - 使用 [TIER IV Vector Map Builder](https://tools.tier4.jp/feature/vector_map_builder_ll2/) 将 Lanelet 与 PCD 对齐，并添加交通灯。
 
-### Publishing CARLA Traffic-Light States
+- 使用 TIER IV Vector Map Builder 时，必须将 PCD 格式从 `binary_compressed` 转换为 `ascii`。可使用 `pcl_tools` 完成转换。
+- 作为参考，可在[此处](https://drive.google.com/drive/folders/1QFU0p3C8NW71sT5wwdnCKXoZFQJzXfTG?usp=sharing)下载一个 Town01 示例，其中一个交叉口已添加交通灯。
 
-Instead of running camera-based recognition, the bridge can publish the CARLA server's
-traffic-light states directly. Setting `traffic_light.publish:=true` publishes an
-`autoware_perception_msgs/TrafficLightGroupArray` on
-`/perception/traffic_light_recognition/traffic_signals` every tick. Each CARLA light is
-reported as a circular signal whose color and status follow the CARLA state: `Red`/`Yellow`/`Green`
-map to `RED`/`AMBER`/`GREEN` with status `SOLID_ON`, the known-dark `Off` state maps to status
-`SOLID_OFF`, and only a state the bridge cannot interpret is published as `UNKNOWN`/`UNKNOWN`.
+<a id="publishing-carla-traffic-light-states"></a>
 
-Autoware keys traffic signals by `traffic_light_group_id`, the id of a `traffic_light`
-regulatory element in the lanelet2 map. The bridge resolves which group(s) each CARLA light
-belongs to as follows, in order of precedence:
+### 发布 CARLA 交通灯状态
 
-1. **`traffic_light.id_map` override.** If the light's OpenDRIVE signal id appears in the
-   `opendrive_id:group_id[|group_id...],...` map, those group ids are used directly. One entry
-   may pin several group ids (`|`-separated), so a shared physical head can be mapped to every
-   regulatory element that governs it. A malformed entry (no `:`, a non-integer id, or no group
-   id after the `:`) is skipped with a warning naming the offending entry, so a typo neither
-   stops the bridge nor silently overrides a light with an empty group list; the remaining
-   entries still apply.
-2. **Position matching (`traffic_light.map_path`).** When a lanelet2 map is given, each CARLA
-   light head is matched to the nearest map traffic-light head, and its state is published under
-   **every** regulatory element that references that head (one physical light is commonly shared
-   by several regulatory elements, one per approaching lane). This needs no id convention between
-   CARLA and the map — it works for hand-authored / Vector Map Builder maps whose regulatory-element
-   ids do not correspond to the OpenDRIVE signal ids.
-3. **OpenDRIVE-id fallback.** With no map path and no override, the OpenDRIVE signal id is used
-   directly as the group id (correct only for maps generated so regulatory-element ids preserve
-   the OpenDRIVE signal ids).
+桥接器可直接发布 CARLA 服务器的交通灯状态，
+无需运行基于摄像头的识别。设置 `traffic_light.publish:=true` 后，每个仿真步都会将
+`autoware_perception_msgs/TrafficLightGroupArray` 发布到
+`/perception/traffic_light_recognition/traffic_signals`。每个 CARLA 交通灯
+均报告为圆形信号，其颜色和状态跟随 CARLA 状态：`Red`/`Yellow`/`Green`
+对应 `RED`/`AMBER`/`GREEN`，状态为 `SOLID_ON`；已知熄灭的 `Off` 状态对应
+`SOLID_OFF`；仅当桥接器无法解释状态时才发布为 `UNKNOWN`/`UNKNOWN`。
 
-Position matching is deliberately conservative: it binds a CARLA light only when a single map head
-is clearly closest. If a head belonging to a _different_ signal is nearly as close (the classic
-"light across the intersection" case, controlled by `traffic_light.match_ratio`), is exactly as
-close (a tie has no winner, so the .osm order must not decide it), or nothing is within
-`traffic_light.match_distance`, the light is left unpublished and logged as ambiguous / unmatched
-rather than guessed. Watch the node's startup log for the match report (`N matched, M ambiguous,
-K too far`) and pin any reported light through `traffic_light.id_map` if you need it.
+Autoware 使用 `traffic_light_group_id` 标识交通信号，该值是 Lanelet2 地图中 `traffic_light`
+监管元素的 ID。桥接器按以下优先级解析每个 CARLA 交通灯
+所属的一个或多个组：
 
-> Position matching reads the lanelet2 node `local_x`/`local_y` tags, i.e. the Autoware map frame,
-> and expresses each CARLA head in that frame via `map_origin_x`/`map_origin_y` (the same offsets
-> used for localization). If localization is aligned, matching is too.
+1. **`traffic_light.id_map` 覆盖配置。** 如果交通灯的 OpenDRIVE 信号 ID 出现在
+   `opendrive_id:group_id[|group_id...],...` 映射中，则直接使用这些组 ID。一个条目
+   可指定多个组 ID（用 `|` 分隔），从而将共用的物理灯头映射到管理它的全部
+   监管元素。格式错误的条目（缺少 `:`、ID 非整数或 `:` 后无组
+   ID）会被跳过，并输出指明该条目的警告。因此，拼写错误既不会
+   使桥接器停止，也不会悄然用空组列表覆盖某个交通灯；其余
+   条目仍然生效。
+2. **位置匹配（`traffic_light.map_path`）。** 提供 Lanelet2 地图后，每个 CARLA
+   灯头会与最近的地图交通灯灯头匹配，其状态会通过引用该灯头的
+   **每个**监管元素发布（一个物理交通灯通常由多个监管元素共用，
+   每条驶入车道各有一个）。此方式不要求 CARLA 与地图采用一致的 ID 约定，
+   因此也适用于手工制作或 Vector Map Builder 创建的地图，即使其中的监管元素
+   ID 与 OpenDRIVE 信号 ID 不对应。
+3. **OpenDRIVE ID 回退。** 未提供地图路径且未设置覆盖配置时，直接将 OpenDRIVE 信号 ID
+   用作组 ID（仅适用于生成时将监管元素 ID 保持为
+   OpenDRIVE 信号 ID 的地图）。
 
-To let the ego proceed through all intersections without any recognition setup — for example in
-camera-less closed-loop runs — set `traffic_light.force_green:=true`. At startup this sets every
-CARLA traffic light to green and freezes it; combined with `traffic_light.publish:=true` the
-frozen green states are also published on the topic above.
+位置匹配采用保守策略：只有单个地图灯头明显最近时，才将 CARLA 交通灯与其绑定。
+如果属于_不同_信号的灯头距离几乎同样近（典型的
+“交叉口对面交通灯”情况，由 `traffic_light.match_ratio` 控制），或者距离完全
+相等（平局时没有最佳候选，因此不能由 .osm 中的顺序决定），或没有任何灯头位于
+`traffic_light.match_distance` 范围内，则不发布该交通灯，并记录为有歧义/未匹配，
+而不是猜测。请查看节点启动日志中的匹配报告（`N matched, M ambiguous,
+K too far`），必要时通过 `traffic_light.id_map` 为所报告的交通灯指定映射。
 
-## Tips
+> 位置匹配读取 Lanelet2 节点的 `local_x`/`local_y` 标签，即 Autoware 地图坐标系，
+> 并通过 `map_origin_x`/`map_origin_y` 将每个 CARLA 灯头表示在该坐标系中（与定位使用
+> 相同的偏移）。定位对齐后，匹配也会对齐。
 
-- Misalignment might occurs during initialization, pressing `init by gnss` button should fix it.
-- Changing the `fixed_delta_seconds` can increase the simulation tick (default 0.05 s), some sensor params in `sensor_mapping.yaml` need to be adjusted when it is changed (example: LIDAR rotation frequency should match the FPS).
+如需在没有任何识别配置的情况下让自车通过所有交叉口——例如
+无摄像头的闭环运行——请设置 `traffic_light.force_green:=true`。启动时会将所有
+CARLA 交通灯设为绿灯并冻结；结合 `traffic_light.publish:=true`，
+冻结后的绿灯状态也会发布到上述话题。
 
-## Known Issues and Future Works
+<a id="tips"></a>
 
-- **Testing on procedural maps (Adv Digital Twin)**: Currently unable to test due to failures in creating the Adv Digital Twin map.
-- **Traffic light recognition**: The default CARLA Lanelet2 maps lack proper traffic light regulatory elements. See the "Traffic Light Recognition" section above for workarounds, or bypass camera recognition entirely with `traffic_light.publish` (see "Publishing CARLA Traffic-Light States").
+## 提示
+
+- 初始化时可能出现对齐偏差，按下 `init by gnss` 按钮应可解决。
+- 更改 `fixed_delta_seconds` 可以提高仿真更新频率（默认步长为 0.05 s），修改时还需调整 `sensor_mapping.yaml` 中的部分传感器参数（例如激光雷达旋转频率应与 FPS 匹配）。
+
+<a id="known-issues-and-future-works"></a>
+
+## 已知问题与后续工作
+
+- **在程序化生成地图（Adv Digital Twin）上测试**：由于 Adv Digital Twin 地图创建失败，目前无法测试。
+- **交通灯识别**：默认 CARLA Lanelet2 地图缺少适当的交通灯监管元素。解决方法见上文“交通灯识别”一节，也可通过 `traffic_light.publish` 完全绕过摄像头识别（参见“发布 CARLA 交通灯状态”）。

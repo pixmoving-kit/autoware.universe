@@ -1,13 +1,17 @@
 # fault_injection
 
-## Purpose
+<a id="purpose"></a>
 
-This package is used to convert pseudo system faults from PSim to Diagnostics and notify Autoware.
-The component diagram is as follows:
+## 用途
 
-![Component diagram of fault_injection package](img/component.drawio.svg)
+此功能包将 PSim 中的模拟系统故障转换为诊断信息，并通知 Autoware。
+组件图如下：
 
-## Test
+![fault_injection 功能包组件图](img/component.drawio.svg)
+
+<a id="test"></a>
+
+## 测试
 
 ```bash
 source install/setup.bash
@@ -15,39 +19,57 @@ cd fault_injection
 launch_test test/test_fault_injection_node.test.py
 ```
 
-## Inner-workings / Algorithms
+<a id="inner-workings-algorithms"></a>
 
-## Inputs / Outputs
+## 内部机制／算法
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name                        | Type                                           | Description            |
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称                        | 类型                                           | 说明            |
 | --------------------------- | ---------------------------------------------- | ---------------------- |
-| `~/input/simulation_events` | `tier4_simulation_msgs::msg::SimulationEvents` | simulation events      |
-| `~/input/diagnostics`       | `diagnostic_msgs::msg::DiagnosticArray`        | Diagnostics from nodes |
+| `~/input/simulation_events` | `tier4_simulation_msgs::msg::SimulationEvents` | 仿真事件      |
+| `~/input/diagnostics`       | `diagnostic_msgs::msg::DiagnosticArray`        | 各节点的诊断信息 |
 
-### Output
+<a id="output"></a>
 
-| Name                   | Type                                    | Description                              |
+### 输出
+
+| 名称                   | 类型                                    | 说明                              |
 | ---------------------- | --------------------------------------- | ---------------------------------------- |
-| `~/output/diagnostics` | `diagnostic_msgs::msg::DiagnosticArray` | Diagnostics with fault injection applied |
+| `~/output/diagnostics` | `diagnostic_msgs::msg::DiagnosticArray` | 应用故障注入后的诊断信息 |
 
-### Notes
+<a id="notes"></a>
 
-- Use separate input/output topics (default remaps are `/diagnostics` -> `~/input/diagnostics` and `/diagnostics/fault_injection` -> `~/output/diagnostics`) to avoid mixing raw and modified diagnostics.
+### 注意事项
 
-## Parameters
+- 使用独立的输入/输出话题（默认重映射为 `/diagnostics` -> `~/input/diagnostics` 和 `/diagnostics/fault_injection` -> `~/output/diagnostics`），以避免混淆原始诊断与修改后的诊断。
 
-None.
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-None.
+无。
 
-### Core Parameters
+<a id="node-parameters"></a>
 
-None.
+### 节点参数
 
-## Assumptions / Known limits
+无。
 
-TBD.
+<a id="core-parameters"></a>
+
+### 核心参数
+
+无。
+
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制
+
+待定。

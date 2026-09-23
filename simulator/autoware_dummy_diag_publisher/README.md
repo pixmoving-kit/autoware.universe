@@ -1,51 +1,71 @@
 # dummy_diag_publisher
 
-## Purpose
+<a id="purpose"></a>
 
-This package outputs a dummy diagnostic data for debugging and developing.
+## 用途
 
-## Inputs / Outputs
+此功能包输出虚拟诊断数据，用于调试和开发。
 
-### Outputs
+<a id="inputs-outputs"></a>
 
-| Name           | Type                                     | Description         |
+## 输入／输出
+
+<a id="outputs"></a>
+
+### 输出
+
+| 名称           | 类型                                     | 说明         |
 | -------------- | ---------------------------------------- | ------------------- |
-| `/diagnostics` | `diagnostic_msgs::msgs::DiagnosticArray` | Diagnostics outputs |
+| `/diagnostics` | `diagnostic_msgs::msgs::DiagnosticArray` | 诊断输出 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-The parameter `DIAGNOSTIC_NAME` must be a name that exists in the parameter YAML file. If the parameter `status` is given from a command line, the parameter `is_active` is automatically set to `true`.
+<a id="node-parameters"></a>
 
-| Name                        | Type   | Default Value | Explanation                             | Reconfigurable |
+### 节点参数
+
+参数 `DIAGNOSTIC_NAME` 必须是参数 YAML 文件中存在的名称。如果通过命令行指定 `status` 参数，`is_active` 参数会自动设为 `true`。
+
+| 名称                        | 类型   | 默认值 | 说明                             | 可重新配置 |
 | --------------------------- | ------ | ------------- | --------------------------------------- | -------------- |
-| `update_rate`               | int    | `10`          | Timer callback period [Hz]              | false          |
-| `DIAGNOSTIC_NAME.is_active` | bool   | `true`        | Force update or not                     | true           |
-| `DIAGNOSTIC_NAME.status`    | string | `"OK"`        | diag status set by dummy diag publisher | true           |
+| `update_rate`               | int    | `10`          | 定时器回调频率 [Hz]              | false          |
+| `DIAGNOSTIC_NAME.is_active` | bool   | `true`        | 是否强制更新                     | true           |
+| `DIAGNOSTIC_NAME.status`    | string | `"OK"`        | 由虚拟诊断发布器设置的诊断状态 | true           |
 
-### YAML format for dummy_diag_publisher
+<a id="yaml-format-for-dummy_diag_publisher"></a>
 
-If the value is `default`, the default value will be set.
+### dummy_diag_publisher 的 YAML 格式
 
-| Key                                        | Type   | Default Value | Explanation                             |
+如果值为 `default`，则使用默认值。
+
+| 键                                        | 类型   | 默认值 | 说明                             |
 | ------------------------------------------ | ------ | ------------- | --------------------------------------- |
-| `required_diags.DIAGNOSTIC_NAME.is_active` | bool   | `true`        | Force update or not                     |
-| `required_diags.DIAGNOSTIC_NAME.status`    | string | `"OK"`        | diag status set by dummy diag publisher |
+| `required_diags.DIAGNOSTIC_NAME.is_active` | bool   | `true`        | 是否强制更新                     |
+| `required_diags.DIAGNOSTIC_NAME.status`    | string | `"OK"`        | 由虚拟诊断发布器设置的诊断状态 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-TBD.
+## 前提假设／已知限制
 
-## Usage
+待定。
 
-### launch
+<a id="usage"></a>
+
+## 使用方法
+
+<a id="launch"></a>
+
+### 启动
 
 ```sh
 ros2 launch autoware_dummy_diag_publisher dummy_diag_publisher.launch.xml
 ```
 
-### reconfigure
+<a id="reconfigure"></a>
+
+### 重新配置
 
 ```sh
 ros2 param set /dummy_diag_publisher velodyne_connection.status "Warn"

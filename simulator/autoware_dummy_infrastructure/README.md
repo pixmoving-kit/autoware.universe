@@ -1,41 +1,55 @@
 # autoware_dummy_infrastructure
 
-This is a debug node for infrastructure communication.
+这是用于基础设施通信的调试节点。
 
-## Usage
+<a id="usage"></a>
+
+## 使用方法
 
 ```sh
 ros2 launch autoware_dummy_infrastructure dummy_infrastructure.launch.xml
 ros2 run rqt_reconfigure rqt_reconfigure
 ```
 
-## Inputs / Outputs
+<a id="inputs-outputs"></a>
 
-### Inputs
+## 输入／输出
 
-| Name                    | Type                                              | Description            |
+<a id="inputs"></a>
+
+### 输入
+
+| 名称                    | 类型                                              | 说明            |
 | ----------------------- | ------------------------------------------------- | ---------------------- |
-| `~/input/command_array` | `tier4_v2x_msgs::msg::InfrastructureCommandArray` | Infrastructure command |
+| `~/input/command_array` | `tier4_v2x_msgs::msg::InfrastructureCommandArray` | 基础设施指令 |
 
-### Outputs
+<a id="outputs"></a>
 
-| Name                   | Type                                                 | Description                 |
+### 输出
+
+| 名称                   | 类型                                                 | 说明                 |
 | ---------------------- | ---------------------------------------------------- | --------------------------- |
-| `~/output/state_array` | `tier4_v2x_msgs::msg::VirtualTrafficLightStateArray` | Virtual traffic light array |
+| `~/output/state_array` | `tier4_v2x_msgs::msg::VirtualTrafficLightStateArray` | 虚拟交通灯数组 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-| Name                | Type   | Default Value | Explanation                                       |
+<a id="node-parameters"></a>
+
+### 节点参数
+
+| 名称                | 类型   | 默认值 | 说明                                       |
 | ------------------- | ------ | ------------- | ------------------------------------------------- |
-| `update_rate`       | double | `10.0`        | Timer callback period [Hz]                        |
-| `use_first_command` | bool   | `true`        | Consider instrument id or not                     |
-| `use_command_state` | bool   | `false`       | Consider command state or not                     |
-| `instrument_id`     | string | ``            | Used as command id                                |
-| `approval`          | bool   | `false`       | set approval filed to ros param                   |
-| `is_finalized`      | bool   | `false`       | Stop at stop_line if finalization isn't completed |
+| `update_rate`       | double | `10.0`        | 定时器回调频率 [Hz]                        |
+| `use_first_command` | bool   | `true`        | 是否考虑设备 ID                     |
+| `use_command_state` | bool   | `false`       | 是否考虑指令状态                     |
+| `instrument_id`     | string | ``            | 用作指令 ID                                |
+| `approval`          | bool   | `false`       | 将 approval 字段设为 ROS 参数值                   |
+| `is_finalized`      | bool   | `false`       | 若尚未完成最终确认，则在 stop_line 停车 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-TBD.
+## 前提假设／已知限制
+
+待定。

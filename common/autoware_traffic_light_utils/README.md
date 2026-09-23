@@ -1,6 +1,8 @@
 # autoware_traffic_light_utils
 
-## Purpose
+<a id="purpose"></a>
 
-This package contains a library of common functions that are useful across the traffic light recognition module.  
-This package may include functions for handling ROI types, converting between different data types and message types, as well as common functions related to them.
+## 用途
+
+此软件包包含交通信号灯识别模块共用的函数库。  
+此软件包可包含处理 ROI 类型、在不同数据类型与消息类型之间转换的函数，以及相关的通用函数。

@@ -1,67 +1,85 @@
-# Boundary Departure Checker
+<a id="boundary-departure-checker"></a>
 
-## 1. Introduction
+# 边界越界检查器
 
-The Boundary Departure Checker is a trajectory validation module designed to prevent the autonomous vehicle from crossing uncrossable road boundaries. It continuously evaluates the ego vehicle's predicted path and outputs a departure severity status to the planning system to ensure safe lane following.
+<a id="1-introduction"></a>
 
-## 2. Input and Output
+## 1. 简介
 
-### Input
+边界越界检查器是一个轨迹验证模块，用于防止自动驾驶车辆越过不可跨越的道路边界。它持续评估自车的预测路径，并向规划系统输出越界严重程度状态，确保安全地沿车道行驶。
 
-- **Vehicle Information (`vehicle_info`):** Used to generate geometric footprints and filter boundaries based on the vehicle's elevation.
-- **Kinematic State (`/localization/kinematic_state`):** Provides ego vehicle velocity, used to calculate the minimum physical braking distance.
-- **Acceleration (`/localization/acceleration`):** Used alongside velocity to calculate the minimum braking distance.
-- **Candidate Trajectories (`/planning/generator/concatenated/candidate_trajectories`):** The predicted paths to be evaluated, requiring accurate time-from-start values.
-- **Vector Map (`/map/vector_map`):** The Lanelet2 map used to extract uncrossable boundary locations, such as `road_border`.
+<a id="2-input-and-output"></a>
 
-### Output
+## 2. 输入与输出
 
-- **Status:** The departure severity classification (`NONE`, `APPROACHING_DEPARTURE`, or `CRITICAL_DEPARTURE`).
-- **Score:** A numerical value used for trajectory cost evaluation.
-- **Processing Time:** Execution time in milliseconds for system monitoring.
-- **Debug Markers:** Visualizations for the ego footprint, boundaries, and geometric projections.
+<a id="input"></a>
 
-## 3. What the Module Does
+### 输入
 
-The module evaluates whether the ego vehicle's predicted trajectory will safely stay within the road boundaries. It splits the vehicle's footprint into distinct left and right sides to evaluate the environment asymmetrically. By computing the geometric intersection between the vehicle's predicted footprint and mapped uncrossable boundaries, it classifies the trajectory's safety based on physical braking limits and predefined time thresholds. It also applies time-based hysteresis to prevent status flickering caused by noisy trajectory predictions.
+- **车辆信息（`vehicle_info`）：** 用于生成车辆的几何轮廓，并根据车辆高度过滤边界。
+- **运动学状态（`/localization/kinematic_state`）：** 提供自车速度，用于计算物理上的最小制动距离。
+- **加速度（`/localization/acceleration`）：** 与速度一起用于计算最小制动距离。
+- **候选轨迹（`/planning/generator/concatenated/candidate_trajectories`）：** 待评估的预测路径，需要准确的起点相对时间。
+- **矢量地图（`/map/vector_map`）：** 用于提取不可跨越边界位置的 Lanelet2 地图，例如 `road_border`。
 
-## 4. Parameters
+<a id="output"></a>
 
-The module uses a structured parameter configuration to define thresholds, footprint margins, and buffer times. Below is a high-level representation of the parameter schema:
+### 输出
+
+- **状态：** 越界严重程度分类（`NONE`、`APPROACHING_DEPARTURE` 或 `CRITICAL_DEPARTURE`）。
+- **得分：** 用于评估轨迹代价的数值。
+- **处理时间：** 用于系统监控的执行时间，单位为毫秒。
+- **调试标记：** 自车轮廓、边界和几何投影的可视化结果。
+
+<a id="3-what-the-module-does"></a>
+
+## 3. 模块功能
+
+此模块评估自车的预测轨迹能否安全地保持在道路边界内。它将车辆轮廓分为左、右两侧，以不对称方式评估周围环境。通过计算车辆预测轮廓与地图中不可跨越边界的几何交集，结合物理制动极限和预设时间阈值，对轨迹安全性进行分类。此外，还采用基于时间的滞回机制，防止轨迹预测噪声导致状态频繁切换。
+
+<a id="4-parameters"></a>
+
+## 4. 参数
+
+此模块通过结构化参数配置定义阈值、轮廓边距和缓冲时间。参数模式概览如下：
 
 {{ json_to_markdown("common/autoware_boundary_departure_checker/schema/boundary_departure_checker.schema.json") }}
 
-## 5. Process Overview
+<a id="5-process-overview"></a>
 
-1. **Footprint Generation:** The module generates geometric footprints for the ego vehicle at every point along the candidate trajectory. It expands the footprint size using margins to account for localization uncertainty.
-2. **Boundary Extraction and Filtering:** Uncrossable boundaries (e.g., `road_border`) are extracted from the Lanelet2 map and stored in a spatial R-tree. Boundaries significantly above or below the vehicle's Z-axis height are filtered out to prevent false positives from overpasses.
-3. **Distance Calculation:** The system calculates the shortest lateral distance from the left and right footprint segments to the nearest filtered boundary.
-4. **Severity Evaluation:** A minimum physical braking distance is dynamically calculated using current speed, acceleration, maximum allowed deceleration, jerk, and brake delay. The departure severity is assigned as follows:
-   - **NONE:** The footprint lateral distance is greater than the critical lateral margin.
-   - **APPROACHING:** A departure is detected, but it is farther than the braking distance AND the time to departure is greater than the cutoff threshold.
-   - **CRITICAL:** A departure is detected within the braking distance OR before the cutoff time expires.
-5. **Hysteresis Logic:** To ensure stability, an **ON-Time buffer** suppresses the `CRITICAL` state until the departure is continuously detected for a set duration. If a collision is imminent, this buffer is bypassed. An **OFF-Time buffer** ensures the status does not revert to `NONE` until the trajectory is continuously evaluated as safe.
+## 5. 处理流程概述
 
-## 6. Possible Scenarios and Expected Behavior
+1. **轮廓生成：** 为候选轨迹上的每个点生成自车几何轮廓，并通过边距扩展轮廓尺寸，以考虑定位不确定性。
+2. **边界提取与过滤：** 从 Lanelet2 地图中提取不可跨越边界（例如 `road_border`），并存入空间 R 树。过滤明显高于或低于车辆 Z 轴高度的边界，避免高架道路引起误报。
+3. **距离计算：** 计算左、右轮廓线段到过滤后最近边界的最短横向距离。
+4. **严重程度评估：** 根据当前速度、加速度、最大允许减速度、加加速度和制动延迟，动态计算物理上的最小制动距离。按以下规则确定越界严重程度：
+   - **NONE：** 轮廓的横向距离大于临界横向边距。
+   - **APPROACHING：** 检测到越界，但越界位置的距离大于制动距离，且到达越界位置的时间大于截止阈值。
+   - **CRITICAL：** 检测到的越界位于制动距离内，或将在截止时间之前发生。
+5. **滞回逻辑：** 为保证稳定性，**开启时间缓冲**会抑制 `CRITICAL` 状态，直到持续检测到越界达到设定时长。如果碰撞即将发生，则跳过此缓冲。**关闭时间缓冲**确保只有在轨迹持续被判定为安全后，状态才恢复为 `NONE`。
 
-- **Scenario 1:** The ego vehicle's footprint overlaps with a map boundary that does not have the `road_border` tag (or other defined uncrossable tags).
-  - **Expected Behavior:** Evaluated as safe (`NONE`).
-- **Scenario 2:** The ego vehicle's footprint does not overlap the defined lateral gap to the `road_border`.
-  - **Expected Behavior:** Evaluated as safe (`NONE`).
-- **Scenario 3:** The footprint overlaps the lateral gap to the `road_border`, AND the arc length to the overlap is less than the minimum braking distance, AND the time to reach it is less than the cutoff time.
-  - **Expected Behavior:** Evaluated as a departure (`CRITICAL_DEPARTURE`).
-- **Scenario 4:** The footprint overlaps the lateral gap, and the time to reach the overlap is less than the cutoff time, even if the arc length is greater than the minimum braking distance.
-  - **Expected Behavior:** Evaluated as a departure (`CRITICAL_DEPARTURE`).
-- **Scenario 5:** The footprint overlaps the lateral gap, and the arc length to the overlap is less than the minimum braking distance, even if the time to reach the overlap exceeds the cutoff time.
-  - **Expected Behavior:** Evaluated as a departure (`CRITICAL_DEPARTURE`).
-- **Scenario 6:** The footprint overlaps the lateral gap, the longitudinal distance to the overlap is greater than the minimum braking distance, and the time to reach it is greater than the cutoff time.
-  - **Expected Behavior:** Evaluated as approaching departure (`APPROACHING_DEPARTURE`)
+<a id="6-possible-scenarios-and-expected-behavior"></a>
 
-| Scenario            | Condition / Description             | Lateral Overlap? | Lon > Braking Dist? | Time > Cutoff? | Expected Result |
+## 6. 可能场景与预期行为
+
+- **场景 1：** 自车轮廓与地图边界重叠，但该边界没有 `road_border` 标签或其他已定义的不可跨越标签。
+  - **预期行为：** 判定为安全（`NONE`）。
+- **场景 2：** 自车轮廓未进入 `road_border` 边界所定义的横向间距范围。
+  - **预期行为：** 判定为安全（`NONE`）。
+- **场景 3：** 轮廓进入 `road_border` 的横向间距范围，且到重叠位置的弧长小于最小制动距离，同时到达该位置的时间小于截止时间。
+  - **预期行为：** 判定为越界（`CRITICAL_DEPARTURE`）。
+- **场景 4：** 轮廓进入横向间距范围，到达重叠位置的时间小于截止时间，即使到该位置的弧长大于最小制动距离。
+  - **预期行为：** 判定为越界（`CRITICAL_DEPARTURE`）。
+- **场景 5：** 轮廓进入横向间距范围，到重叠位置的弧长小于最小制动距离，即使到达该位置的时间超过截止时间。
+  - **预期行为：** 判定为越界（`CRITICAL_DEPARTURE`）。
+- **场景 6：** 轮廓进入横向间距范围，到重叠位置的纵向距离大于最小制动距离，且到达该位置的时间大于截止时间。
+  - **预期行为：** 判定为接近越界（`APPROACHING_DEPARTURE`）
+
+| 场景 | 条件 / 说明 | 横向重叠？ | 纵向距离 > 制动距离？ | 时间 > 截止时间？ | 预期结果 |
 | ------------------- | ----------------------------------- | ---------------- | ------------------- | -------------- | --------------- |
-| **1: Wrong Tag**    | Boundary lacks `road_border` tag    | N/A              | N/A                 | N/A            | **NONE**        |
-| **2: Safe Lateral** | Vehicle stays within lateral gap    | No               | N/A                 | N/A            | **NONE**        |
-| **3: Imminent**     | Too close and too fast              | Yes              | No                  | No             | **CRITICAL**    |
-| **4: Late Warning** | Low time buffer to crossing         | Yes              | Yes                 | **No**         | **CRITICAL**    |
-| **5: High Speed**   | Insufficient braking distance       | Yes              | **No**              | Yes            | **CRITICAL**    |
-| **6: Approaching**  | Within margin, but buffers are safe | Yes              | **Yes**             | **Yes**        | **APPROACHING** |
+| **1：标签不匹配**    | 边界缺少 `road_border` 标签    | 不适用              | 不适用                 | 不适用            | **NONE**        |
+| **2：横向安全** | 车辆保持在安全横向间距内    | 否               | 不适用                 | 不适用            | **NONE**        |
+| **3：即将越界**     | 距离过近且速度过快              | 是              | 否                  | 否             | **CRITICAL**    |
+| **4：预警过晚** | 到越界的时间余量不足         | 是              | 是                 | **否**         | **CRITICAL**    |
+| **5：高速**   | 制动距离不足       | 是              | **否**              | 是            | **CRITICAL**    |
+| **6：接近越界**  | 进入边距范围，但缓冲余量安全 | 是              | **是**             | **是**        | **APPROACHING** |

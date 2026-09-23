@@ -1,147 +1,183 @@
 # vehicle_cmd_gate
 
-## Purpose
+<a id="purpose"></a>
 
-`vehicle_cmd_gate` is the package to get information from emergency handler, planning module, and external controller, and send a message to the vehicle.
+## 目的
 
-## Role
+`vehicle_cmd_gate` 功能包从紧急处理器、规划模块和外部控制器获取信息，并向车辆发送消息。
 
-Receive multiple control commands and select one to forward to the vehicle.
+<a id="role"></a>
 
-## Inputs / Outputs
+## 作用
 
-### Input
+接收多组控制命令，选择其中一组转发给车辆。
 
-| Name                                        | Type                                                | Description                                                          |
+<a id="inputs-outputs"></a>
+
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------- |
-| `~/input/steering`                          | `autoware_vehicle_msgs::msg::SteeringReport`        | steering status                                                      |
-| `~/input/auto/control_cmd`                  | `autoware_control_msgs::msg::Control`               | command for lateral and longitudinal velocity from planning module   |
-| `~/input/auto/turn_indicators_cmd`          | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | turn indicators command from planning module                         |
-| `~/input/auto/hazard_lights_cmd`            | `autoware_vehicle_msgs::msg::HazardLightsCommand`   | hazard lights command from planning module                           |
-| `~/input/auto/gear_cmd`                     | `autoware_vehicle_msgs::msg::GearCommand`           | gear command from planning module                                    |
-| `~/input/external/control_cmd`              | `autoware_control_msgs::msg::Control`               | command for lateral and longitudinal velocity from external          |
-| `~/input/external/turn_indicators_cmd`      | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | turn indicators command from external                                |
-| `~/input/external/hazard_lights_cmd`        | `autoware_vehicle_msgs::msg::HazardLightsCommand`   | hazard lights command from external                                  |
-| `~/input/external/gear_cmd`                 | `autoware_vehicle_msgs::msg::GearCommand`           | gear command from external                                           |
-| `~/input/external_emergency_stop_heartbeat` | `tier4_external_api_msgs::msg::Heartbeat`           | heartbeat                                                            |
-| `~/input/gate_mode`                         | `tier4_control_msgs::msg::GateMode`                 | gate mode (AUTO or EXTERNAL)                                         |
-| `~/input/emergency/control_cmd`             | `autoware_control_msgs::msg::Control`               | command for lateral and longitudinal velocity from emergency handler |
-| `~/input/emergency/turn_indicators_cmd`     | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | turn indicators command from emergency handler                       |
-| `~/input/emergency/hazard_lights_cmd`       | `autoware_vehicle_msgs::msg::HazardLightsCommand`   | hazard lights command from emergency handler                         |
-| `~/input/emergency/gear_cmd`                | `autoware_vehicle_msgs::msg::GearCommand`           | gear command from emergency handler                                  |
-| `~/input/engage`                            | `autoware_vehicle_msgs::msg::Engage`                | engage signal                                                        |
-| `~/input/operation_mode`                    | `autoware_adapi_v1_msgs::msg::OperationModeState`   | operation mode of Autoware                                           |
+| `~/input/steering` | `autoware_vehicle_msgs::msg::SteeringReport` | 转向状态 |
+| `~/input/auto/control_cmd` | `autoware_control_msgs::msg::Control` | 规划模块提供的横向和纵向速度控制命令 |
+| `~/input/auto/turn_indicators_cmd` | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | 规划模块提供的转向灯命令 |
+| `~/input/auto/hazard_lights_cmd` | `autoware_vehicle_msgs::msg::HazardLightsCommand` | 规划模块提供的危险警告灯命令 |
+| `~/input/auto/gear_cmd` | `autoware_vehicle_msgs::msg::GearCommand` | 规划模块提供的挡位命令 |
+| `~/input/external/control_cmd` | `autoware_control_msgs::msg::Control` | 外部提供的横向和纵向速度控制命令 |
+| `~/input/external/turn_indicators_cmd` | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | 外部提供的转向灯命令 |
+| `~/input/external/hazard_lights_cmd` | `autoware_vehicle_msgs::msg::HazardLightsCommand` | 外部提供的危险警告灯命令 |
+| `~/input/external/gear_cmd` | `autoware_vehicle_msgs::msg::GearCommand` | 外部提供的挡位命令 |
+| `~/input/external_emergency_stop_heartbeat` | `tier4_external_api_msgs::msg::Heartbeat` | 心跳 |
+| `~/input/gate_mode` | `tier4_control_msgs::msg::GateMode` | 命令门控模式（AUTO 或 EXTERNAL） |
+| `~/input/emergency/control_cmd` | `autoware_control_msgs::msg::Control` | 紧急处理器提供的横向和纵向速度控制命令 |
+| `~/input/emergency/turn_indicators_cmd` | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | 紧急处理器提供的转向灯命令 |
+| `~/input/emergency/hazard_lights_cmd` | `autoware_vehicle_msgs::msg::HazardLightsCommand` | 紧急处理器提供的危险警告灯命令 |
+| `~/input/emergency/gear_cmd` | `autoware_vehicle_msgs::msg::GearCommand` | 紧急处理器提供的挡位命令 |
+| `~/input/engage` | `autoware_vehicle_msgs::msg::Engage` | 接管使能信号 |
+| `~/input/operation_mode` | `autoware_adapi_v1_msgs::msg::OperationModeState` | Autoware 运行模式 |
 
-### Output
+<a id="output"></a>
 
-| Name                                   | Type                                                | Description                                              |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------------------------------- | --------------------------------------------------- | -------------------------------------------------------- |
-| `~/output/vehicle_cmd_emergency`       | `tier4_vehicle_msgs::msg::VehicleEmergencyStamped`  | emergency state which was originally in vehicle command  |
-| `~/output/command/control_cmd`         | `autoware_control_msgs::msg::Control`               | command for lateral and longitudinal velocity to vehicle |
-| `~/output/command/turn_indicators_cmd` | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | turn indicators command to vehicle                       |
-| `~/output/command/hazard_lights_cmd`   | `autoware_vehicle_msgs::msg::HazardLightsCommand`   | hazard lights command to vehicle                         |
-| `~/output/command/gear_cmd`            | `autoware_vehicle_msgs::msg::GearCommand`           | gear command to vehicle                                  |
-| `~/output/gate_mode`                   | `tier4_control_msgs::msg::GateMode`                 | gate mode (AUTO or EXTERNAL)                             |
-| `~/output/engage`                      | `autoware_vehicle_msgs::msg::Engage`                | engage signal                                            |
-| `~/output/external_emergency`          | `tier4_external_api_msgs::msg::Emergency`           | external emergency signal                                |
-| `~/output/operation_mode`              | `tier4_system_msgs::msg::OperationMode`             | current operation mode of the vehicle_cmd_gate           |
+| `~/output/vehicle_cmd_emergency` | `tier4_vehicle_msgs::msg::VehicleEmergencyStamped` | 原先包含在车辆命令中的紧急状态 |
+| `~/output/command/control_cmd` | `autoware_control_msgs::msg::Control` | 发给车辆的横向和纵向速度控制命令 |
+| `~/output/command/turn_indicators_cmd` | `autoware_vehicle_msgs::msg::TurnIndicatorsCommand` | 发给车辆的转向灯命令 |
+| `~/output/command/hazard_lights_cmd` | `autoware_vehicle_msgs::msg::HazardLightsCommand` | 发给车辆的危险警告灯命令 |
+| `~/output/command/gear_cmd` | `autoware_vehicle_msgs::msg::GearCommand` | 发给车辆的挡位命令 |
+| `~/output/gate_mode` | `tier4_control_msgs::msg::GateMode` | 命令门控模式（AUTO 或 EXTERNAL） |
+| `~/output/engage` | `autoware_vehicle_msgs::msg::Engage` | 接管使能信号 |
+| `~/output/external_emergency` | `tier4_external_api_msgs::msg::Emergency` | 外部紧急信号 |
+| `~/output/operation_mode` | `tier4_system_msgs::msg::OperationMode` | vehicle_cmd_gate 的当前运行模式 |
 
-## Parameters
+<a id="parameters"></a>
 
-| Parameter                                             | Type     | Description                                                                                                                                                                                 |
+## 参数
+
+| 参数 | 类型 | 说明 |
 | ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `update_period`                                       | double   | update period                                                                                                                                                                               |
-| `use_emergency_handling`                              | bool     | true when emergency handler is used                                                                                                                                                         |
-| `check_external_emergency_heartbeat`                  | bool     | true when checking heartbeat for emergency stop                                                                                                                                             |
-| `system_emergency_heartbeat_timeout`                  | double   | timeout for system emergency                                                                                                                                                                |
-| `external_emergency_stop_heartbeat_timeout`           | double   | timeout for external emergency                                                                                                                                                              |
-| `filter_activated_count_threshold`                    | int      | threshold for filter activation                                                                                                                                                             |
-| `filter_activated_velocity_threshold`                 | double   | velocity threshold for filter activation                                                                                                                                                    |
-| `stop_hold_acceleration`                              | double   | longitudinal acceleration cmd when vehicle should stop                                                                                                                                      |
-| `emergency_acceleration`                              | double   | longitudinal acceleration cmd when vehicle stop with emergency                                                                                                                              |
-| `moderate_stop_service_acceleration`                  | double   | longitudinal acceleration cmd when vehicle stop with moderate stop service                                                                                                                  |
-| `nominal.vel_lim`                                     | double   | limit of longitudinal velocity (activated in AUTONOMOUS operation mode)                                                                                                                     |
-| `nominal.reference_speed_points`                      | <double> | velocity point used as a reference when calculate control command limit (activated in AUTONOMOUS operation mode). The size of this array must be equivalent to the size of the limit array. |
-| `nominal.lon_acc_lim_for_lon_vel`                     | <double> | array of limits for longitudinal acceleration (activated in AUTONOMOUS operation mode)                                                                                                      |
-| `nominal.lon_jerk_lim_for_lon_acc`                    | <double> | array of limits for longitudinal jerk (activated in AUTONOMOUS operation mode)                                                                                                              |
-| `nominal.lat_acc_lim_for_steer_cmd`                   | <double> | array of limits for lateral acceleration (activated in AUTONOMOUS operation mode)                                                                                                           |
-| `nominal.lat_jerk_lim_for_steer_cmd`                  | <double> | array of limits for lateral jerk (activated in AUTONOMOUS operation mode)                                                                                                                   |
-| `nominal.steer_cmd_lim`                               | <double> | array of limits for steering angle (activated in AUTONOMOUS operation mode)                                                                                                                 |
-| `nominal.steer_rate_lim_for_steer_cmd`                | <double> | array of limits for command steering rate (activated in AUTONOMOUS operation mode)                                                                                                          |
-| `nominal.lat_jerk_lim_for_steer_rate`                 | double   | limit for lateral jerk constraint on steering rate (activated in AUTONOMOUS operation mode)                                                                                                 |
-| `nominal.steer_cmd_diff_lim_from_current_steer`       | <double> | array of limits for difference between current and command steering angle (activated in AUTONOMOUS operation mode)                                                                          |
-| `on_transition.vel_lim`                               | double   | limit of longitudinal velocity (activated in TRANSITION operation mode)                                                                                                                     |
-| `on_transition.reference_speed_points`                | <double> | velocity point used as a reference when calculate control command limit (activated in TRANSITION operation mode). The size of this array must be equivalent to the size of the limit array. |
-| `on_transition.lon_acc_lim_for_lon_vel`               | <double> | array of limits for longitudinal acceleration (activated in TRANSITION operation mode)                                                                                                      |
-| `on_transition.lon_jerk_lim_for_lon_acc`              | <double> | array of limits for longitudinal jerk (activated in TRANSITION operation mode)                                                                                                              |
-| `on_transition.lat_acc_lim_for_steer_cmd`             | <double> | array of limits for lateral acceleration (activated in TRANSITION operation mode)                                                                                                           |
-| `on_transition.lat_jerk_lim_for_steer_cmd`            | <double> | array of limits for lateral jerk (activated in TRANSITION operation mode)                                                                                                                   |
-| `on_transition.steer_cmd_lim`                         | <double> | array of limits for steering angle (activated in TRANSITION operation mode)                                                                                                                 |
-| `on_transition.steer_rate_lim_for_steer_cmd`          | <double> | array of limits for command steering rate (activated in TRANSITION operation mode)                                                                                                          |
-| `on_transition.lat_jerk_lim_for_steer_rate`           | double   | limit for lateral jerk constraint on steering rate (activated in TRANSITION operation mode)                                                                                                 |
-| `on_transition.steer_cmd_diff_lim_from_current_steer` | <double> | array of limits for difference between current and command steering angle (activated in TRANSITION operation mode)                                                                          |
+| `update_period` | double | 更新周期 |
+| `use_emergency_handling` | bool | 使用紧急处理器时为 true |
+| `check_external_emergency_heartbeat` | bool | 检查紧急停车心跳时为 true |
+| `system_emergency_heartbeat_timeout` | double | 系统紧急心跳超时时间 |
+| `external_emergency_stop_heartbeat_timeout` | double | 外部紧急心跳超时时间 |
+| `filter_activated_count_threshold` | int | 过滤器激活次数阈值 |
+| `filter_activated_velocity_threshold` | double | 过滤器激活速度阈值 |
+| `stop_hold_acceleration` | double | 车辆应停止时的纵向加速度命令 |
+| `emergency_acceleration` | double | 车辆紧急停车时的纵向加速度命令 |
+| `moderate_stop_service_acceleration` | double | 车辆通过平缓停车服务停车时的纵向加速度命令 |
+| `nominal.vel_lim` | double | 纵向速度限制（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.reference_speed_points` | <double> | 计算控制命令限制时使用的参考速度点（在 AUTONOMOUS 运行模式下启用）。此数组长度必须与限制数组相同。 |
+| `nominal.lon_acc_lim_for_lon_vel` | <double> | 纵向加速度限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.lon_jerk_lim_for_lon_acc` | <double> | 纵向加加速度限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.lat_acc_lim_for_steer_cmd` | <double> | 横向加速度限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.lat_jerk_lim_for_steer_cmd` | <double> | 横向加加速度限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.steer_cmd_lim` | <double> | 转向角限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.steer_rate_lim_for_steer_cmd` | <double> | 命令转向角速度限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.lat_jerk_lim_for_steer_rate` | double | 用横向加加速度约束转向角速度的限制（在 AUTONOMOUS 运行模式下启用） |
+| `nominal.steer_cmd_diff_lim_from_current_steer` | <double> | 当前转向角与命令转向角之差的限制数组（在 AUTONOMOUS 运行模式下启用） |
+| `on_transition.vel_lim` | double | 纵向速度限制（在 TRANSITION 运行模式下启用） |
+| `on_transition.reference_speed_points` | <double> | 计算控制命令限制时使用的参考速度点（在 TRANSITION 运行模式下启用）。此数组长度必须与限制数组相同。 |
+| `on_transition.lon_acc_lim_for_lon_vel` | <double> | 纵向加速度限制数组（在 TRANSITION 运行模式下启用） |
+| `on_transition.lon_jerk_lim_for_lon_acc` | <double> | 纵向加加速度限制数组（在 TRANSITION 运行模式下启用） |
+| `on_transition.lat_acc_lim_for_steer_cmd` | <double> | 横向加速度限制数组（在 TRANSITION 运行模式下启用） |
+| `on_transition.lat_jerk_lim_for_steer_cmd` | <double> | 横向加加速度限制数组（在 TRANSITION 运行模式下启用） |
+| `on_transition.steer_cmd_lim` | <double> | 转向角限制数组（在 TRANSITION 运行模式下启用） |
+| `on_transition.steer_rate_lim_for_steer_cmd` | <double> | 命令转向角速度限制数组（在 TRANSITION 运行模式下启用） |
+| `on_transition.lat_jerk_lim_for_steer_rate` | double | 用横向加加速度约束转向角速度的限制（在 TRANSITION 运行模式下启用） |
+| `on_transition.steer_cmd_diff_lim_from_current_steer` | <double> | 当前转向角与命令转向角之差的限制数组（在 TRANSITION 运行模式下启用） |
 
-### Parameter Naming Convention
+<a id="parameter-naming-convention"></a>
 
-The parameters follow specific naming patterns to clearly distinguish between different types of constraints and their relationships:
+### 参数命名约定
 
-#### Pattern 1: `[constraint]_lim_for_[target]`
+参数遵循特定命名模式，以清楚区分不同类型的约束及其关系：
 
-- **Format**: `[physical_constraint]_lim_for_[controlled_variable]`
-- **Description**: Defines limits based on physical constraints (acceleration, jerk, etc.) applied to control variables
+<a id="pattern-1-constraint_lim_for_target"></a>
 
-#### Pattern 2: `[target]_[constraint]_lim_from_[reference]`
+#### 模式 1：`[constraint]_lim_for_[target]`
 
-- **Format**: `[controlled_variable]_[constraint_type]_lim_from_[reference_variable]`
-- **Description**: Defines limits on the difference or deviation of a control variable from a reference value
+- **格式**：`[physical_constraint]_lim_for_[controlled_variable]`
+- **说明**：定义应用于控制变量的物理约束限制（加速度、加加速度等）。
 
-#### Pattern 3: `[target]_lim`
+<a id="pattern-2-target_constraint_lim_from_reference"></a>
 
-- **Format**: `[controlled_variable]_lim`
-- **Description**: Defines absolute limits for control variables
+#### 模式 2：`[target]_[constraint]_lim_from_[reference]`
 
-## Functionality
+- **格式**：`[controlled_variable]_[constraint_type]_lim_from_[reference_variable]`
+- **说明**：定义控制变量相对于参考值的差值或偏差限制。
 
-### Main Functionality
+<a id="pattern-3-target_lim"></a>
 
-- Receive multiple control commands (from Autoware planning, emergency handler, remote control, etc.) and select one to forward to the vehicle.
-- Apply a final guard on the selected command to enforce absolute safety limits (e.g., maximum steering rate). This is not a comfort filter.
-- Enforce transition guards during mode changes into autonomous driving (e.g., remote→autonomous, manual→autonomous) to limit sudden changes. Integration with the Operation Transition Manager is recommended, though code boundaries should be maintained due to its complexity.
+#### 模式 3：`[target]_lim`
 
-### Sub-Functionality
+- **格式**：`[controlled_variable]_lim`
+- **说明**：定义控制变量的绝对限制。
 
-- Check heartbeat signals to verify connectivity for each input (e.g., emergency external heartbeat).
-- Publish status indicating whether the final guard is active. Active guard in autonomous mode implies an unexpected constraint in command generation and requires attention.
-- Leverage guard status during mode transitions to notify operators/drivers that a strong constraint is active (focus on "transition in progress" rather than simple filter activation).
+<a id="functionality"></a>
 
-### Filter function
+## 功能
 
-This module incorporates a limitation filter to the control command right before its published. Primarily for safety, this filter restricts the output range of all control commands published through Autoware.
+<a id="main-functionality"></a>
 
-The limitation values are calculated based on the 1D interpolation of the limitation array parameters. Here is an example for the longitudinal jerk limit.
+### 主要功能
 
-![filter-example](./image/filter.png)
+- 接收多组控制命令（来自 Autoware 规划、紧急处理器、远程控制等），选择一组转发给车辆。
+- 对所选命令施加最终保护，强制满足绝对安全限制（例如最大转向角速度）。这不是舒适性过滤器。
+- 切换至自动驾驶模式时（例如远程→自动、手动→自动），施加切换保护以限制突变。建议与运行模式切换管理器集成，但由于其复杂性，代码之间应保持清晰边界。
 
-Notation: this filter is not designed to enhance ride comfort. Its main purpose is to detect and remove abnormal values in the control outputs during the final stages of Autoware. If this filter is frequently active, it implies the control module may need tuning. If you're aiming to smoothen the signal via a low-pass filter or similar techniques, that should be handled in the control module. When the filter is activated, the topic `~/is_filter_activated` is published.
+<a id="sub-functionality"></a>
 
-Notation 2: If you use vehicles in which the driving force is controlled by the accelerator/brake pedal, the jerk limit, denoting the pedal rate limit, must be sufficiently relaxed at low speeds.
-Otherwise, quick pedal changes at start/stop will not be possible, resulting in slow starts and creep down on hills.
-This functionality for starting/stopping was embedded in the source code but was removed because it was complex and could be achieved by parameters.
+### 辅助功能
 
-## Assumptions / Known limits
+- 检查心跳信号，验证各输入的连接状态（例如外部紧急心跳）。
+- 发布最终保护是否激活的状态。自动驾驶模式下保护激活，意味着命令生成中出现了非预期约束，需要关注。
+- 在模式切换期间利用保护状态，通知操作人员或驾驶员当前存在较强约束（重点提示“切换进行中”，而非仅提示过滤器激活）。
 
-### External Emergency Heartbeat
+<a id="filter-function"></a>
 
-The parameter `check_external_emergency_heartbeat` (true by default) enables an emergency stop request from external modules.
-This feature requires a `~/input/external_emergency_stop_heartbeat` topic for health monitoring of the external module, and the vehicle_cmd_gate module will not start without the topic.
-The `check_external_emergency_heartbeat` parameter must be false when the "external emergency stop" function is not used.
+### 过滤功能
 
-### Commands on Mode changes
+本模块在控制命令发布前应用限幅过滤器。该过滤器主要用于安全保护，限制 Autoware 发布的所有控制命令的输出范围。
 
-Output commands' topics: `turn_indicators_cmd`, `hazard_light` and `gear_cmd` are selected based on `gate_mode`.
-However, to ensure the continuity of commands, these commands will not change until the topics of new input commands arrive, even if a mode change occurs.
+限制值通过对限制数组参数进行一维插值计算。以下是纵向加加速度限制的示例。
 
-## Caution
+![过滤器示例](./image/filter.png)
 
-- This node depends on the Operation Mode Transition Manager for Engage state transitions at the design level.
-- Tests are essential and must be retained.
+说明：此过滤器并非用于提高乘坐舒适性。其主要目的是在 Autoware 输出末端检测并移除异常控制值。如果过滤器频繁激活，说明控制模块可能需要调参。如果希望通过低通滤波等方法平滑信号，应在控制模块中处理。过滤器激活时，会发布 `~/is_filter_activated` 话题。
+
+说明 2：如果车辆通过油门或制动踏板控制驱动力，则低速时必须充分放宽加加速度限制，也就是踏板变化率限制。
+否则，起步和停车时无法快速改变踏板输入，会导致起步缓慢以及坡道溜车。
+此起停功能曾内置于源代码中，但由于逻辑复杂且可通过参数实现，后来被移除。
+
+<a id="assumptions-known-limits"></a>
+
+## 假设与已知限制
+
+<a id="external-emergency-heartbeat"></a>
+
+### 外部紧急心跳
+
+`check_external_emergency_heartbeat` 参数（默认 true）启用来自外部模块的紧急停车请求。
+此功能要求存在 `~/input/external_emergency_stop_heartbeat` 话题，用于监控外部模块的健康状态；缺少该话题时，vehicle_cmd_gate 模块不会启动。
+不使用“外部紧急停车”功能时，必须将 `check_external_emergency_heartbeat` 设为 false。
+
+<a id="commands-on-mode-changes"></a>
+
+### 模式切换时的命令
+
+输出命令话题 `turn_indicators_cmd`、`hazard_light` 和 `gear_cmd` 根据 `gate_mode` 选择。
+但为保证命令连续性，即使发生模式切换，也会等待新输入命令话题到达后才更改这些命令。
+
+<a id="caution"></a>
+
+## 注意事项
+
+- 在设计层面，本节点依赖运行模式切换管理器完成接管状态切换。
+- 测试必不可少，必须保留。

@@ -1,33 +1,47 @@
 # autoware cluster merger
 
-## Purpose
+<a id="purpose"></a>
 
-autoware_cluster_merger is a package for merging pointcloud clusters as detected objects with feature type.
+## 用途
 
-## Inner-working / Algorithms
+autoware_cluster_merger 功能包用于将点云聚类合并为带特征类型的检测目标。
 
-The clusters of merged topics are simply concatenated from clusters of input topics.
+<a id="inner-working-algorithms"></a>
 
-## Input / Output
+## 内部原理 / 算法
 
-### Input
+合并话题中的聚类由输入话题中的聚类直接拼接而成。
 
-| Name             | Type                                                     | Description         |
+<a id="input-output"></a>
+
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称             | 类型                                                     | 说明         |
 | ---------------- | -------------------------------------------------------- | ------------------- |
-| `input/cluster0` | `tier4_perception_msgs::msg::DetectedObjectsWithFeature` | pointcloud clusters |
-| `input/cluster1` | `tier4_perception_msgs::msg::DetectedObjectsWithFeature` | pointcloud clusters |
+| `input/cluster0` | `tier4_perception_msgs::msg::DetectedObjectsWithFeature` | 点云聚类 |
+| `input/cluster1` | `tier4_perception_msgs::msg::DetectedObjectsWithFeature` | 点云聚类 |
 
-### Output
+<a id="output"></a>
 
-| Name              | Type                                                     | Description     |
+### 输出
+
+| 名称              | 类型                                                     | 说明     |
 | ----------------- | -------------------------------------------------------- | --------------- |
-| `output/clusters` | `tier4_perception_msgs::msg::DetectedObjectsWithFeature` | merged clusters |
+| `output/clusters` | `tier4_perception_msgs::msg::DetectedObjectsWithFeature` | 合并后的聚类 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("perception/autoware_cluster_merger/schema/cluster_merger.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制
 
 <!-- Write assumptions and limitations of your implementation.
 

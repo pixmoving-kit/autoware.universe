@@ -1,3 +1,3 @@
 # autoware_vehicle_door_simulator
 
-This package is for testing operations on vehicle devices such as doors.
+此软件包用于测试车门等车辆设备的操作。

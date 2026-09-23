@@ -1,12 +1,18 @@
 # obstacle_collision_checker
 
-## Purpose
+<a id="purpose"></a>
 
-`obstacle_collision_checker` is a module to check obstacle collision for predicted trajectory and publish diagnostic errors if collision is found.
+## 目的
 
-## Inner-workings / Algorithms
+`obstacle_collision_checker` 模块用于检查预测轨迹是否与障碍物碰撞，并在发现碰撞时发布诊断错误。
 
-### Flow chart
+<a id="inner-workings-algorithms"></a>
+
+## 内部机制／算法
+
+<a id="flow-chart"></a>
+
+### 流程图
 
 ```plantuml
 @startuml
@@ -43,44 +49,60 @@ stop
 @enduml
 ```
 
-### Algorithms
+<a id="algorithms"></a>
 
-### Check data
+### 算法
 
-Check that `obstacle_collision_checker` receives no ground pointcloud, predicted_trajectory, reference trajectory, and current velocity data.
+<a id="check-data"></a>
 
-### Diagnostic update
+### 数据检查
 
-If any collision is found on predicted path, this module sets `ERROR` level as diagnostic status else sets `OK`.
+检查 `obstacle_collision_checker` 是否收到去地面点云、predicted_trajectory、参考轨迹和当前速度数据。
 
-## Inputs / Outputs
+<a id="diagnostic-update"></a>
 
-### Input
+### 诊断更新
 
-| Name                                           | Type                                      | Description                                                        |
+如果预测路径上发现碰撞，本模块将诊断状态设为 `ERROR`；否则设为 `OK`。
+
+<a id="inputs-outputs"></a>
+
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ---------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
-| `~/input/trajectory`                           | `autoware_planning_msgs::msg::Trajectory` | Reference trajectory                                               |
-| `~/input/trajectory`                           | `autoware_planning_msgs::msg::Trajectory` | Predicted trajectory                                               |
-| `/perception/obstacle_segmentation/pointcloud` | `sensor_msgs::msg::PointCloud2`           | Pointcloud of obstacles which the ego-vehicle should stop or avoid |
-| `/tf`                                          | `tf2_msgs::msg::TFMessage`                | TF                                                                 |
-| `/tf_static`                                   | `tf2_msgs::msg::TFMessage`                | TF static                                                          |
+| `~/input/trajectory` | `autoware_planning_msgs::msg::Trajectory` | 参考轨迹 |
+| `~/input/trajectory` | `autoware_planning_msgs::msg::Trajectory` | 预测轨迹 |
+| `/perception/obstacle_segmentation/pointcloud` | `sensor_msgs::msg::PointCloud2` | 自车应停车或避让的障碍物点云 |
+| `/tf` | `tf2_msgs::msg::TFMessage` | TF |
+| `/tf_static` | `tf2_msgs::msg::TFMessage` | 静态 TF |
 
-### Output
+<a id="output"></a>
 
-| Name             | Type                                   | Description              |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ---------------- | -------------------------------------- | ------------------------ |
-| `~/debug/marker` | `visualization_msgs::msg::MarkerArray` | Marker for visualization |
+| `~/debug/marker` | `visualization_msgs::msg::MarkerArray` | 可视化标记 |
 
-## Parameters
+<a id="parameters"></a>
 
-| Name                | Type     | Description                                        | Default value |
+## 参数
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :------------------ | :------- | :------------------------------------------------- | :------------ |
-| `delay_time`        | `double` | Delay time of vehicle [s]                          | 0.3           |
-| `footprint_margin`  | `double` | Foot print margin [m]                              | 0.0           |
-| `max_deceleration`  | `double` | Max deceleration for ego vehicle to stop [m/s^2]   | 2.0           |
-| `resample_interval` | `double` | Interval for resampling trajectory [m]             | 0.3           |
-| `search_radius`     | `double` | Search distance from trajectory to point cloud [m] | 5.0           |
+| `delay_time` | `double` | 车辆延迟时间 [s] | 0.3 |
+| `footprint_margin` | `double` | 车辆轮廓余量 [m] | 0.0 |
+| `max_deceleration` | `double` | 自车停车的最大减速度 [m/s^2] | 2.0 |
+| `resample_interval` | `double` | 轨迹重采样间隔 [m] | 0.3 |
+| `search_radius` | `double` | 从轨迹搜索点云的距离 [m] | 5.0 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-To perform proper collision check, it is necessary to get probably predicted trajectory and obstacle pointclouds without noise.
+## 假设与已知限制
+
+要正确执行碰撞检查，需要获得合理的预测轨迹和无噪声的障碍物点云。

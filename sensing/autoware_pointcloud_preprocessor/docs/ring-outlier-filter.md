@@ -1,23 +1,29 @@
 # ring_outlier_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The purpose is to remove point cloud noise such as insects and rain.
+## 用途
 
-## Inner-workings / Algorithms
+此节点旨在移除昆虫、雨等点云噪声。
 
-A method of operating scan in chronological order and removing noise based on the rate of change in the distance between points
+<a id="inner-workings-algorithms"></a>
 
-![ring_outlier_filter](./image/outlier_filter-ring.drawio.svg)
+## 内部机制／算法
 
-Another feature of this node is that it calculates visibility score based on outlier pointcloud and publish score as a topic.
+按时间顺序处理扫描，并根据点间距离的变化率移除噪声的方法。
 
-### visibility score calculation algorithm
+![扫描环离群点过滤](./image/outlier_filter-ring.drawio.svg)
 
-The pointcloud is divided into vertical bins (rings) and horizontal bins (azimuth divisions).
-The algorithm starts by splitting the input point cloud into separate rings based on the ring value of each point. Then, for each ring, it iterates through the points and calculates the frequency of points within each horizontal bin. The frequency is determined by incrementing a counter for the corresponding bin based on the point's azimuth value.
-The frequency values are stored in a frequency image matrix, where each cell represents a specific ring and azimuth bin. After calculating the frequency image, the algorithm applies a noise threshold to create a binary image. Points with frequency values above the noise threshold are considered valid, while points below the threshold are considered noise.
-Finally, the algorithm calculates the visibility score by counting the number of non-zero pixels in the frequency image and dividing it by the total number of pixels (vertical bins multiplied by horizontal bins).
+此节点还会根据离群点云计算能见度评分，并通过话题发布该评分。
+
+<a id="visibility-score-calculation-algorithm"></a>
+
+### 能见度评分计算算法
+
+将点云划分为垂直分箱（扫描环）和水平分箱（方位角分区）。
+算法首先根据每个点的 ring 值，将输入点云拆分为独立的扫描环。然后遍历各扫描环中的点，统计每个水平分箱内的点数。根据点的方位角，为对应分箱的计数器加一，从而得到频数。
+频数存储在频数图像矩阵中，每个单元格代表特定扫描环和方位角分箱。生成频数图像后，算法应用噪声阈值生成二值图像。频数高于噪声阈值的点视为有效点，低于阈值的点视为噪声。
+最后，统计频数图像中的非零像素数，再除以总像素数（垂直分箱数乘以水平分箱数），得到能见度评分。
 
 ```plantuml
 @startuml
@@ -44,28 +50,46 @@ stop
 @enduml
 ```
 
-## Inputs / Outputs
+<a id="inputs-outputs"></a>
 
-This implementation inherits `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+## 输入／输出
 
-## Parameters
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
 
-### Node Parameters
+<a id="parameters"></a>
 
-This implementation inherits `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+## 参数
 
-### Core Parameters
+<a id="node-parameters"></a>
+
+### 节点参数
+
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/ring_outlier_filter_node.schema.json") }} |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-This nodes requires that the points of the input point cloud are in chronological order and that individual points follow the memory layout specified by [PointXYZIRCAEDT](https://github.com/autowarefoundation/autoware_core/blob/main/common/autoware_point_types/include/autoware/point_types/types.hpp#L95-L116).
+## 前提假设／已知限制
 
-## (Optional) Error detection and handling
+此节点要求输入点云中的点按时间顺序排列，且每个点遵循 [PointXYZIRCAEDT](https://github.com/autowarefoundation/autoware_core/blob/main/common/autoware_point_types/include/autoware/point_types/types.hpp#L95-L116) 指定的内存布局。
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

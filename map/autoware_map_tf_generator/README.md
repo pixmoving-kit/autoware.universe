@@ -1,50 +1,68 @@
 # autoware_map_tf_generator
 
-## Purpose
+<a id="purpose"></a>
 
-The nodes in this package broadcast the `viewer` frame for visualization of the map in RViz.
+## 用途
 
-Note that there is no module to need the `viewer` frame and this is used only for visualization.
+此功能包中的节点广播 `viewer` 坐标系，用于在 RViz 中可视化地图。
 
-The following are the supported methods to calculate the position of the `viewer` frame:
+请注意，没有任何模块依赖 `viewer` 坐标系；该坐标系仅用于可视化。
 
-- `pcd_map_tf_generator_node` outputs the geometric center of all points in the PCD.
-- `vector_map_tf_generator_node` outputs the geometric center of all points in the point layer.
+支持以下方法计算 `viewer` 坐标系的位置：
 
-## Inner-workings / Algorithms
+- `pcd_map_tf_generator_node` 输出 PCD 中所有点的几何中心。
+- `vector_map_tf_generator_node` 输出点图层中所有点的几何中心。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制／算法
+
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
 
 #### autoware_pcd_map_tf_generator
 
-| Name                  | Type                            | Description                                                       |
+| 名称                  | 类型                            | 说明                                                       |
 | --------------------- | ------------------------------- | ----------------------------------------------------------------- |
-| `/map/pointcloud_map` | `sensor_msgs::msg::PointCloud2` | Subscribe pointcloud map to calculate position of `viewer` frames |
+| `/map/pointcloud_map` | `sensor_msgs::msg::PointCloud2` | 订阅点云地图，计算 `viewer` 坐标系的位置 |
 
 #### autoware_vector_map_tf_generator
 
-| Name              | Type                                    | Description                                                   |
+| 名称              | 类型                                    | 说明                                                   |
 | ----------------- | --------------------------------------- | ------------------------------------------------------------- |
-| `/map/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | Subscribe vector map to calculate position of `viewer` frames |
+| `/map/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | 订阅矢量地图，计算 `viewer` 坐标系的位置 |
 
-### Output
+<a id="output"></a>
 
-| Name         | Type                     | Description               |
+### 输出
+
+| 名称         | 类型                     | 说明               |
 | ------------ | ------------------------ | ------------------------- |
-| `/tf_static` | `tf2_msgs/msg/TFMessage` | Broadcast `viewer` frames |
+| `/tf_static` | `tf2_msgs/msg/TFMessage` | 广播 `viewer` 坐标系 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-None
+<a id="node-parameters"></a>
 
-### Core Parameters
+### 节点参数
+
+无
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("map/autoware_map_tf_generator/schema/map_tf_generator.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-TBD.
+## 前提假设／已知限制
+
+待定。

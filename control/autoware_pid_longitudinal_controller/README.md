@@ -1,267 +1,319 @@
-# PID Longitudinal Controller
+<a id="pid-longitudinal-controller"></a>
 
-## Purpose / Use cases
+# PID 纵向控制器
 
-The longitudinal_controller computes the target acceleration to achieve the target velocity set at each point of the target trajectory using a feed-forward/back control.
+<a id="purpose-use-cases"></a>
 
-It also contains a slope force correction that takes into account road slope information, and a delay compensation function.
-It is assumed that the target acceleration calculated here will be properly realized by the vehicle interface.
+## 目的与使用场景
 
-Note that the use of this module is not mandatory for Autoware if the vehicle supports the "target speed" interface.
+longitudinal_controller 使用前馈与反馈控制，计算目标加速度，以达到目标轨迹各点设定的目标速度。
 
-## Design / Inner-workings / Algorithms
+它还包含考虑道路坡度信息的坡度力补偿，以及延迟补偿功能。
+此处假设计算出的目标加速度能够由车辆接口正确实现。
 
-### States
+请注意，如果车辆支持“目标速度”接口，Autoware 并不强制要求使用本模块。
 
-This module has four state transitions as shown below in order to handle special processing in a specific situation.
+<a id="design-inner-workings-algorithms"></a>
+
+## 设计、内部工作原理与算法
+
+<a id="states"></a>
+
+### 状态
+
+为在特定情况下进行特殊处理，本模块具有下述四种状态及其切换。
 
 - **DRIVE**
-  - Executes target velocity tracking by PID control.
-  - It also applies the delay compensation and slope compensation.
+  - 通过 PID 控制跟踪目标速度。
+  - 同时应用延迟补偿和坡度补偿。
 - **STOPPING**
-  - Controls the motion just before stopping.
-  - Special sequence is performed to achieve accurate and smooth stopping.
+  - 控制即将停车前的运动。
+  - 执行特殊控制序列，实现准确、平稳的停车。
 - **STOPPED**
-  - Performs operations in the stopped state (e.g. brake hold)
-- **EMERGENCY**.
-  - Enters an emergency state when certain conditions are met (e.g., when the vehicle has crossed a certain distance of a stop line).
-  - The recovery condition (whether or not to keep emergency state until the vehicle completely stops) or the deceleration in the emergency state are defined by parameters.
+  - 执行停止状态下的操作（例如保持制动）。
+- **EMERGENCY**。
+  - 满足特定条件时进入紧急状态（例如车辆越过停止线一定距离）。
+  - 恢复条件（是否保持紧急状态直到车辆完全停止）及紧急状态下的减速度由参数定义。
 
-The state transition diagram is shown below.
+状态切换图如下。
 
-![LongitudinalControllerStateTransition](./media/LongitudinalControllerStateTransition.drawio.svg)
+![纵向控制器状态切换](./media/LongitudinalControllerStateTransition.drawio.svg)
 
-### Logics
+<a id="logics"></a>
 
-#### Control Block Diagram
+### 逻辑
 
-![LongitudinalControllerDiagram](./media/LongitudinalControllerDiagram.drawio.svg)
+<a id="control-block-diagram"></a>
 
-#### FeedForward (FF)
+#### 控制框图
 
-The reference acceleration set in the trajectory and slope compensation terms are output as a feedforward. Under ideal conditions with no modeling error, this FF term alone should be sufficient for velocity tracking.
+![纵向控制器框图](./media/LongitudinalControllerDiagram.drawio.svg)
 
-Tracking errors causing modeling or discretization errors are removed by the feedback control (now using PID).
+<a id="feedforward-ff"></a>
 
-##### Brake keeping
+#### 前馈（FF）
 
-From the viewpoint of ride comfort, stopping with 0 acceleration is important because it reduces the impact of braking. However, if the target acceleration when stopping is 0, the vehicle may cross over the stop line or accelerate a little in front of the stop line due to vehicle model error or gradient estimation error.
+将轨迹中设定的参考加速度和坡度补偿项作为前馈输出。在不存在建模误差的理想条件下，仅此 FF 项就应足以完成速度跟踪。
 
-For reliable stopping, the target acceleration calculated by the FeedForward system is limited to a negative acceleration when stopping.
+由建模或离散化误差造成的跟踪误差通过反馈控制消除（目前使用 PID）。
 
-![BrakeKeepingDiagram](./media/BrakeKeeping.drawio.svg)
+<a id="brake-keeping"></a>
 
-#### Slope compensation
+##### 保持制动
 
-Based on the slope information, a compensation term is added to the target acceleration.
+从乘坐舒适性来看，以零加速度停稳很重要，因为这样可以减小制动冲击。但如果停车时目标加速度为零，车辆可能因模型误差或坡度估计误差越过停止线，或在停止线前轻微加速。
 
-There are two sources of the slope information, which can be switched by a parameter.
+为确保可靠停车，停车时将前馈系统计算出的目标加速度限制为负值。
 
-- Pitch of the estimated ego-pose (default)
-  - Calculates the current slope from the pitch angle of the estimated ego-pose
-  - Pros: Easily available
-  - Cons: Cannot extract accurate slope information due to the influence of vehicle vibration.
-- Z coordinate on the trajectory
-  - Calculates the road slope from the difference of z-coordinates between the front and rear wheel positions in the target trajectory
-  - Pros: More accurate than pitch information, if the z-coordinates of the route are properly maintained
-  - Pros: Can be used in combination with delay compensation (not yet implemented)
-  - Cons: z-coordinates of high-precision map is needed.
-  - Cons: Does not support free space planning (for now)
+![保持制动示意图](./media/BrakeKeeping.drawio.svg)
 
-We also offer the options to switch between these, depending on driving conditions.
+<a id="slope-compensation"></a>
 
-**Notation:** This function works correctly only in a vehicle system that does not have acceleration feedback in the low-level control system.
+#### 坡度补偿
 
-This compensation adds gravity correction to the target acceleration, resulting in an output value that is no longer equal to the target acceleration that the autonomous driving system desires. Therefore, it conflicts with the role of the acceleration feedback in the low-level controller.
-For instance, if the vehicle is attempting to start with an acceleration of `1.0 m/s^2` and a gravity correction of `-1.0 m/s^2` is applied, the output value will be `0`. If this output value is mistakenly treated as the target acceleration, the vehicle will not start.
+根据坡度信息，向目标加速度添加补偿项。
 
-A suitable example of a vehicle system for the slope compensation function is one in which the output acceleration from the longitudinal_controller is converted into target accel/brake pedal input without any feedbacks. In this case, the output acceleration is just used as a feedforward term to calculate the target pedal, and hence the issue mentioned above does not arise.
+坡度信息有两个来源，可通过参数切换。
 
-Note: The angle of the slope is defined as positive for an uphill slope, while the pitch angle of the ego pose is defined as negative when facing upward. They have an opposite definition.
+- 估计自车位姿的俯仰角（默认）
+  - 根据估计自车位姿的俯仰角计算当前坡度。
+  - 优点：容易获取。
+  - 缺点：受车辆振动影响，无法提取准确的坡度信息。
+- 轨迹上的 Z 坐标
+  - 根据目标轨迹中前后轮位置的 z 坐标差计算道路坡度。
+  - 优点：如果路线的 z 坐标维护正确，则比俯仰角信息更准确。
+  - 优点：可与延迟补偿配合使用（尚未实现）。
+  - 缺点：需要高精地图的 z 坐标。
+  - 缺点：目前不支持自由空间规划。
 
-![slope_definition](./media/slope_definition.drawio.svg)
+也提供了根据行驶条件在两者之间切换的选项。
 
-#### PID control
+**说明：**此功能仅适用于底层控制系统中没有加速度反馈的车辆系统。
 
-For deviations that cannot be handled by FeedForward control, such as model errors, PID control is used to construct a feedback system.
+此补偿会向目标加速度添加重力修正，使输出值不再等于自动驾驶系统期望的目标加速度，因此会与底层控制器的加速度反馈作用冲突。
+例如，车辆尝试以 `1.0 m/s^2` 的加速度起步，如果应用 `-1.0 m/s^2` 的重力修正，输出值将为 `0`。如果错误地将该输出值当作目标加速度，车辆就不会起步。
 
-This PID control calculates the target acceleration from the deviation between the current ego-velocity and the target velocity.
+适合使用坡度补偿的车辆系统示例是：将 longitudinal_controller 输出的加速度转换为目标油门或制动踏板输入，且不进行任何反馈。在这种情况下，输出加速度仅作为计算目标踏板输入的前馈项，因此不会出现上述问题。
 
-This PID logic has a maximum value for the output of each term. This is to prevent the following:
+注意：坡度角在上坡时定义为正，而自车位姿的俯仰角在车头向上时定义为负，两者的符号约定相反。
 
-- Large integral terms may cause unintended behavior by users.
-- Unintended noise may cause the output of the derivative term to be very large.
+![坡度定义](./media/slope_definition.drawio.svg)
 
-Note: by default, the integral term in the control system is not accumulated when the vehicle is stationary. This precautionary measure aims to prevent unintended accumulation of the integral term in scenarios where Autoware assumes the vehicle is engaged, but an external system has immobilized the vehicle to initiate startup procedures.
+<a id="pid-control"></a>
 
-However, certain situations may arise, such as when the vehicle encounters a depression in the road surface during startup or if the slope compensation is inaccurately estimated (lower than necessary), leading to a failure to initiate motion. To address these scenarios, it is possible to activate error integration even when the vehicle is at rest by setting the `enable_integration_at_low_speed` parameter to true.
+#### PID 控制
 
-When `enable_integration_at_low_speed` is set to true, the PID controller will initiate integration of the acceleration error after a specified duration defined by the `time_threshold_before_pid_integration` parameter has elapsed without the vehicle surpassing a minimum velocity set by the `current_vel_threshold_pid_integration` parameter.
+对于前馈控制无法处理的偏差（例如模型误差），使用 PID 控制构建反馈系统。
 
-The presence of the `time_threshold_before_pid_integration` parameter is important for practical PID tuning. Integrating the error when the vehicle is stationary or at low speed can complicate PID tuning. This parameter effectively introduces a delay before the integral part becomes active, preventing it from kicking in immediately. This delay allows for more controlled and effective tuning of the PID controller.
+PID 控制根据当前自车速度与目标速度之间的偏差计算目标加速度。
 
-At present, PID control is implemented from the viewpoint of trade-off between development/maintenance cost and performance.
-This may be replaced by a higher performance controller (adaptive control or robust control) in future development.
+此 PID 逻辑对各项输出均设有上限，以防止以下情况：
 
-#### Time delay compensation
+- 积分项过大，产生用户不期望的行为。
+- 意外噪声使微分项输出过大。
 
-At high speeds, the delay of actuator systems such as gas pedals and brakes has a significant impact on driving accuracy.
-Depending on the actuating principle of the vehicle, the mechanism that physically controls the gas pedal and brake typically has a delay of about a hundred millisecond.
+注意：默认情况下，车辆静止时控制系统不累积积分项。这是为了避免在 Autoware 认为车辆已接管、但外部系统为执行启动流程而限制车辆运动的场景中，积分项发生意外累积。
 
-In this controller, the predicted ego-velocity and the target velocity after the delay time are calculated and used for the feedback to address the time delay problem.
+不过，有些情况下，例如车辆起步时遇到路面凹陷，或坡度补偿估计偏低，可能导致车辆无法起步。为处理这些情况，可以将 `enable_integration_at_low_speed` 设为 true，使车辆静止时也能进行误差积分。
 
-### Slope compensation
+当 `enable_integration_at_low_speed` 为 true 时，如果车辆在 `time_threshold_before_pid_integration` 指定的时间内一直未超过 `current_vel_threshold_pid_integration` 设定的最低速度，PID 控制器就会开始对加速度误差积分。
 
-Based on the slope information, a compensation term is added to the target acceleration.
+`time_threshold_before_pid_integration` 对实际 PID 调参很重要。车辆静止或低速时进行误差积分，可能使调参更复杂。此参数在积分项生效之前引入延迟，防止积分立即介入，使 PID 调整更可控、更有效。
 
-There are two sources of the slope information, which can be switched by a parameter.
+目前采用 PID 控制，是在开发和维护成本与性能之间权衡的结果。
+后续开发中可能将其替换为性能更高的控制器（例如自适应控制或鲁棒控制）。
 
-- Pitch of the estimated ego-pose (default)
-  - Calculates the current slope from the pitch angle of the estimated ego-pose
-  - Pros: Easily available
-  - Cons: Cannot extract accurate slope information due to the influence of vehicle vibration.
-- Z coordinate on the trajectory
-  - Calculates the road slope from the difference of z-coordinates between the front and rear wheel positions in the target trajectory
-  - Pros: More accurate than pitch information, if the z-coordinates of the route are properly maintained
-  - Pros: Can be used in combination with delay compensation (not yet implemented)
-  - Cons: z-coordinates of high-precision map is needed.
-  - Cons: Does not support free space planning (for now)
+<a id="time-delay-compensation"></a>
 
-## Assumptions / Known limits
+#### 时间延迟补偿
 
-1. Smoothed target velocity and its acceleration shall be set in the trajectory
-   1. The velocity command is not smoothed inside the controller (only noise may be removed).
-   2. For step-like target signal, tracking is performed as fast as possible.
-2. The vehicle velocity must be an appropriate value
-   1. The ego-velocity must be a signed-value corresponding to the forward/backward direction
-   2. The ego-velocity should be given with appropriate noise processing.
-   3. If there is a large amount of noise in the ego-velocity, the tracking performance will be significantly reduced.
-3. The output of this controller must be achieved by later modules (e.g. vehicle interface).
-   1. If the vehicle interface does not have the target velocity or acceleration interface (e.g., the vehicle only has a gas pedal and brake interface), an appropriate conversion must be done after this controller.
+高速行驶时，油门和制动等执行器系统的延迟会显著影响驾驶精度。
+根据车辆执行机构原理，实际控制油门和制动的机械装置通常存在约一百毫秒的延迟。
 
-## Inputs / Outputs / API
+本控制器计算延迟时间之后的预测自车速度和目标速度，并用于反馈，以处理时间延迟问题。
 
-### Input
+<a id="slope-compensation_1"></a>
 
-Set the following from the [controller_node](../autoware_trajectory_follower_node/README.md)
+### 坡度补偿
 
-- `autoware_planning_msgs/Trajectory` : reference trajectory to follow.
-- `nav_msgs/Odometry`: current odometry
+根据坡度信息，向目标加速度添加补偿项。
 
-### Output
+坡度信息有两个来源，可通过参数切换。
 
-Return LongitudinalOutput which contains the following to the controller node
+- 估计自车位姿的俯仰角（默认）
+  - 根据估计自车位姿的俯仰角计算当前坡度。
+  - 优点：容易获取。
+  - 缺点：受车辆振动影响，无法提取准确的坡度信息。
+- 轨迹上的 Z 坐标
+  - 根据目标轨迹中前后轮位置的 z 坐标差计算道路坡度。
+  - 优点：如果路线的 z 坐标维护正确，则比俯仰角信息更准确。
+  - 优点：可与延迟补偿配合使用（尚未实现）。
+  - 缺点：需要高精地图的 z 坐标。
+  - 缺点：目前不支持自由空间规划。
 
-- `autoware_control_msgs/Longitudinal`: command to control the longitudinal motion of the vehicle. It contains the target velocity and target acceleration.
+<a id="assumptions-known-limits"></a>
+
+## 假设与已知限制
+
+1. 轨迹中应设置平滑后的目标速度及其加速度。
+   1. 控制器内部不会平滑速度命令（只可能去除噪声）。
+   2. 对于阶跃式目标信号，会尽可能快速地跟踪。
+2. 车辆速度必须是正确的值。
+   1. 自车速度必须带符号，以对应前进和后退方向。
+   2. 自车速度应经过适当的噪声处理。
+   3. 如果自车速度中存在大量噪声，跟踪性能会显著降低。
+3. 本控制器的输出必须由后续模块（例如车辆接口）实现。
+   1. 如果车辆接口不提供目标速度或加速度接口（例如仅提供油门和制动踏板接口），则必须在本控制器之后进行适当转换。
+
+<a id="inputs-outputs-api"></a>
+
+## 输入、输出与 API
+
+<a id="input"></a>
+
+### 输入
+
+由 [controller_node](../autoware_trajectory_follower_node/README.md) 设置以下内容：
+
+- `autoware_planning_msgs/Trajectory`：需要跟踪的参考轨迹。
+- `nav_msgs/Odometry`：当前里程计。
+
+<a id="output"></a>
+
+### 输出
+
+向控制器节点返回包含以下内容的 LongitudinalOutput：
+
+- `autoware_control_msgs/Longitudinal`：控制车辆纵向运动的命令，包含目标速度和目标加速度。
 - LongitudinalSyncData
-  - velocity convergence(currently not used)
+  - 速度收敛状态（目前未使用）。
 
-### PIDController class
+<a id="pidcontroller-class"></a>
 
-The `PIDController` class is straightforward to use.
-First, gains and limits must be set (using `setGains()` and `setLimits()`) for the proportional (P), integral (I), and derivative (D) components.
-Then, the velocity can be calculated by providing the current error and time step duration to the `calculate()` function.
+### PIDController 类
 
-## Parameter description
+`PIDController` 类的使用很直接。
+首先，使用 `setGains()` 和 `setLimits()`，为比例（P）、积分（I）和微分（D）项设置增益和限制。
+然后，向 `calculate()` 函数提供当前误差和时间步长，即可计算速度。
 
-The default parameters defined in `param/lateral_controller_defaults.param.yaml` are adjusted to the
-AutonomouStuff Lexus RX 450h for under 40 km/h driving.
+<a id="parameter-description"></a>
 
-| Name                                        | Type   | Description                                                                                                                                                                             | Default value |
+## 参数说明
+
+`param/lateral_controller_defaults.param.yaml` 中的默认参数针对
+AutonomouStuff Lexus RX 450h 以低于 40 km/h 的速度行驶进行了调整。
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :------------------------------------------ | :----- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| delay_compensation_time                     | double | delay for longitudinal control [s]                                                                                                                                                      | 0.17          |
-| enable_smooth_stop                          | bool   | flag to enable transition to STOPPING                                                                                                                                                   | true          |
-| enable_overshoot_emergency                  | bool   | flag to enable transition to EMERGENCY when the ego is over the stop line with a certain distance. See `emergency_state_overshoot_stop_dist`.                                           | true          |
-| enable_large_tracking_error_emergency       | bool   | flag to enable transition to EMERGENCY when the closest trajectory point search is failed due to a large deviation between trajectory and ego pose.                                     | true          |
-| enable_slope_compensation                   | bool   | flag to modify output acceleration for slope compensation. The source of the slope angle can be selected from ego-pose or trajectory angle. See `use_trajectory_for_pitch_calculation`. | true          |
-| enable_brake_keeping_before_stop            | bool   | flag to keep a certain acceleration during DRIVE state before the ego stops. See [Brake keeping](#brake-keeping).                                                                       | false         |
-| enable_keep_stopped_until_steer_convergence | bool   | flag to keep stopped condition until until the steer converges.                                                                                                                         | true          |
-| max_acc                                     | double | max value of output acceleration [m/s^2]                                                                                                                                                | 3.0           |
-| min_acc                                     | double | min value of output acceleration [m/s^2]                                                                                                                                                | -5.0          |
-| max_jerk                                    | double | max value of jerk of output acceleration [m/s^3]                                                                                                                                        | 2.0           |
-| min_jerk                                    | double | min value of jerk of output acceleration [m/s^3]                                                                                                                                        | -5.0          |
-| use_trajectory_for_pitch_calculation        | bool   | If true, the slope is estimated from trajectory z-level. Otherwise the pitch angle of the ego pose is used.                                                                             | false         |
-| lpf_pitch_gain                              | double | gain of low-pass filter for pitch estimation                                                                                                                                            | 0.95          |
-| max_pitch_rad                               | double | max value of estimated pitch [rad]                                                                                                                                                      | 0.1           |
-| min_pitch_rad                               | double | min value of estimated pitch [rad]                                                                                                                                                      | -0.1          |
+| delay_compensation_time | double | 纵向控制延迟 [s] | 0.17 |
+| enable_smooth_stop | bool | 是否启用向 STOPPING 状态的切换 | true |
+| enable_overshoot_emergency | bool | 自车越过停止线一定距离时，是否启用向 EMERGENCY 状态的切换。参见 `emergency_state_overshoot_stop_dist`。 | true |
+| enable_large_tracking_error_emergency | bool | 因轨迹与自车位姿偏差过大而无法找到最近轨迹点时，是否启用向 EMERGENCY 状态的切换。 | true |
+| enable_slope_compensation | bool | 是否修改输出加速度以补偿坡度。坡度角可来自自车位姿或轨迹角度。参见 `use_trajectory_for_pitch_calculation`。 | true |
+| enable_brake_keeping_before_stop | bool | 自车停止前，是否在 DRIVE 状态保持一定加速度。参见[保持制动](#brake-keeping)。 | false |
+| enable_keep_stopped_until_steer_convergence | bool | 是否保持停止状态直到转向收敛。 | true |
+| max_acc | double | 输出加速度的最大值 [m/s^2] | 3.0 |
+| min_acc | double | 输出加速度的最小值 [m/s^2] | -5.0 |
+| max_jerk | double | 输出加速度的最大加加速度 [m/s^3] | 2.0 |
+| min_jerk | double | 输出加速度的最小加加速度 [m/s^3] | -5.0 |
+| use_trajectory_for_pitch_calculation | bool | 若为 true，则根据轨迹 z 坐标估计坡度；否则使用自车位姿的俯仰角。 | false |
+| lpf_pitch_gain | double | 俯仰角估计的低通滤波器增益 | 0.95 |
+| max_pitch_rad | double | 估计俯仰角的最大值 [rad] | 0.1 |
+| min_pitch_rad | double | 估计俯仰角的最小值 [rad] | -0.1 |
 
-### State transition
+<a id="state-transition"></a>
 
-| Name                                | Type   | Description                                                                                                                                                          | Default value |
+### 状态切换
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :---------------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| drive_state_stop_dist               | double | The state will transit to DRIVE when the distance to the stop point is longer than `drive_state_stop_dist` + `drive_state_offset_stop_dist` [m]                      | 0.5           |
-| drive_state_offset_stop_dist        | double | The state will transit to DRIVE when the distance to the stop point is longer than `drive_state_stop_dist` + `drive_state_offset_stop_dist` [m]                      | 1.0           |
-| stopping_state_stop_dist            | double | The state will transit to STOPPING when the distance to the stop point is shorter than `stopping_state_stop_dist` [m]                                                | 0.5           |
-| stopped_state_entry_vel             | double | threshold of the ego velocity in transition to the STOPPED state [m/s]                                                                                               | 0.01          |
-| stopped_state_entry_acc             | double | threshold of the ego acceleration in transition to the STOPPED state [m/s^2]                                                                                         | 0.1           |
-| emergency_state_overshoot_stop_dist | double | If `enable_overshoot_emergency` is true and the ego is `emergency_state_overshoot_stop_dist`-meter ahead of the stop point, the state will transit to EMERGENCY. [m] | 1.5           |
+| drive_state_stop_dist | double | 距停车点的距离大于 `drive_state_stop_dist` + `drive_state_offset_stop_dist` 时，切换为 DRIVE。[m] | 0.5 |
+| drive_state_offset_stop_dist | double | 距停车点的距离大于 `drive_state_stop_dist` + `drive_state_offset_stop_dist` 时，切换为 DRIVE。[m] | 1.0 |
+| stopping_state_stop_dist | double | 距停车点的距离小于 `stopping_state_stop_dist` 时，切换为 STOPPING。[m] | 0.5 |
+| stopped_state_entry_vel | double | 切换到 STOPPED 状态时的自车速度阈值 [m/s] | 0.01 |
+| stopped_state_entry_acc | double | 切换到 STOPPED 状态时的自车加速度阈值 [m/s^2] | 0.1 |
+| emergency_state_overshoot_stop_dist | double | 如果 `enable_overshoot_emergency` 为 true，且自车越过停车点 `emergency_state_overshoot_stop_dist` 米，则切换为 EMERGENCY。[m] | 1.5 |
 
-### DRIVE Parameter
+<a id="drive-parameter"></a>
 
-| Name                                  | Type   | Description                                                                                                                                                        | Default value |
+### DRIVE 参数
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :------------------------------------ | :----- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| kp                                    | double | p gain for longitudinal control                                                                                                                                    | 1.0           |
-| ki                                    | double | i gain for longitudinal control                                                                                                                                    | 0.1           |
-| kd                                    | double | d gain for longitudinal control                                                                                                                                    | 0.0           |
-| max_out                               | double | max value of PID's output acceleration during DRIVE state [m/s^2]                                                                                                  | 1.0           |
-| min_out                               | double | min value of PID's output acceleration during DRIVE state [m/s^2]                                                                                                  | -1.0          |
-| max_p_effort                          | double | max value of acceleration with p gain                                                                                                                              | 1.0           |
-| min_p_effort                          | double | min value of acceleration with p gain                                                                                                                              | -1.0          |
-| max_i_effort                          | double | max value of acceleration with i gain                                                                                                                              | 0.3           |
-| min_i_effort                          | double | min value of acceleration with i gain                                                                                                                              | -0.3          |
-| max_d_effort                          | double | max value of acceleration with d gain                                                                                                                              | 0.0           |
-| min_d_effort                          | double | min value of acceleration with d gain                                                                                                                              | 0.0           |
-| lpf_vel_error_gain                    | double | gain of low-pass filter for velocity error                                                                                                                         | 0.9           |
-| enable_integration_at_low_speed       | bool   | Whether to enable integration of acceleration errors when the vehicle speed is lower than `current_vel_threshold_pid_integration` or not.                          | false         |
-| current_vel_threshold_pid_integration | double | Velocity error is integrated for I-term only when the absolute value of current velocity is larger than this parameter. [m/s]                                      | 0.5           |
-| time_threshold_before_pid_integration | double | How much time without the vehicle moving must past to enable PID error integration. [s]                                                                            | 5.0           |
-| ff_scale_min                          | double | Minimum clamp value for feedforward scaling applied during the time-to-arclength conversion.                                                                       | 0.5           |
-| ff_scale_max                          | double | Maximum clamp value for feedforward scaling applied during the time-to-arclength conversion.                                                                       | 2.0           |
-| brake_keeping_acc                     | double | If `enable_brake_keeping_before_stop` is true, a certain acceleration is kept during DRIVE state before the ego stops [m/s^2] See [Brake keeping](#brake-keeping). | 0.2           |
+| kp | double | 纵向控制的 p 增益 | 1.0 |
+| ki | double | 纵向控制的 i 增益 | 0.1 |
+| kd | double | 纵向控制的 d 增益 | 0.0 |
+| max_out | double | DRIVE 状态下 PID 输出加速度的最大值 [m/s^2] | 1.0 |
+| min_out | double | DRIVE 状态下 PID 输出加速度的最小值 [m/s^2] | -1.0 |
+| max_p_effort | double | p 项加速度的最大值 | 1.0 |
+| min_p_effort | double | p 项加速度的最小值 | -1.0 |
+| max_i_effort | double | i 项加速度的最大值 | 0.3 |
+| min_i_effort | double | i 项加速度的最小值 | -0.3 |
+| max_d_effort | double | d 项加速度的最大值 | 0.0 |
+| min_d_effort | double | d 项加速度的最小值 | 0.0 |
+| lpf_vel_error_gain | double | 速度误差低通滤波器的增益 | 0.9 |
+| enable_integration_at_low_speed | bool | 车速低于 `current_vel_threshold_pid_integration` 时，是否启用加速度误差积分。 | false |
+| current_vel_threshold_pid_integration | double | 仅当当前速度的绝对值大于此参数时，才对速度误差积分以计算 I 项。[m/s] | 0.5 |
+| time_threshold_before_pid_integration | double | 车辆保持不动多长时间后启用 PID 误差积分。[s] | 5.0 |
+| ff_scale_min | double | 时间到弧长转换期间应用的前馈缩放系数下限。 | 0.5 |
+| ff_scale_max | double | 时间到弧长转换期间应用的前馈缩放系数上限。 | 2.0 |
+| brake_keeping_acc | double | 若 `enable_brake_keeping_before_stop` 为 true，则自车停止前在 DRIVE 状态保持一定加速度 [m/s^2]。参见[保持制动](#brake-keeping)。 | 0.2 |
 
-### STOPPING Parameter (smooth stop)
+<a id="stopping-parameter-smooth-stop"></a>
 
-Smooth stop is enabled if `enable_smooth_stop` is true.
-In smooth stop, strong acceleration (`strong_acc`) will be output first to decrease the ego velocity.
-Then weak acceleration (`weak_acc`) will be output to stop smoothly by decreasing the ego jerk.
-If the ego does not stop in a certain time or some-meter over the stop point, weak acceleration to stop right (`weak_stop_acc`) now will be output.
-If the ego is still running, strong acceleration (`strong_stop_acc`) to stop right now will be output.
+### STOPPING 参数（平滑停车）
 
-| Name                         | Type   | Description                                                                                                          | Default value |
+如果 `enable_smooth_stop` 为 true，则启用平滑停车。
+平滑停车时，先输出较强的减速加速度（`strong_acc`）以降低自车速度。
+然后输出较弱的减速加速度（`weak_acc`），通过降低自车加加速度实现平稳停车。
+如果自车在一定时间内仍未停止，或越过停车点一定距离，则输出用于立即停车的较弱加速度（`weak_stop_acc`）。
+如果自车仍在运动，则输出用于立即停车的较强加速度（`strong_stop_acc`）。
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :--------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------- | :------------ |
-| smooth_stop_max_strong_acc   | double | max strong acceleration [m/s^2]                                                                                      | -0.5          |
-| smooth_stop_min_strong_acc   | double | min strong acceleration [m/s^2]                                                                                      | -0.8          |
-| smooth_stop_weak_acc         | double | weak acceleration [m/s^2]                                                                                            | -0.3          |
-| smooth_stop_weak_stop_acc    | double | weak acceleration to stop right now [m/s^2]                                                                          | -0.8          |
-| smooth_stop_strong_stop_acc  | double | strong acceleration to be output when the ego is `smooth_stop_strong_stop_dist`-meter over the stop point. [m/s^2]   | -3.4          |
-| smooth_stop_max_fast_vel     | double | max fast vel to judge the ego is running fast [m/s]. If the ego is running fast, strong acceleration will be output. | 0.5           |
-| smooth_stop_min_running_vel  | double | min ego velocity to judge if the ego is running or not [m/s]                                                         | 0.01          |
-| smooth_stop_min_running_acc  | double | min ego acceleration to judge if the ego is running or not [m/s^2]                                                   | 0.01          |
-| smooth_stop_weak_stop_time   | double | max time to output weak acceleration [s]. After this, strong acceleration will be output.                            | 0.8           |
-| smooth_stop_weak_stop_dist   | double | Weak acceleration will be output when the ego is `smooth_stop_weak_stop_dist`-meter before the stop point. [m]       | -0.3          |
-| smooth_stop_strong_stop_dist | double | Strong acceleration will be output when the ego is `smooth_stop_strong_stop_dist`-meter over the stop point. [m]     | -0.5          |
+| smooth_stop_max_strong_acc | double | 强减速阶段的最大加速度 [m/s^2] | -0.5 |
+| smooth_stop_min_strong_acc | double | 强减速阶段的最小加速度 [m/s^2] | -0.8 |
+| smooth_stop_weak_acc | double | 弱减速加速度 [m/s^2] | -0.3 |
+| smooth_stop_weak_stop_acc | double | 用于立即停车的较弱加速度 [m/s^2] | -0.8 |
+| smooth_stop_strong_stop_acc | double | 自车越过停车点 `smooth_stop_strong_stop_dist` 米时输出的较强加速度。[m/s^2] | -3.4 |
+| smooth_stop_max_fast_vel | double | 判定自车快速行驶的最大速度阈值 [m/s]。自车快速行驶时会输出较强加速度。 | 0.5 |
+| smooth_stop_min_running_vel | double | 判定自车是否仍在运动的最小速度 [m/s] | 0.01 |
+| smooth_stop_min_running_acc | double | 判定自车是否仍在运动的最小加速度 [m/s^2] | 0.01 |
+| smooth_stop_weak_stop_time | double | 输出较弱加速度的最长时间 [s]，之后输出较强加速度。 | 0.8 |
+| smooth_stop_weak_stop_dist | double | 自车距停车点还有 `smooth_stop_weak_stop_dist` 米时，输出较弱加速度。[m] | -0.3 |
+| smooth_stop_strong_stop_dist | double | 自车越过停车点 `smooth_stop_strong_stop_dist` 米时，输出较强加速度。[m] | -0.5 |
 
-### STOPPED Parameter
+<a id="stopped-parameter"></a>
 
-The `STOPPED` state assumes that the vehicle is completely stopped with the brakes fully applied.
-Therefore, `stopped_acc` should be set to a value that allows the vehicle to apply the strongest possible brake.
-If `stopped_acc` is not sufficiently low, there is a possibility of sliding down on steep slopes.
+### STOPPED 参数
 
-| Name        | Type   | Description                                  | Default value |
+`STOPPED` 状态假设车辆已完全停止，且制动已完全施加。
+因此，`stopped_acc` 应设置为能够使车辆施加最强制动的值。
+如果 `stopped_acc` 不够低，车辆可能在陡坡上下滑。
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :---------- | :----- | :------------------------------------------- | :------------ |
-| stopped_vel | double | target velocity in STOPPED state [m/s]       | 0.0           |
-| stopped_acc | double | target acceleration in STOPPED state [m/s^2] | -3.4          |
+| stopped_vel | double | STOPPED 状态的目标速度 [m/s] | 0.0 |
+| stopped_acc | double | STOPPED 状态的目标加速度 [m/s^2] | -3.4 |
 
-### EMERGENCY Parameter
+<a id="emergency-parameter"></a>
 
-| Name           | Type   | Description                                       | Default value |
+### EMERGENCY 参数
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :------------- | :----- | :------------------------------------------------ | :------------ |
-| emergency_vel  | double | target velocity in EMERGENCY state [m/s]          | 0.0           |
-| emergency_acc  | double | target acceleration in an EMERGENCY state [m/s^2] | -5.0          |
-| emergency_jerk | double | target jerk in an EMERGENCY state [m/s^3]         | -3.0          |
+| emergency_vel | double | EMERGENCY 状态的目标速度 [m/s] | 0.0 |
+| emergency_acc | double | EMERGENCY 状态的目标加速度 [m/s^2] | -5.0 |
+| emergency_jerk | double | EMERGENCY 状态的目标加加速度 [m/s^3] | -3.0 |
 
-## References / External links
+<a id="references-external-links"></a>
 
-## Future extensions / Unimplemented parts
+## 参考资料与外部链接
 
-## Related issues
+<a id="future-extensions-unimplemented-parts"></a>
+
+## 后续扩展与尚未实现的部分
+
+<a id="related-issues"></a>
+
+## 相关问题

@@ -1,10 +1,12 @@
 # tier4_perception_rviz_plugin
 
-## Purpose
+<a id="purpose"></a>
 
-It is an rviz plugin for visualizing the result from tier4 perception module. This package is based on the implementation of the rviz plugin developed by Autoware.Auto.
+## 用途
 
-See Autoware.Auto design documentation for the original design philosophy. [[1]](https://gitlab.com/autowarefoundation/autoware.auto/AutowareAuto/-/blob/master/src/tools/visualization/autoware_rviz_plugins)
+这是用于可视化 tier4 感知模块结果的 RViz 插件。此功能包基于 Autoware.Auto 开发的 RViz 插件实现。
+
+原始设计理念请参阅 Autoware.Auto 设计文档。[[1]](https://gitlab.com/autowarefoundation/autoware.auto/AutowareAuto/-/blob/master/src/tools/visualization/autoware_rviz_plugins)
 
 <!-- Write the purpose of this package and briefly describe the features.
 

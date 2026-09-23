@@ -1,30 +1,38 @@
-# Traffic Light Compliance Checker
+<a id="traffic-light-compliance-checker"></a>
 
-The `traffic_light_compliance_checker` package provides a deterministic validation layer that cross-references planned vehicle trajectories against real-time perceived traffic light signals and High-Definition (HD) vector maps to enforce strict traffic compliance.
+# 交通信号灯合规检查器
 
-## Core Features
+`traffic_light_compliance_checker` 软件包提供确定性的验证层，将规划的车辆轨迹与实时感知的交通信号灯信号及高精度（HD）矢量地图交叉比对，以确保严格遵守交通规则。
 
-1. **Signal State Tracking (`TrafficLightStatusTracker`)**
-   - Eliminates perception jitter and signal flickering by maintaining a temporal state history for each traffic light group ID.
-   - Leverages stable duration thresholds before validating a transition to `RED` or `AMBER`.
-   - Utilizes a hysteresis buffer to sustain known states during transient object occlusions.
+<a id="core-features"></a>
 
-2. **Trajectory Validation (`TrafficLightComplianceChecker`)**
-   - Scans forward trajectory segments sequentially to isolate intersection entry points.
-   - Appends a physical front-bumper projection to ensure the vehicle footprint stays behind regulatory stop lines.
-   - Implements a kinematic pass/stop feasibility matrix for `AMBER` signals based on comfortable braking and intersection clearance times.
-   - Returns prioritized, chronological arrays of `Violation` metadata if an unvalidated stop line overshoot is detected.
+## 核心功能
 
-## Inner Workings
+1. **信号状态跟踪（`TrafficLightStatusTracker`）**
+   - 为每个交通信号灯组 ID 维护时间序列状态历史，消除感知抖动和信号频繁切换。
+   - 在确认切换到 `RED` 或 `AMBER` 之前，检查状态是否达到稳定持续时间阈值。
+   - 使用滞回缓冲，在目标短暂遮挡期间保持已知状态。
 
-### Main Processing Pipeline
+2. **轨迹验证（`TrafficLightComplianceChecker`）**
+   - 依次扫描前方轨迹段，确定进入交叉路口的位置。
+   - 附加前保险杠的实际投影，确保车辆轮廓停留在规定的停止线后方。
+   - 基于舒适制动和驶离交叉路口所需时间，为 `AMBER` 信号实现运动学通行或停车可行性判定矩阵。
+   - 检测到未经允许的越过停止线行为时，返回按优先级和时间顺序排列的 `Violation` 元数据数组。
 
-The execution flow follows a sequential logical from signal processing & filtering down to stop line interaction evaluations:
+<a id="inner-workings"></a>
 
-1. **Filter signals and update status tracker:** Feeds raw perception data into the status tracker to clean up transient noise and tracking dropouts.
-2. **Generate Geometric Trajectory Linestring:** Removes path points situated behind the ego vehicle, clamps the forward path length at `max(min_lookahead_distance, comfortable_stop_distance + stop_overshoot_margin)` (or until the first planned stop), and extends trajectory end to account for ego front offset.
-3. **Extract and group map stop lines:** Sorts overlapping intersection lines into separate evaluation queues for red and amber constraints.
-4. **Evaluate Stop Line Violations:** Checks the trajectory linestring against active stop lines, records detected violations and generate compliance result.
+## 内部机制
+
+<a id="main-processing-pipeline"></a>
+
+### 主要处理流程
+
+处理流程依次执行信号处理与过滤，直至评估轨迹与停止线的关系：
+
+1. **过滤信号并更新状态跟踪器：** 将原始感知数据输入状态跟踪器，消除短暂噪声和跟踪丢失的影响。
+2. **生成几何轨迹折线：** 移除自车后方的路径点，将前向路径长度限制为 `max(min_lookahead_distance, comfortable_stop_distance + stop_overshoot_margin)`，或截断到第一个计划停车点；同时延长轨迹末端，以计入自车前部偏移。
+3. **提取并分组地图停止线：** 将相交的路口停止线按红灯和黄灯约束分别放入评估队列。
+4. **评估停止线违规：** 检查轨迹折线与当前有效停止线的关系，记录检测到的违规，并生成合规检查结果。
 
 ```plantuml
 @startuml
@@ -74,34 +82,42 @@ stop
 @enduml
 ```
 
-### Signal Status Tracker Filtering
+<a id="signal-status-tracker-filtering"></a>
 
-To prevent sudden, harsh emergency braking maneuvers caused by raw perception noise, the status tracker filters raw signals through three deterministic mechanisms before passing them to the validation layer:
+### 信号状态跟踪器过滤
 
-- **State Persistence Buffering:** Incoming state transitions (e.g., green to amber/red/unknown) must continuously persist for a minimum time window (`stable_duration_threshold_red`, `stable_duration_threshold_amber`, or `stable_duration_threshold_unknown`) before the new state is considered valid. If a signal flips color or alters elements before this duration threshold is reached, its active elements array is cleared to suppress transient sensor noise.
-- **History Eviction Buffer:** If a traffic light group drops out of the incoming message matrix completely, the tracker retains its record for a brief clearing window. The duration an un-updated signal persists in memory is dynamically determined by its last recorded color state: `stable_duration_threshold_red` for red signals, `stable_duration_threshold_amber` for amber signals, and `stable_duration_threshold_unknown` for other non-red, non-amber conditions. If the signal remains un-detected beyond this frame timeout, its stale context is permanently erased from the tracking ledger.
-- **Ego-Stopped Pass-Through Gate:** The tracker continuously evaluates the current motion of the ego vehicle via `is_ego_stopped`. When the vehicle has brought itself to a halt beneath the configured `ego_stopped_velocity_threshold`, the entire stability duration filtering logic is completely bypassed. This pass-through guarantees that the vehicle maintains maximum responsiveness to incoming state changes while stationary, eliminating filtering-induced latency during intersection departures.
+为防止原始感知噪声引发突然、剧烈的紧急制动，状态跟踪器先通过以下三种确定性机制过滤原始信号，再将其传给验证层：
 
-### Safety & Compliance Logic
+- **状态持续缓冲：** 输入状态的变化（例如从绿灯变为黄灯、红灯或未知）必须持续达到最小时间窗口（`stable_duration_threshold_red`、`stable_duration_threshold_amber` 或 `stable_duration_threshold_unknown`），新状态才被视为有效。如果信号在达到该时长阈值之前改变颜色或元素，则清空其有效元素数组，以抑制短暂的传感器噪声。
+- **历史记录清除缓冲：** 如果某个交通信号灯组完全从输入消息集合中消失，跟踪器会在一个短暂的清除窗口内保留其记录。未更新信号在内存中的保留时长，由最后记录的颜色状态动态决定：红灯使用 `stable_duration_threshold_red`，黄灯使用 `stable_duration_threshold_amber`，其他非红、非黄状态使用 `stable_duration_threshold_unknown`。如果超过该超时时间仍未检测到信号，则从跟踪记录中彻底移除其过期信息。
+- **自车停止时直接放行：** 跟踪器通过 `is_ego_stopped` 持续评估自车运动状态。当车辆速度低于配置的 `ego_stopped_velocity_threshold`、被判定为停止时，完全跳过稳定持续时间过滤逻辑。这样可让静止车辆及时响应输入状态变化，消除路口起步时由过滤引起的延迟。
 
-- **Segment-by-Segment Geometric Scan:** The checker evaluates trajectory segments sequentially against mapped stop lines using a localized `boost::geometry::intersection` check. The loop breaks immediately upon finding the first chronological intersection point, calculating the dynamic distance-to-stop-line and interpolating the exact crossing timestamp (for amber light) using `autoware::interpolation::lerp`.
-- **Red Light Evaluation:** Generates a violation if an intersection occurs, unless the trajectory makes the ego come to a complete stop within the specified `stop_overshoot_margin`.
-- **Amber Light Evaluation:** Computes the dynamic stopping distance based on current velocity, acceleration, applied deceleration, and system response latency. If the vehicle can stop safely before the line, or if it cannot clear the intersection within the `crossing_time_limit`, an amber violation is recorded to enforce a stop.
-- **Arrow-aware amber passing:** On protected turn lanes with a separate direction-arrow bulb in the map, the circle signal often goes `GREEN → AMBER → RED` before `GREEN *_ARROW` appears. While the circle is amber after a green circle, requiring a stop would be overly strict. When `enable_arrow_aware_amber_passing` is true, the checker skips stop-line collection (no amber/red violation) if all of the following hold:
-  - ego route lane is a left or right turn lane (`turn_direction`)
-  - the traffic light has a static arrow in the map (`subtype` containing `arrow`, or light-bulb `arrow` attribute)
-  - the amber phase was reached from a green circle (`AmberState::kFromGreen`)
-  - the current signal still reports an amber circle
+<a id="safety-compliance-logic"></a>
 
-  Transitions from red (or unknown) to amber still require a stop. A brief red circle before the green arrow is reported is also still treated as a stop (same scope as the behavior velocity traffic light module).
+### 安全与合规逻辑
 
-## Structs and Interface Definitions
+- **逐段几何扫描：** 检查器通过局部 `boost::geometry::intersection` 检查，依次评估轨迹段与地图停止线的关系。按时间顺序找到第一个交点后立即终止循环，计算到停止线的动态距离，并使用 `autoware::interpolation::lerp` 插值求得准确的越线时间戳（用于黄灯评估）。
+- **红灯评估：** 如果轨迹与停止线相交，则判定为违规；但若轨迹使自车在指定的 `stop_overshoot_margin` 范围内完全停止，则不判为违规。
+- **黄灯评估：** 根据当前速度、加速度、采用的减速度和系统响应延迟计算动态停车距离。如果车辆能够在停止线前安全停车，或者无法在 `crossing_time_limit` 内驶离交叉路口，则记录黄灯违规，要求停车。
+- **考虑箭头灯的黄灯通行：** 对于地图中设有独立方向箭头灯的受保护转向车道，圆形信号灯通常会先经历 `GREEN → AMBER → RED`，随后才出现 `GREEN *_ARROW`。圆形灯从绿灯变为黄灯期间，要求停车可能过于严格。当 `enable_arrow_aware_amber_passing` 为 true，且以下条件全部满足时，检查器跳过停止线收集，不判定黄灯或红灯违规：
+  - 自车路线所在车道为左转或右转车道（`turn_direction`）
+  - 地图中该交通信号灯具有静态箭头信息（`subtype` 包含 `arrow`，或灯泡具有 `arrow` 属性）
+  - 黄灯阶段由圆形绿灯转换而来（`AmberState::kFromGreen`）
+  - 当前信号仍报告圆形黄灯
 
-The interfaces pass inputs and output results through the following standard data types:
+  从红灯或未知状态变为黄灯时仍要求停车。在报告绿色箭头灯之前短暂出现的圆形红灯，也仍按停车处理，处理范围与行为速度交通信号灯模块一致。
 
-### Inputs
+<a id="structs-and-interface-definitions"></a>
 
-| Field Name             | Data Type                      |
+## 结构体与接口定义
+
+接口通过以下标准数据类型传递输入和输出结果：
+
+<a id="inputs"></a>
+
+### 输入
+
+| 字段名称             | 数据类型                      |
 | :--------------------- | :----------------------------- |
 | `trajectory`           | `std::vector<TrajectoryPoint>` |
 | `map`                  | `lanelet::LaneletMapPtr`       |
@@ -111,9 +127,11 @@ The interfaces pass inputs and output results through the following standard dat
 | `current_velocity`     | `double`                       |
 | `current_acceleration` | `double`                       |
 
-### Violation
+<a id="violation"></a>
 
-| Struct Field                | Data Type                    |
+### 违规信息
+
+| 结构体字段                | 数据类型                    |
 | :-------------------------- | :--------------------------- |
 | `type`                      | `ViolationType`              |
 | `stop_line`                 | `lanelet::BasicLineString2d` |
@@ -121,24 +139,26 @@ The interfaces pass inputs and output results through the following standard dat
 | `cross_point`               | `lanelet::BasicPoint2d`      |
 | `arc_length_to_cross_point` | `double`                     |
 
-## Parameters
+<a id="parameters"></a>
 
-| Parameter Name                                 | Type     | Description                                                                                                |
+## 参数
+
+| 参数名称                                 | 类型     | 说明                                                                                                |
 | :--------------------------------------------- | :------- | :--------------------------------------------------------------------------------------------------------- |
-| `deceleration_limit`                           | `double` | Max deceleration limit during braking ($m/s^2$) for assessing stopping feasibility.                        |
-| `jerk_limit`                                   | `double` | Max jerk limit during braking ($m/s^3$) for assessing stopping feasibility.                                |
-| `delay_response_time`                          | `double` | Combined latency buffer for compute cycle lag and brake actuation (seconds).                               |
-| `crossing_time_limit`                          | `double` | Maximum duration allowed for the vehicle to clear an amber light intersection (seconds).                   |
-| `stop_overshoot_margin`                        | `double` | Allowed physical distance buffer beyond a stop line for a stopped vehicle (meters).                        |
-| `allow_if_cannot_stop_distance`                | `double` | Distance within which a crossing trajectory is allowed when ego cannot stop before the stop line (meters). |
-| `min_lookahead_distance`                       | `double` | Minimum forward trajectory length to scan for stop lines, even at low ego speed (meters).                  |
-| `stable_duration_threshold_red`                | `double` | Required continuous duration for a `RED` state to be confirmed as valid (seconds).                         |
-| `stable_duration_threshold_amber`              | `double` | Required continuous duration for an `AMBER` state to be confirmed as valid (seconds).                      |
-| `stable_duration_threshold_unknown`            | `double` | Required continuous duration for an `UNKNOWN` state to be confirmed as valid (seconds).                    |
-| `amber_rejection_hysteresis_duration`          | `double` | Duration to retain an active amber light state if perception updates drop out (seconds).                   |
-| `ego_stopped_velocity_threshold`               | `double` | Velocity threshold beneath which the ego vehicle is considered completely stopped ($m/s$).                 |
-| `treat_amber_light_as_red_light`               | `bool`   | If true, disables amber passing logic and treats all amber states as strict red signals.                   |
-| `treat_unknown_light_as_red_light`             | `bool`   | If true, evaluates unclassified or blank signal states as strict red signals.                              |
-| `enable_arrow_aware_amber_passing`             | `bool`   | If true, allow Green Circle → Amber pass on turn lanes with a mapped static arrow.                         |
-| `checked_trajectory_length.deceleration_limit` | `double` | Comfortable stop deceleration limit ($m/s^2$) for computing trajectory checking length.                    |
-| `checked_trajectory_length.jerk_limit`         | `double` | Comfortable stop jerk limit ($m/s^3$) for computing trajectory checking length.                            |
+| `deceleration_limit`                           | `double` | 制动时的最大减速度限制（$m/s^2$），用于评估停车可行性。                        |
+| `jerk_limit`                                   | `double` | 制动时的最大加加速度限制（$m/s^3$），用于评估停车可行性。                                |
+| `delay_response_time`                          | `double` | 计算周期延迟和制动执行延迟的合并缓冲时间（秒）。                               |
+| `crossing_time_limit`                          | `double` | 允许车辆在黄灯状态下驶离交叉路口的最长时间（秒）。                   |
+| `stop_overshoot_margin`                        | `double` | 允许已停止车辆越过停止线的实际距离余量（米）。                        |
+| `allow_if_cannot_stop_distance`                | `double` | 自车无法在停止线前停车时，允许采用越线轨迹的距离范围（米）。 |
+| `min_lookahead_distance`                       | `double` | 即使自车速度较低，也用于扫描停止线的最小前向轨迹长度（米）。                  |
+| `stable_duration_threshold_red`                | `double` | 确认 `RED` 状态有效所需的连续持续时间（秒）。                         |
+| `stable_duration_threshold_amber`              | `double` | 确认 `AMBER` 状态有效所需的连续持续时间（秒）。                      |
+| `stable_duration_threshold_unknown`            | `double` | 确认 `UNKNOWN` 状态有效所需的连续持续时间（秒）。                    |
+| `amber_rejection_hysteresis_duration`          | `double` | 感知更新中断时，保留有效黄灯状态的时长（秒）。                   |
+| `ego_stopped_velocity_threshold`               | `double` | 自车速度低于此阈值时，视为完全停止（$m/s$）。                 |
+| `treat_amber_light_as_red_light`               | `bool`   | 为 true 时，禁用黄灯通行逻辑，并严格将所有黄灯状态按红灯处理。                   |
+| `treat_unknown_light_as_red_light`             | `bool`   | 为 true 时，严格将未分类或空白信号状态按红灯处理。                              |
+| `enable_arrow_aware_amber_passing`             | `bool`   | 为 true 时，在地图标有静态箭头的转向车道上，允许在圆形绿灯变为黄灯时通行。                         |
+| `checked_trajectory_length.deceleration_limit` | `double` | 用于计算轨迹检查长度的舒适停车减速度限制（$m/s^2$）。                    |
+| `checked_trajectory_length.jerk_limit`         | `double` | 用于计算轨迹检查长度的舒适停车加加速度限制（$m/s^3$）。                            |

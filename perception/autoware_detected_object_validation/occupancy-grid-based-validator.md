@@ -1,38 +1,52 @@
-# occupancy grid based validator
+<a id="occupancy-grid-based-validator"></a>
 
-## Inner-workings / Algorithms
+# 基于占据栅格的验证器
 
-Compare the occupancy grid map with the DetectedObject, and if a larger percentage of obstacles are in freespace, delete them.
+<a id="inner-workings-algorithms"></a>
 
-![debug sample image](image/occupancy_grid_based_validator/debug_image.png)
+## 内部机制／算法
 
-Basically, it takes an occupancy grid map as input and generates a binary image of freespace or other.
+将占据栅格地图与 DetectedObject 比较，如果障碍物位于自由空间的比例较高，则删除它们。
 
-A mask image is generated for each DetectedObject and the average value (percentage) in the mask image is calculated.
-If the percentage is low, it is deleted.
+![调试示例图像](image/occupancy_grid_based_validator/debug_image.png)
 
-## Inputs / Outputs
+基本流程是输入占据栅格地图，生成区分自由空间和其他区域的二值图像。
 
-### Input
+为每个 DetectedObject 生成掩码图像，并计算掩码内的平均值（比例）。
+如果比例较低，则删除该目标。
 
-| Name                         | Type                                             | Description                                                 |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称                         | 类型                                             | 说明                                                 |
 | ---------------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
-| `~/input/detected_objects`   | `autoware_perception_msgs::msg::DetectedObjects` | DetectedObjects                                             |
-| `~/input/occupancy_grid_map` | `nav_msgs::msg::OccupancyGrid`                   | OccupancyGrid with no time series calculation is preferred. |
+| `~/input/detected_objects`   | `autoware_perception_msgs::msg::DetectedObjects` | DetectedObjects |
+| `~/input/occupancy_grid_map` | `nav_msgs::msg::OccupancyGrid`                   | 建议使用未进行时间序列计算的 OccupancyGrid。 |
 
-### Output
+<a id="output"></a>
 
-| Name               | Type                                             | Description               |
+### 输出
+
+| 名称               | 类型                                             | 说明               |
 | ------------------ | ------------------------------------------------ | ------------------------- |
-| `~/output/objects` | `autoware_perception_msgs::msg::DetectedObjects` | validated DetectedObjects |
+| `~/output/objects` | `autoware_perception_msgs::msg::DetectedObjects` | 通过验证的 DetectedObjects |
 
-## Parameters
+<a id="parameters"></a>
 
-| Name             | Type  | Description                                        |
+## 参数
+
+| 名称             | 类型  | 说明                                        |
 | ---------------- | ----- | -------------------------------------------------- |
-| `mean_threshold` | float | The percentage threshold of allowed non-freespace. |
-| `enable_debug`   | bool  | Whether to display debug images or not?            |
+| `mean_threshold` | float | 允许的非自由空间比例阈值。 |
+| `enable_debug`   | bool  | 是否显示调试图像。 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-Currently, only vehicle represented as BoundingBox are supported.
+## 前提假设／已知限制
+
+当前仅支持以 BoundingBox 表示的车辆。

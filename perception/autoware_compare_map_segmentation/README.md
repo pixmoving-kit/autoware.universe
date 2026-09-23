@@ -1,133 +1,185 @@
 # autoware_compare_map_segmentation
 
-## Purpose
+<a id="purpose"></a>
 
-The `autoware_compare_map_segmentation` is a package that filters the ground points from the input pointcloud by using map info (e.g. pcd, elevation map or split map pointcloud from map_loader interface).
+## 用途
 
-## Inner-workings / Algorithms
+`autoware_compare_map_segmentation` 功能包利用地图信息（如 pcd、高程地图或 map_loader 接口提供的分块地图点云），从输入点云中过滤地面点。
 
-### Compare Elevation Map Filter
+<a id="inner-workings-algorithms"></a>
 
-Compare the z of the input points with the value of elevation_map. The height difference is calculated by the binary integration of neighboring cells. Remove points whose height difference is below the `height_diff_thresh`.
+## 内部机制／算法
+
+<a id="compare-elevation-map-filter"></a>
+
+### 高程地图比较滤波器
+
+将输入点的 z 值与 elevation_map 中的值比较。通过相邻单元的二元积分计算高度差，并移除高度差低于 `height_diff_thresh` 的点。
 
 <p align="center">
   <img src="./media/compare_elevation_map.png" width="1000">
 </p>
 
-### Distance Based Compare Map Filter
+<a id="distance-based-compare-map-filter"></a>
 
-This filter compares the input pointcloud with the map pointcloud using the `nearestKSearch` function of `kdtree` and removes points that are close to the map point cloud. The map pointcloud can be loaded statically at once at the beginning or dynamically as the vehicle moves.
+### 基于距离的地图比较滤波器
 
-### Voxel Based Approximate Compare Map Filter
+此滤波器使用 `kdtree` 的 `nearestKSearch` 函数比较输入点云与地图点云，并移除靠近地图点云的点。地图点云可在开始时一次性静态加载，也可随车辆移动动态加载。
 
-The filter loads the map point cloud, which can be loaded statically at the beginning or dynamically during vehicle movement, and creates a voxel grid of the map point cloud. The filter uses the getCentroidIndexAt function in combination with the getGridCoordinates function from the VoxelGrid class to find input points that are inside the voxel grid and removes them.
+<a id="voxel-based-approximate-compare-map-filter"></a>
 
-### Voxel Based Compare Map Filter
+### 基于体素的近似地图比较滤波器
 
-The filter loads the map pointcloud (static loading whole map at once at beginning or dynamic loading during vehicle moving) and utilizes VoxelGrid to downsample map pointcloud.
+此滤波器加载地图点云（可在开始时静态加载，也可在车辆运动时动态加载），并创建地图点云的体素网格。它结合使用 VoxelGrid 类的 getCentroidIndexAt 与 getGridCoordinates 函数，查找并移除位于体素网格内部的输入点。
 
-For each point of input pointcloud, the filter use `getCentroidIndexAt` combine with `getGridCoordinates` function from VoxelGrid class to check if the downsampled map point existing surrounding input points. Remove the input point which has downsampled map point in voxels containing or being close to the point.
+<a id="voxel-based-compare-map-filter"></a>
 
-### Voxel Distance based Compare Map Filter
+### 基于体素的地图比较滤波器
 
-This filter is a combination of the distance_based_compare_map_filter and voxel_based_approximate_compare_map_filter. The filter loads the map point cloud, which can be loaded statically at the beginning or dynamically during vehicle movement, and creates a voxel grid and a k-d tree of the map point cloud. The filter uses the getCentroidIndexAt function in combination with the getGridCoordinates function from the VoxelGrid class to find input points that are inside the voxel grid and removes them. For points that do not belong to any voxel grid, they are compared again with the map point cloud using the radiusSearch function of the k-d tree and are removed if they are close enough to the map.
+此滤波器加载地图点云（开始时一次性静态加载整幅地图，或在车辆移动时动态加载），并利用 VoxelGrid 对地图点云进行下采样。
 
-### Lanelet Elevation Filter
+对于输入点云中的每个点，滤波器结合使用 VoxelGrid 类的 `getCentroidIndexAt` 与 `getGridCoordinates` 函数，检查输入点附近是否存在下采样后的地图点。如果包含该点或靠近该点的体素中存在下采样后的地图点，则移除该输入点。
 
-The Lanelet Elevation Filter filters point clouds based on lanelet elevation information. It creates a grid-based elevation map from lanelet data and filters out points that deviate significantly from the expected road surface height. This filter is useful for removing floating objects, overpass structures, and other non-road elements that should not be considered for ground-level navigation.
+<a id="voxel-distance-based-compare-map-filter"></a>
 
-The filter processes lanelet maps to extract elevation information at regular grid intervals and uses this information to validate incoming point cloud data. Points that are too far above or below the expected lanelet surface elevation are filtered out.
+### 基于体素距离的地图比较滤波器
 
-If incoming point cloud frame differs from target_frame, points will be transformed to target_frame before elevation check.
+此滤波器结合了 distance_based_compare_map_filter 和 voxel_based_approximate_compare_map_filter。它加载地图点云（可在开始时静态加载，也可在车辆运动时动态加载），并创建地图点云的体素网格和 k-d 树。滤波器结合使用 VoxelGrid 类的 getCentroidIndexAt 与 getGridCoordinates 函数，查找并移除位于体素网格内部的输入点。对于不属于任何体素网格的点，再使用 k-d 树的 radiusSearch 函数与地图点云比较，若距离地图足够近则移除。
 
-## Inputs / Outputs
+<a id="lanelet-elevation-filter"></a>
 
-### Compare Elevation Map Filter
+### Lanelet 高程滤波器
 
-#### Input
+Lanelet 高程滤波器根据 lanelet 高程信息过滤点云。它从 lanelet 数据创建基于网格的高程地图，并滤除明显偏离预期路面高度的点。此滤波器有助于移除悬浮物体、立交桥结构及其他不应纳入地面导航的非道路元素。
 
-| Name                    | Type                            | Description      |
+滤波器处理 lanelet 地图，以规则网格间隔提取高程信息，并据此验证输入点云数据。高于或低于预期 lanelet 表面高程过多的点将被滤除。
+
+如果输入点云坐标系与 target_frame 不同，则在高程检查前先将点变换到 target_frame。
+
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="compare-elevation-map-filter_1"></a>
+
+### 高程地图比较滤波器
+
+<a id="input"></a>
+
+#### 输入
+
+| 名称                    | 类型                            | 说明      |
 | ----------------------- | ------------------------------- | ---------------- |
-| `~/input/points`        | `sensor_msgs::msg::PointCloud2` | reference points |
-| `~/input/elevation_map` | `grid_map::msg::GridMap`        | elevation map    |
+| `~/input/points`        | `sensor_msgs::msg::PointCloud2` | 参考点 |
+| `~/input/elevation_map` | `grid_map::msg::GridMap`        | 高程地图    |
 
-#### Output
+<a id="output"></a>
 
-| Name              | Type                            | Description     |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | ----------------- | ------------------------------- | --------------- |
-| `~/output/points` | `sensor_msgs::msg::PointCloud2` | filtered points |
+| `~/output/points` | `sensor_msgs::msg::PointCloud2` | 过滤后的点 |
 
-#### Parameters
+<a id="parameters"></a>
 
-| Name                 | Type   | Description                                                                     | Default value |
+#### 参数
+
+| 名称                 | 类型   | 说明                                                                     | 默认值 |
 | :------------------- | :----- | :------------------------------------------------------------------------------ | :------------ |
-| `map_layer_name`     | string | elevation map layer name                                                        | elevation     |
-| `map_frame`          | float  | frame_id of the map that is temporarily used before elevation_map is subscribed | map           |
-| `height_diff_thresh` | float  | Remove points whose height difference is below this value [m]                   | 0.15          |
+| `map_layer_name`     | string | 高程地图图层名称                                                        | elevation     |
+| `map_frame`          | float  | 订阅 elevation_map 前临时使用的地图 frame_id | map           |
+| `height_diff_thresh` | float  | 移除高度差低于此值的点 [m]                   | 0.15          |
 
-### Lanelet Elevation Filter
+<a id="lanelet-elevation-filter_1"></a>
 
-#### Input
+### Lanelet 高程滤波器
 
-| Name                  | Type                                    | Description       |
+<a id="input_1"></a>
+
+#### 输入
+
+| 名称                  | 类型                                    | 说明       |
 | --------------------- | --------------------------------------- | ----------------- |
-| `~/input/pointcloud`  | `sensor_msgs::msg::PointCloud2`         | input point cloud |
-| `~/input/lanelet_map` | `autoware_map_msgs::msg::LaneletMapBin` | lanelet map       |
+| `~/input/pointcloud`  | `sensor_msgs::msg::PointCloud2`         | 输入点云 |
+| `~/input/lanelet_map` | `autoware_map_msgs::msg::LaneletMapBin` | lanelet 地图       |
 
-#### Output
+<a id="output_1"></a>
 
-| Name                        | Type                                   | Description                  |
+#### 输出
+
+| 名称                        | 类型                                   | 说明                  |
 | --------------------------- | -------------------------------------- | ---------------------------- |
-| `~/output/pointcloud`       | `sensor_msgs::msg::PointCloud2`        | filtered point cloud         |
-| `~/debug/elevation_markers` | `visualization_msgs::msg::MarkerArray` | elevation grid visualization |
+| `~/output/pointcloud`       | `sensor_msgs::msg::PointCloud2`        | 过滤后的点云         |
+| `~/debug/elevation_markers` | `visualization_msgs::msg::MarkerArray` | 高程网格可视化 |
 
-#### Parameters
+<a id="parameters_1"></a>
 
-| Name                   | Type   | Description                                                                               | Default value                                                               |
+#### 参数
+
+| 名称                   | 类型   | 说明                                                                               | 默认值                                                               |
 | :--------------------- | :----- | :---------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- |
-| `grid_resolution`      | double | Grid cell size in meters for elevation processing                                         | 1.0                                                                         |
-| `height_threshold`     | double | Maximum height difference from lanelet elevation (meters)                                 | 2.0                                                                         |
-| `sampling_distance`    | double | Distance between sampled points along lanelet boundaries (meters)                         | 0.5                                                                         |
-| `extension_count`      | int    | Number of cells to extend around original lanelet points                                  | 5                                                                           |
-| `target_frame`         | string | Target coordinate frame for processing                                                    | map                                                                         |
-| `cache_directory`      | string | Directory for cached grid files                                                           | $(find-pkg-share autoware_compare_map_segmentation)/data/lanelet_grid_cache |
-| `require_map_coverage` | bool   | If true, only keep points with direct map coverage; reject points requiring interpolation | true                                                                        |
-| `enable_debug`         | bool   | Enable debug mode (includes elevation markers and processing time publisher)              | false                                                                       |
+| `grid_resolution`      | double | 高程处理的网格单元尺寸，单位为米                                         | 1.0                                                                         |
+| `height_threshold`     | double | 相对于 lanelet 高程的最大高度差（米）                                 | 2.0                                                                         |
+| `sampling_distance`    | double | 沿 lanelet 边界采样点之间的距离（米）                         | 0.5                                                                         |
+| `extension_count`      | int    | 原始 lanelet 点周围扩展的单元数量                                  | 5                                                                           |
+| `target_frame`         | string | 处理所用的目标坐标系                                                    | map                                                                         |
+| `cache_directory`      | string | 缓存网格文件的目录 | $(find-pkg-share autoware_compare_map_segmentation)/data/lanelet_grid_cache |
+| `require_map_coverage` | bool   | 若为 true，仅保留地图直接覆盖的点；拒绝需要插值的点 | true                                                                        |
+| `enable_debug`         | bool   | 启用调试模式（包含高程标记和处理时间发布者） | false                                                                       |
 
-### Other Filters
+<a id="other-filters"></a>
 
-#### Input
+### 其他滤波器
 
-| Name                            | Type                            | Description                                            |
+<a id="input_2"></a>
+
+#### 输入
+
+| 名称                            | 类型                            | 说明                                            |
 | ------------------------------- | ------------------------------- | ------------------------------------------------------ |
-| `~/input/points`                | `sensor_msgs::msg::PointCloud2` | reference points                                       |
-| `~/input/map`                   | `sensor_msgs::msg::PointCloud2` | map (in case static map loading)                       |
-| `/localization/kinematic_state` | `nav_msgs::msg::Odometry`       | current ego-vehicle pose (in case dynamic map loading) |
+| `~/input/points`                | `sensor_msgs::msg::PointCloud2` | 参考点 |
+| `~/input/map`                   | `sensor_msgs::msg::PointCloud2` | 地图（静态地图加载时） |
+| `/localization/kinematic_state` | `nav_msgs::msg::Odometry`       | 当前自车位姿（动态地图加载时） |
 
-#### Output
+<a id="output_2"></a>
 
-| Name              | Type                            | Description     |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | ----------------- | ------------------------------- | --------------- |
-| `~/output/points` | `sensor_msgs::msg::PointCloud2` | filtered points |
+| `~/output/points` | `sensor_msgs::msg::PointCloud2` | 过滤后的点 |
 
-#### Parameters
+<a id="parameters_2"></a>
 
-| Name                            | Type   | Description                                                                                                                             | Default value |
+#### 参数
+
+| 名称                            | 类型   | 说明                                                                                                                             | 默认值 |
 | :------------------------------ | :----- | :-------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| `use_dynamic_map_loading`       | bool   | map loading mode selection, `true` for dynamic map loading, `false` for static map loading, recommended for no-split map pointcloud     | true          |
-| `distance_threshold`            | float  | Threshold distance to compare input points with map points [m]                                                                          | 0.5           |
-| `map_update_distance_threshold` | float  | Threshold of vehicle movement distance when map update is necessary (in dynamic map loading) [m]                                        | 10.0          |
-| `map_loader_radius`             | float  | Radius of map need to be loaded (in dynamic map loading) [m]                                                                            | 150.0         |
-| `timer_interval_ms`             | int    | Timer interval to check if the map update is necessary (in dynamic map loading) [ms]                                                    | 100           |
-| `publish_debug_pcd`             | bool   | Enable to publish voxelized updated map in `debug/downsampled_map/pointcloud` for debugging. It might cause additional computation cost | false         |
-| `downsize_ratio_z_axis`         | double | Positive ratio to reduce voxel_leaf_size and neighbor point distance threshold in z axis                                                | 0.5           |
+| `use_dynamic_map_loading`       | bool   | 地图加载模式选择：`true` 为动态地图加载，`false` 为静态地图加载，建议用于未分块的地图点云 | true          |
+| `distance_threshold`            | float  | 比较输入点与地图点的距离阈值 [m] | 0.5           |
+| `map_update_distance_threshold` | float  | 需要更新地图时的车辆移动距离阈值（动态地图加载时）[m] | 10.0          |
+| `map_loader_radius`             | float  | 需要加载的地图半径（动态地图加载时）[m] | 150.0         |
+| `timer_interval_ms`             | int    | 检查是否需要更新地图的定时器间隔（动态地图加载时）[ms] | 100           |
+| `publish_debug_pcd`             | bool   | 启用后在 `debug/downsampled_map/pointcloud` 发布体素化的更新地图用于调试，可能增加计算开销 | false         |
+| `downsize_ratio_z_axis`         | double | 用于减小 z 轴方向 voxel_leaf_size 和邻近点距离阈值的正比例系数 | 0.5           |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-## (Optional) Error detection and handling
+## 前提假设／已知限制
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

@@ -1,38 +1,48 @@
 # autoware_external_cmd_selector
 
-## Purpose
+<a id="purpose"></a>
 
-`autoware_external_cmd_selector` is the package to publish `external_control_cmd`, `gear_cmd`, `hazard_lights_cmd`, `heartbeat` and `turn_indicators_cmd`, according to the current mode, which is `remote` or `local`.
+## 目的
 
-The current mode is set via service, `remote` is remotely operated, `local` is to use the values calculated by Autoware.
+`autoware_external_cmd_selector` 功能包根据当前模式（`remote` 或 `local`）发布 `external_control_cmd`、`gear_cmd`、`hazard_lights_cmd`、`heartbeat` 和 `turn_indicators_cmd`。
 
-## Input / Output
+当前模式通过服务设置；`remote` 表示远程操作，`local` 表示使用 Autoware 计算出的值。
 
-### Input topics
+<a id="input-output"></a>
 
-| Name                                           | Type | Description                                             |
+## 输入与输出
+
+<a id="input-topics"></a>
+
+### 输入话题
+
+| 名称 | 类型 | 说明 |
 | ---------------------------------------------- | ---- | ------------------------------------------------------- |
-| `/api/external/set/command/local/control`      | TBD  | Local. Calculated control value.                        |
-| `/api/external/set/command/local/heartbeat`    | TBD  | Local. Heartbeat.                                       |
-| `/api/external/set/command/local/shift`        | TBD  | Local. Gear shift like drive, rear and etc.             |
-| `/api/external/set/command/local/turn_signal`  | TBD  | Local. Turn signal like left turn, right turn and etc.  |
-| `/api/external/set/command/remote/control`     | TBD  | Remote. Calculated control value.                       |
-| `/api/external/set/command/remote/heartbeat`   | TBD  | Remote. Heartbeat.                                      |
-| `/api/external/set/command/remote/shift`       | TBD  | Remote. Gear shift like drive, rear and etc.            |
-| `/api/external/set/command/remote/turn_signal` | TBD  | Remote. Turn signal like left turn, right turn and etc. |
+| `/api/external/set/command/local/control` | TBD | 本地：计算出的控制值。 |
+| `/api/external/set/command/local/heartbeat` | TBD | 本地：心跳。 |
+| `/api/external/set/command/local/shift` | TBD | 本地：前进挡、倒挡等挡位切换。 |
+| `/api/external/set/command/local/turn_signal` | TBD | 本地：左转、右转等转向灯信号。 |
+| `/api/external/set/command/remote/control` | TBD | 远程：计算出的控制值。 |
+| `/api/external/set/command/remote/heartbeat` | TBD | 远程：心跳。 |
+| `/api/external/set/command/remote/shift` | TBD | 远程：前进挡、倒挡等挡位切换。 |
+| `/api/external/set/command/remote/turn_signal` | TBD | 远程：左转、右转等转向灯信号。 |
 
-### Output topics
+<a id="output-topics"></a>
 
-| Name                                                   | Type                                              | Description                                     |
+### 输出话题
+
+| 名称 | 类型 | 说明 |
 | ------------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------- |
-| `/control/external_cmd_selector/current_selector_mode` | TBD                                               | Current selected mode, remote or local.         |
-| `/diagnostics`                                         | diagnostic_msgs::msg::DiagnosticArray             | Check if node is active or not.                 |
-| `/external/selected/external_control_cmd`              | TBD                                               | Pass through control command with current mode. |
-| `/external/selected/gear_cmd`                          | autoware_vehicle_msgs::msg::GearCommand           | Pass through gear command with current mode.    |
-| `/external/selected/hazard_lights_cmd`                 | autoware_vehicle_msgs::msg::HazardLightsCommand   | Pass through hazard light with current mode.    |
-| `/external/selected/heartbeat`                         | TBD                                               | Pass through heartbeat with current mode.       |
-| `/external/selected/turn_indicators_cmd`               | autoware_vehicle_msgs::msg::TurnIndicatorsCommand | Pass through turn indicator with current mode.  |
+| `/control/external_cmd_selector/current_selector_mode` | TBD | 当前选择的模式：remote 或 local。 |
+| `/diagnostics` | diagnostic_msgs::msg::DiagnosticArray | 检查节点是否处于活动状态。 |
+| `/external/selected/external_control_cmd` | TBD | 转发当前模式的控制命令。 |
+| `/external/selected/gear_cmd` | autoware_vehicle_msgs::msg::GearCommand | 转发当前模式的挡位命令。 |
+| `/external/selected/hazard_lights_cmd` | autoware_vehicle_msgs::msg::HazardLightsCommand | 转发当前模式的危险警告灯命令。 |
+| `/external/selected/heartbeat` | TBD | 转发当前模式的心跳。 |
+| `/external/selected/turn_indicators_cmd` | autoware_vehicle_msgs::msg::TurnIndicatorsCommand | 转发当前模式的转向灯命令。 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{json_to_markdown("control/autoware_external_cmd_selector/schema/external_cmd_selector.schema.json")}}

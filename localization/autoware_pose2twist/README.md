@@ -1,32 +1,44 @@
 # autoware_pose2twist
 
-## Purpose
+<a id="purpose"></a>
 
-This `autoware_pose2twist` calculates the velocity from the input pose history. In addition to the computed twist, this node outputs the linear-x and angular-z components as a float message to simplify debugging.
+## 用途
 
-The `twist.linear.x` is calculated as `sqrt(dx * dx + dy * dy + dz * dz) / dt`, and the values in the `y` and `z` fields are zero.
-The `twist.angular` is calculated as `relative_rotation_vector / dt` for each field.
+`autoware_pose2twist` 根据输入位姿的历史数据计算速度。除计算出的速度消息外，此节点还以浮点消息输出 linear-x 和 angular-z 分量，便于调试。
 
-## Inputs / Outputs
+`twist.linear.x` 按 `sqrt(dx * dx + dy * dy + dz * dz) / dt` 计算，`y` 和 `z` 字段的值为零。
+`twist.angular` 的各字段均按 `relative_rotation_vector / dt` 计算。
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name | Type                            | Description                                       |
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ---- | ------------------------------- | ------------------------------------------------- |
-| pose | geometry_msgs::msg::PoseStamped | pose source to used for the velocity calculation. |
+| pose | geometry_msgs::msg::PoseStamped | 用于计算速度的位姿来源。 |
 
-### Output
+<a id="output"></a>
 
-| Name      | Type                                              | Description                                   |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | --------- | ------------------------------------------------- | --------------------------------------------- |
-| twist     | geometry_msgs::msg::TwistStamped                  | twist calculated from the input pose history. |
-| linear_x  | autoware_internal_debug_msgs::msg::Float32Stamped | linear-x field of the output twist.           |
-| angular_z | autoware_internal_debug_msgs::msg::Float32Stamped | angular-z field of the output twist.          |
+| twist | geometry_msgs::msg::TwistStamped | 根据输入位姿历史计算得到的速度。 |
+| linear_x | autoware_internal_debug_msgs::msg::Float32Stamped | 输出速度的 linear-x 字段。 |
+| angular_z | autoware_internal_debug_msgs::msg::Float32Stamped | 输出速度的 angular-z 字段。 |
 
-## Parameters
+<a id="parameters"></a>
 
-none.
+## 参数
 
-## Assumptions / Known limits
+无。
 
-none.
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制
+
+无。

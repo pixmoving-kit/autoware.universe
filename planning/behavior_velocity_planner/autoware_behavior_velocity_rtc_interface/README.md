@@ -1,3 +1,5 @@
-# Behavior Velocity RTC Interface
+<a id="behavior-velocity-rtc-interface"></a>
 
-This package provides a behavior velocity interface with RTC, which are used in the `behavior_velocity_planner` node and modules.
+# 行为速度 RTC 接口
+
+此软件包提供与 RTC 对接的行为速度接口，供 `behavior_velocity_planner` 节点及其模块使用。

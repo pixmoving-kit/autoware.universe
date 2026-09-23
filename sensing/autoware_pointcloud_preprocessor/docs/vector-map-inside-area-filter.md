@@ -1,38 +1,52 @@
 # vector_map_inside_area_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `vector_map_inside_area_filter` is a node that removes points inside the vector map area that has given type by parameter.
+## 用途
 
-## Inner-workings / Algorithms
+`vector_map_inside_area_filter` 节点用于移除矢量地图中属于参数指定类型的区域内的点。
 
-- Get the vector map area that has given type by parameter of `polygon_type`
-- Extract the vector map area that intersects with the bounding box of input points to reduce the calculation cost
-- Create the 2D polygon from the extracted vector map area
-- Remove input points inside the polygon
-- If the z value is used for filtering, remove points that are below the z threshold
+<a id="inner-workings-algorithms"></a>
 
-![vector_map_inside_area_filter_figure](./image/vector_map_inside_area_filter_overview.svg)
+## 内部机制／算法
 
-## Inputs / Outputs
+- 获取矢量地图中类型与 `polygon_type` 参数指定值一致的区域
+- 提取与输入点包围盒相交的矢量地图区域，以降低计算成本
+- 根据提取的矢量地图区域创建二维多边形
+- 移除位于该多边形内的输入点
+- 如果使用 z 值过滤，则移除低于 z 阈值的点
 
-This implementation inherits `autoware::pointcloud_preprocessor::Filter` class, so please see also [README](../README.md).
+![矢量地图区域内过滤示意图](./image/vector_map_inside_area_filter_overview.svg)
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name                 | Type                                    | Description                          |
+## 输入／输出
+
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，另请参阅 [README](../README.md)。
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | -------------------- | --------------------------------------- | ------------------------------------ |
-| `~/input`            | `sensor_msgs::msg::PointCloud2`         | input points                         |
-| `~/input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | vector map used for filtering points |
+| `~/input` | `sensor_msgs::msg::PointCloud2` | 输入点 |
+| `~/input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | 用于过滤点的矢量地图 |
 
-### Output
+<a id="output"></a>
 
-| Name       | Type                            | Description     |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ---------- | ------------------------------- | --------------- |
-| `~/output` | `sensor_msgs::msg::PointCloud2` | filtered points |
+| `~/output` | `sensor_msgs::msg::PointCloud2` | 过滤后的点 |
 
-### Core Parameters
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/vector_map_inside_area_filter_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制

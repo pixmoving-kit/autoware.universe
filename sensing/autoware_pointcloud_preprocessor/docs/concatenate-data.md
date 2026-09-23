@@ -1,130 +1,160 @@
 # concatenate_and_time_synchronize_node
 
-## Purpose
+<a id="purpose"></a>
 
-The `concatenate_and_time_synchronize_node` is a node designed to combine and synchronize multiple point clouds into a single, unified point cloud. By integrating data from multiple LiDARs, this node significantly enhances the sensing range and coverage of autonomous vehicles, enabling more accurate perception of the surrounding environment. Synchronization ensures that point clouds are aligned temporally, reducing errors caused by mismatched timestamps.
+## 用途
 
-For example, consider a vehicle equipped with three LiDAR sensors mounted on the left, right, and top positions. Each LiDAR captures data from its respective field of view, as shown below:
+`concatenate_and_time_synchronize_node` 用于将多个点云同步并合并为一个统一的点云。通过整合多个激光雷达的数据，此节点显著扩大自动驾驶车辆的探测范围和覆盖范围，从而更准确地感知周围环境。同步处理确保点云在时间上对齐，减少时间戳不匹配引起的误差。
 
-|                       Left                        |                       Top                       |                        Right                        |
+例如，一辆车在左侧、右侧和顶部各安装一个激光雷达。每个激光雷达采集各自视场内的数据，如下图所示：
+
+| 左侧 | 顶部 | 右侧 |
 | :-----------------------------------------------: | :---------------------------------------------: | :-------------------------------------------------: |
-| ![Concatenate Left](./image/concatenate_left.png) | ![Concatenate Top](./image/concatenate_top.png) | ![Concatenate Right](./image/concatenate_right.png) |
+| ![左侧点云](./image/concatenate_left.png) | ![顶部点云](./image/concatenate_top.png) | ![右侧点云](./image/concatenate_right.png) |
 
-After processing the data through the `concatenate_and_time_synchronize_node`, the outputs from all LiDARs are combined into a single comprehensive point cloud that provides a complete view of the environment:
+经过 `concatenate_and_time_synchronize_node` 处理后，所有激光雷达的输出合并为一个综合点云，提供完整的环境视图：
 
-![Full Scene View](./image/concatenate_all.png)
+![完整场景视图](./image/concatenate_all.png)
 
-This resulting point cloud allows autonomous systems to detect obstacles, map the environment, and navigate more effectively, leveraging the complementary fields of view from multiple LiDAR sensors.
+通过利用多个激光雷达相互补充的视场，生成的点云使自主系统能够更有效地检测障碍物、构建环境地图和导航。
 
-## Inner Workings / Algorithms
+<a id="inner-workings-algorithms"></a>
 
-![concatenate_algorithm](./image/concatenate_algorithm.drawio.svg)
+## 内部机制／算法
 
-### Step 1: Match and Create Collector
+![点云拼接算法](./image/concatenate_algorithm.drawio.svg)
 
-When a point cloud arrives, its timestamp is checked, and an offset is subtracted to get the reference timestamp. The node then checks if there is an existing collector with the same reference timestamp. If such a collector exists, the point cloud is added to it. If no such collector exists, a new collector is created with the reference timestamp.
+<a id="step-1-match-and-create-collector"></a>
 
-### Step 2: Trigger the Timer
+### 步骤 1：匹配并创建收集器
 
-Once a collector is created, a timer for that collector starts counting down (this value is defined by `timeout_sec`). The collector begins to concatenate the point clouds either when all point clouds defined in `input_topics` have been collected or when the timer counts down to zero.
+点云到达时，节点会检查其时间戳，并减去偏移量得到参考时间戳。随后，节点检查是否存在具有相同参考时间戳的收集器。如果存在，就将点云添加到该收集器；否则，使用该参考时间戳创建新的收集器。
 
-### Step 3: Concatenate the Point Clouds
+<a id="step-2-trigger-the-timer"></a>
 
-The concatenation process involves merging multiple point clouds into a single, concatenated point cloud. The timestamp of the concatenated point cloud will be the earliest timestamp from the input point clouds. By setting the parameter `is_motion_compensated` to `true`, the node will consider the timestamps of the input point clouds and utilize the `twist` information from `geometry_msgs::msg::TwistWithCovarianceStamped` to compensate for motion, aligning the point cloud to the selected (earliest) timestamp.
+### 步骤 2：启动定时器
 
-### Step 4: Publish the Point Cloud
+收集器创建后，对应的定时器开始倒计时（时长由 `timeout_sec` 定义）。当 `input_topics` 中定义的所有点云均已收集齐，或定时器倒计时归零时，收集器开始拼接点云。
 
-After concatenation, the concatenated point cloud is published, and the collector is deleted to free up resources.
+<a id="step-3-concatenate-the-point-clouds"></a>
 
-## Inputs / Outputs
+### 步骤 3：拼接点云
 
-### Input
+拼接过程将多个点云合并为一个点云。拼接后点云的时间戳采用输入点云中最早的时间戳。如果将 `is_motion_compensated` 参数设为 `true`，节点会考虑输入点云的时间戳，并利用 `geometry_msgs::msg::TwistWithCovarianceStamped` 中的 `twist` 信息进行运动补偿，将点云对齐到所选的最早时间戳。
 
-| Name            | Type                                             | Description                                                                                                                                              |
+<a id="step-4-publish-the-point-cloud"></a>
+
+### 步骤 4：发布点云
+
+拼接完成后，发布拼接后的点云，并删除收集器以释放资源。
+
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | --------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `~/input/twist` | `geometry_msgs::msg::TwistWithCovarianceStamped` | Twist information adjusts the point cloud scans based on vehicle motion, allowing LiDARs with different timestamps to be synchronized for concatenation. |
-| `~/input/odom`  | `nav_msgs::msg::Odometry`                        | Vehicle odometry adjusts the point cloud scans based on vehicle motion, allowing LiDARs with different timestamps to be synchronized for concatenation.  |
+| `~/input/twist` | `geometry_msgs::msg::TwistWithCovarianceStamped` | 根据车辆运动，利用速度信息调整点云扫描，使不同时间戳的激光雷达数据同步后再拼接。 |
+| `~/input/odom` | `nav_msgs::msg::Odometry` | 根据车辆运动，利用车辆里程计调整点云扫描，使不同时间戳的激光雷达数据同步后再拼接。 |
 
-By setting the `input_twist_topic_type` parameter to `twist` or `odom`, the subscriber will subscribe to either `~/input/twist` or `~/input/odom`. If the user doesn't want to use the twist information or vehicle odometry to compensate for motion, set `is_motion_compensated` to `false`.
+将 `input_twist_topic_type` 参数设为 `twist` 或 `odom`，订阅器将分别订阅 `~/input/twist` 或 `~/input/odom`。如果不希望使用速度信息或车辆里程计进行运动补偿，请将 `is_motion_compensated` 设为 `false`。
 
-### Output
+<a id="output"></a>
 
-| Name              | Type                                                     | Description                                                                                                 |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ----------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `~/output/points` | `sensor_msgs::msg::Pointcloud2`                          | Concatenated point clouds                                                                                   |
-| `~/output/info`   | `autoware_sensing_msgs::msg::ConcatenatedPointCloudInfo` | Information about the concatenated point cloud, including extents of source point clouds and their statuses |
+| `~/output/points` | `sensor_msgs::msg::Pointcloud2` | 拼接后的点云 |
+| `~/output/info` | `autoware_sensing_msgs::msg::ConcatenatedPointCloudInfo` | 拼接点云的信息，包括源点云的范围及其状态 |
 
-### Core Parameters
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/concatenate_and_time_sync_node.schema.json") }}
 
-## Concatenation Strategies
+<a id="concatenation-strategies"></a>
 
-The `concatenate_and_time_synchronize_node` supports different concatenation strategies through the `matching_strategy.type` parameter, designed to handle different LiDAR synchronization scenarios:
+## 拼接策略
 
-### Naive Strategy (`matching_strategy.type: "naive"`)
+`concatenate_and_time_synchronize_node` 通过 `matching_strategy.type` 参数支持不同的拼接策略，以处理不同的激光雷达同步场景：
 
-The naive strategy is designed for scenarios where LiDAR sensors are **not synchronized** or when precise timestamp alignment is not critical. This strategy:
+<a id="naive-strategy-matching_strategytype-naive"></a>
 
-- **Direct concatenation**: Point clouds are concatenated directly without complex timestamp matching
-- **Simple collection**: Point clouds are collected and merged as they arrive within the timeout window
-- **No offset compensation**: Does not use `lidar_timestamp_offsets` or `lidar_timestamp_noise_window` parameters
-- **Faster processing**: Reduced computational overhead due to simplified logic
+### 简单策略（`matching_strategy.type: "naive"`）
 
-**When to use naive strategy:**
+简单策略适用于激光雷达传感器**未同步**，或不要求精确时间戳对齐的场景。该策略具有以下特点：
 
-- LiDAR sensors are not hardware-synchronized
-- Timestamp differences between sensors are negligible for your application
-- You prioritize processing speed over precise temporal alignment
-- Simple concatenation without complex matching logic is sufficient
+- **直接拼接**：无需复杂的时间戳匹配，直接拼接点云
+- **简单收集**：收集并合并超时窗口内到达的点云
+- **无偏移补偿**：不使用 `lidar_timestamp_offsets` 或 `lidar_timestamp_noise_window` 参数
+- **处理更快**：通过简化逻辑降低计算开销
 
-#### Parameter Settings
+**简单策略的适用场景：**
 
-Set the `type` parameter of `matching_strategy` to `"naive"` to concatenate the point clouds directly.
+- 激光雷达传感器未进行硬件同步
+- 传感器之间的时间戳差异对应用而言可以忽略
+- 相比精确的时间对齐，更重视处理速度
+- 简单拼接已能满足需求，无需复杂匹配逻辑
 
-### Advanced Strategy (`matching_strategy.type: "advanced"`)
+<a id="parameter-settings"></a>
 
-The advanced strategy is designed for scenarios where LiDAR sensors are **synchronized** and precise timestamp alignment is crucial. This strategy:
+#### 参数设置
 
-- **Precise timestamp matching**: Uses reference timestamps with offset compensation
-- **Noise tolerance**: Accounts for timestamp jitter using `lidar_timestamp_noise_window`
-- **Offset correction**: Applies `lidar_timestamp_offsets` to align different LiDAR timing
-- **Robust collection**: Handles temporal variations and ensures proper point cloud grouping
+将 `matching_strategy` 的 `type` 参数设为 `"naive"`，即可直接拼接点云。
 
-**When to use advanced strategy:**
+<a id="advanced-strategy-matching_strategytype-advanced"></a>
 
-- LiDAR sensors are hardware-synchronized
-- Precise temporal alignment is critical for your application
-- You have measured timestamp offsets between your LiDAR sensors
-- You want to handle timestamp noise and jitter effectively
+### 高级策略（`matching_strategy.type: "advanced"`）
 
-**Required parameters for advanced strategy:**
+高级策略适用于激光雷达传感器**已同步**且精确时间戳对齐至关重要的场景。该策略具有以下特点：
 
-- `lidar_timestamp_offsets`: Array of time offsets for each LiDAR sensor
-- `lidar_timestamp_noise_window`: Time window to handle timestamp jitter
-- `timeout_sec`: Maximum wait time for point cloud collection
+- **精确时间戳匹配**：使用经过偏移补偿的参考时间戳
+- **噪声容忍**：使用 `lidar_timestamp_noise_window` 处理时间戳抖动
+- **偏移校正**：应用 `lidar_timestamp_offsets` 对齐不同激光雷达的时序
+- **稳健收集**：处理时间变化，确保点云正确分组
 
-#### Parameter Settings
+**高级策略的适用场景：**
 
-Set the `type` parameter of `matching_strategy` to `"advanced"` and configure the `timeout_sec`, `lidar_timestamp_offsets` and `lidar_timestamp_noise_window` parameters accordingly.
+- 激光雷达传感器已进行硬件同步
+- 精确的时间对齐对应用至关重要
+- 已测量各激光雷达传感器之间的时间戳偏移
+- 希望有效处理时间戳噪声和抖动
+
+**高级策略所需参数：**
+
+- `lidar_timestamp_offsets`：各激光雷达传感器时间偏移量组成的数组
+- `lidar_timestamp_noise_window`：处理时间戳抖动的时间窗口
+- `timeout_sec`：收集点云的最长等待时间
+
+<a id="parameter-settings_1"></a>
+
+#### 参数设置
+
+将 `matching_strategy` 的 `type` 参数设为 `"advanced"`，并相应配置 `timeout_sec`、`lidar_timestamp_offsets` 和 `lidar_timestamp_noise_window` 参数。
 
 ##### timeout_sec
 
-When network issues occur or when point clouds experience delays in the previous processing pipeline, some point clouds may be delayed or dropped. To address this, the `timeout_sec` parameter is used. Once the timer is created, it will start counting down from `timeout_sec`. If the timer reaches zero, the collector will not wait for delayed or dropped point clouds but will concatenate the remaining point clouds in the collector directly. The figure below demonstrates how `timeout_sec` works with `concatenate_and_time_sync_node` when `timeout_sec` is set to `0.12` (120 ms).
+当网络出现问题或点云在前面的处理流水线中发生延迟时，某些点云可能延迟到达或丢失。`timeout_sec` 参数用于处理这种情况。定时器创建后，从 `timeout_sec` 开始倒计时。归零时，收集器不再等待延迟或丢失的点云，而是直接拼接已经收集到的点云。下图展示了 `timeout_sec` 在 `concatenate_and_time_sync_node` 中的工作方式，其中 `timeout_sec` 设为 `0.12`（120 ms）。
 
-![concatenate_edge_case](./image/concatenate_edge_case.drawio.svg)
+![点云拼接边界情况](./image/concatenate_edge_case.drawio.svg)
 
 ##### lidar_timestamp_offsets
 
-Since different vehicles have varied designs for LiDAR scanning, the timestamps of each LiDAR may differ. Users need to know the offsets between each LiDAR and set the values in `lidar_timestamp_offsets`.
+不同车辆采用的激光雷达扫描设计不同，各激光雷达的时间戳也可能不同。用户需要了解各激光雷达之间的偏移量，并在 `lidar_timestamp_offsets` 中设置对应数值。
 
-To monitor the timestamps of each LiDAR, run the following command:
+要监控各激光雷达的时间戳，请运行以下命令：
 
 ```bash
 ros2 topic echo "pointcloud_topic" --field header
 ```
 
-The timestamps should increase steadily by approximately 100 ms, as per the Autoware default. You should see output like this:
+按照 Autoware 的默认设置，时间戳应以约 100 ms 的间隔稳定递增。输出应类似如下内容：
 
 ```bash
 nanosec: 156260951
@@ -132,61 +162,73 @@ nanosec: 257009560
 nanosec: 355444581
 ```
 
-This pattern indicates a LiDAR timestamp of 0.05.
+这种模式表示激光雷达时间戳的小数部分为 0.05。
 
-If there are three LiDARs (left, right, top), and the timestamps for the left, right, and top point clouds are `0.01`, `0.05`, and `0.09` seconds respectively, the parameters should be set as [0.0, 0.04, 0.08]. This reflects the timestamp differences between the current point cloud and the point cloud with the earliest timestamp. Note that the order of the `lidar_timestamp_offsets` corresponds to the order of the `input_topics`.
+如果有三个激光雷达（左、右、顶），其点云时间戳分别为 `0.01`、`0.05` 和 `0.09` 秒，则应将参数设为 [0.0, 0.04, 0.08]。这些值表示当前点云与时间戳最早点云之间的时间差。注意，`lidar_timestamp_offsets` 的顺序应与 `input_topics` 一致。
 
-The figure below demonstrates how `lidar_timestamp_offsets` works with `concatenate_and_time_sync_node`.
+下图展示了 `lidar_timestamp_offsets` 在 `concatenate_and_time_sync_node` 中的工作方式。
 
-![ideal_timestamp_offset](./image/ideal_timestamp_offset.drawio.svg)
+![理想时间戳偏移](./image/ideal_timestamp_offset.drawio.svg)
 
 ##### lidar_timestamp_noise_window
 
-Additionally, due to the mechanical design of LiDARs, there may be some jitter in the timestamps of each scan, as shown in the image below. For example, if the scan frequency is set to 10 Hz (scanning every 100 ms), the timestamps between each scan might not be exactly 100 ms apart. To handle this noise, the `lidar_timestamp_noise_window` parameter is provided.
+此外，由于激光雷达的机械设计，每次扫描的时间戳可能存在抖动，如下图所示。例如，扫描频率设为 10 Hz（每 100 ms 扫描一次）时，相邻扫描的时间戳间隔可能并非恰好为 100 ms。`lidar_timestamp_noise_window` 参数用于处理这种噪声。
 
-Users can use [this tool](https://github.com/tier4/timestamp_analyzer) to visualize the noise between each scan.
+用户可以使用[此工具](https://github.com/tier4/timestamp_analyzer)将各次扫描之间的噪声可视化。
 
-![jitter](./image/jitter.png)
+![时间戳抖动](./image/jitter.png)
 
-From the example above, the noise ranges from 0 to 8 ms, so the user should set `lidar_timestamp_noise_window` to `0.008`.
+上述示例中的噪声范围为 0 到 8 ms，因此应将 `lidar_timestamp_noise_window` 设为 `0.008`。
 
-The figure below demonstrates how `lidar_timestamp_noise_window` works with the `concatenate_and_time_sync_node`. If the green `X` is within the range of the red triangles, it indicates that the point cloud matches the reference timestamp of the collector.
+下图展示了 `lidar_timestamp_noise_window` 在 `concatenate_and_time_sync_node` 中的工作方式。如果绿色 `X` 位于红色三角形限定的范围内，则表示该点云与收集器的参考时间戳匹配。
 
-![noise_timestamp_offset](./image/noise_timestamp_offset.drawio.svg)
+![带噪声的时间戳偏移](./image/noise_timestamp_offset.drawio.svg)
 
-## Meta Information Topic
+<a id="meta-information-topic"></a>
 
-The concatenation node publishes detailed meta information about the concatenation process through the `~/output/info` topic. For detailed information about the `ConcatenatedPointCloudInfo` message structure, please refer to the [autoware_msgs repository documentation](https://github.com/autowarefoundation/autoware_msgs/tree/main/autoware_sensing_msgs#concatenated-point-cloud-messages).
+## 元信息话题
 
-### Handling Serialized Configuration
+拼接节点通过 `~/output/info` 话题发布拼接过程的详细元信息。有关 `ConcatenatedPointCloudInfo` 消息结构的详细信息，请参阅 [autoware_msgs 仓库文档](https://github.com/autowarefoundation/autoware_msgs/tree/main/autoware_sensing_msgs#concatenated-point-cloud-messages)。
 
-The `matching_strategy_config` field contains serialized configuration data for the matching strategy.
-If a strategy has its own configuration, it requires serialization and deserialization implementation based on the `StrategyConfig` class defined in [concatenation_info_manager.hpp](https://github.com/autowarefoundation/autoware_universe/blob/main/sensing/autoware_pointcloud_preprocessor/include/autoware/pointcloud_preprocessor/concatenate_data/concatenation_info_manager.hpp).
+<a id="handling-serialized-configuration"></a>
 
-Here's how to work with serialized configuration for the Advanced strategy:
+### 处理序列化配置
 
-#### Serialization Example
+`matching_strategy_config` 字段包含匹配策略的序列化配置数据。
+如果某种策略有自己的配置，就需要基于 [concatenation_info_manager.hpp](https://github.com/autowarefoundation/autoware_universe/blob/main/sensing/autoware_pointcloud_preprocessor/include/autoware/pointcloud_preprocessor/concatenate_data/concatenation_info_manager.hpp) 中定义的 `StrategyConfig` 类实现序列化和反序列化。
+
+以下示例展示如何处理高级策略的序列化配置：
+
+<a id="serialization-example"></a>
+
+#### 序列化示例
 
 ```cpp
 auto cfg = StrategyAdvancedConfig(reference_timestamp_min, reference_timestamp_max);
 ConcatenationInfoManager::set_config(cfg.serialize(), concatenation_info_msg);
 ```
 
-#### Deserialization Example
+<a id="deserialization-example"></a>
+
+#### 反序列化示例
 
 ```cpp
 std::vector<uint8_t> raw_cfg = concat_info_msg->matching_strategy_config;
 auto cfg = StrategyAdvancedConfig(raw_cfg);
 ```
 
-## Launch
+<a id="launch"></a>
+
+## 启动
 
 ```bash
 # The launch file will read the parameters from the concatenate_and_time_sync_node.param.yaml
 ros2 launch autoware_pointcloud_preprocessor concatenate_and_time_sync_node.launch.xml
 ```
 
-## Test
+<a id="test"></a>
+
+## 测试
 
 ```bash
 # build autoware_pointcloud_preprocessor
@@ -196,19 +238,21 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --package
 colcon test --packages-select autoware_pointcloud_preprocessor --event-handlers console_cohesion+
 ```
 
-## Debug and Diagnostics
+<a id="debug-and-diagnostics"></a>
 
-To verify whether the node has successfully concatenated the point clouds, the user can examine rqt or the `/diagnostics` topic using the following command:
+## 调试与诊断
+
+要验证节点是否成功拼接了点云，可以查看 rqt，或使用以下命令检查 `/diagnostics` 话题：
 
 ```bash
 ros2 topic echo /diagnostics
 ```
 
-Below is an example output when the point clouds are concatenated successfully:
+以下是点云拼接成功时的输出示例：
 
-- Each point cloud has a value of `True`.
-- The `Pointcloud concatenation succeeded` is `True`.
-- The `level` value is `\0`. (diagnostic_msgs::msg::DiagnosticStatus::OK)
+- 每个点云对应的值均为 `True`。
+- `Pointcloud concatenation succeeded` 为 `True`。
+- `level` 值为 `\0`。（diagnostic_msgs::msg::DiagnosticStatus::OK）
 
 ```bash
 header:
@@ -244,11 +288,11 @@ status:
     value: 'True'
 ```
 
-Below is an example when point clouds fail to concatenate successfully.
+以下是点云未能成功拼接时的示例。
 
-- Some point clouds might have values of `False`.
-- The `Pointcloud concatenation succeeded` is `False`.
-- The `level` value is `\x02`. (diagnostic_msgs::msg::DiagnosticStatus::ERROR)
+- 某些点云对应的值可能为 `False`。
+- `Pointcloud concatenation succeeded` 为 `False`。
+- `level` 值为 `\x02`。（diagnostic_msgs::msg::DiagnosticStatus::ERROR）
 
 ```bash
 header:
@@ -282,13 +326,17 @@ status:
     value: 'False'
 ```
 
-## Node separation options
+<a id="node-separation-options"></a>
 
-There is also an option to separate the concatenate_and_time_sync_node into two nodes: one for `time synchronization` and another for `concatenate pointclouds` ([See this PR](https://github.com/autowarefoundation/autoware_universe/pull/3312)).
+## 节点拆分选项
 
-Note that the `concatenate_pointclouds` and `time_synchronizer_nodelet` are using the [old design](https://github.com/autowarefoundation/autoware_universe/blob/9bb228fe5b7fa4c6edb47e4713c73489a02366e1/sensing/autoware_pointcloud_preprocessor/docs/concatenate-data.md) of the concatenate node.
+也可以将 concatenate_and_time_sync_node 拆分为两个节点：一个负责 `time synchronization`（时间同步），另一个负责 `concatenate pointclouds`（点云拼接）（[参见此 PR](https://github.com/autowarefoundation/autoware_universe/pull/3312)）。
 
-## Assumptions / Known Limits
+注意，`concatenate_pointclouds` 和 `time_synchronizer_nodelet` 使用的是拼接节点的[旧版设计](https://github.com/autowarefoundation/autoware_universe/blob/9bb228fe5b7fa4c6edb47e4713c73489a02366e1/sensing/autoware_pointcloud_preprocessor/docs/concatenate-data.md)。
 
-- If `is_motion_compensated` is set to `false`, the `concatenate_and_time_sync_node` will directly concatenate the point clouds without applying for motion compensation. This can save several milliseconds depending on the number of LiDARs being concatenated. Therefore, if the timestamp differences between point clouds are negligible, the user can set `is_motion_compensated` to `false` and omit the need for twist or odometry input for the node.
-- As mentioned above, the user should clearly understand how their LiDAR's point cloud timestamps are managed to set the parameters correctly. If the user does not synchronize the point clouds, please set `matching_strategy.type` to `naive`.
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制
+
+- 如果将 `is_motion_compensated` 设为 `false`，`concatenate_and_time_sync_node` 将直接拼接点云而不进行运动补偿。根据参与拼接的激光雷达数量，这可以节省数毫秒。因此，如果点云之间的时间戳差异可以忽略，就可以将 `is_motion_compensated` 设为 `false`，节点也就无需输入速度信息或里程计数据。
+- 如上所述，用户应清楚了解激光雷达点云时间戳的管理方式，以便正确设置参数。如果点云未同步，请将 `matching_strategy.type` 设为 `naive`。

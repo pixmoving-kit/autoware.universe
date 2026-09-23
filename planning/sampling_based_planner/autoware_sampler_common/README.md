@@ -1,6 +1,8 @@
-# Sampler Common
+<a id="sampler-common"></a>
 
-Common functions for sampling based planners.
-This includes classes for representing paths and trajectories,
-hard and soft constraints,
-conversion between cartesian and frenet frames, ...
+# 采样器通用功能
+
+面向基于采样的规划器的通用功能。
+包括表示路径和轨迹的类、
+硬约束与软约束、
+笛卡尔坐标系与 Frenet 坐标系之间的转换等。

@@ -1,12 +1,16 @@
 # autoware_universe_utils
 
-## Purpose
+<a id="purpose"></a>
 
-This package contains many common functions used by other packages, so please refer to them as needed.
+## 用途
 
-## For developers
+此软件包包含许多供其他软件包使用的通用函数，请按需参考。
 
-`autoware_universe_utils.hpp` header file was removed because the source files that directly/indirectly include this file took a long time for preprocessing.
+<a id="for-developers"></a>
+
+## 开发者说明
+
+已移除 `autoware_universe_utils.hpp` 头文件，因为直接或间接包含此文件的源文件需要很长的预处理时间。
 
 ## `autoware::universe_utils`
 
@@ -14,44 +18,50 @@ This package contains many common functions used by other packages, so please re
 
 #### `autoware::universe_utils::TimeKeeper`
 
-##### Constructor
+<a id="constructor"></a>
+
+##### 构造函数
 
 ```cpp
 template <typename... Reporters>
 explicit TimeKeeper(Reporters... reporters);
 ```
 
-- Initializes the `TimeKeeper` with a list of reporters.
+- 使用报告器列表初始化 `TimeKeeper`。
 
-##### Methods
+<a id="methods"></a>
+
+##### 方法
 
 - `void add_reporter(std::ostream * os);`
-  - Adds a reporter to output processing times to an `ostream`.
-  - `os`: Pointer to the `ostream` object.
+  - 添加报告器，将处理时间输出到 `ostream`。
+  - `os`: 指向 `ostream` 对象的指针。
 
 - `void add_reporter(rclcpp::Publisher<ProcessingTimeDetail>::SharedPtr publisher);`
-  - Adds a reporter to publish processing times to an `rclcpp` publisher.
-  - `publisher`: Shared pointer to the `rclcpp` publisher.
+  - 添加报告器，通过 `rclcpp` 发布器发布处理时间。
+  - `publisher`: 指向 `rclcpp` 发布器的共享指针。
 
 - `void add_reporter(rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher);`
-  - Adds a reporter to publish processing times to an `rclcpp` publisher with `std_msgs::msg::String`.
-  - `publisher`: Shared pointer to the `rclcpp` publisher.
+  - 添加报告器，通过 `rclcpp` 发布器使用 `std_msgs::msg::String` 发布处理时间。
+  - `publisher`: 指向 `rclcpp` 发布器的共享指针。
 
 - `void start_track(const std::string & func_name);`
-  - Starts tracking the processing time of a function.
-  - `func_name`: Name of the function to be tracked.
+  - 开始跟踪函数的处理时间。
+  - `func_name`: 要跟踪的函数名称。
 
 - `void end_track(const std::string & func_name);`
-  - Ends tracking the processing time of a function.
-  - `func_name`: Name of the function to end tracking.
+  - 结束对函数处理时间的跟踪。
+  - `func_name`: 要结束跟踪的函数名称。
 
 - `void comment(const std::string & comment);`
-  - Adds a comment to the current function being tracked.
-  - `comment`: Comment to be added.
+  - 为当前正在跟踪的函数添加备注。
+  - `comment`: 要添加的备注。
 
-##### Note
+<a id="note"></a>
 
-- It's possible to start and end time measurements using `start_track` and `end_track` as shown below:
+##### 注意
+
+- 可以使用 `start_track` 和 `end_track` 开始和结束计时，如下所示：
 
   ```cpp
   time_keeper.start_track("example_function");
@@ -59,9 +69,11 @@ explicit TimeKeeper(Reporters... reporters);
   time_keeper.end_track("example_function");
   ```
 
-- For safety and to ensure proper tracking, it is recommended to use `ScopedTimeTrack`.
+- 为保证安全并确保正确跟踪，建议使用 `ScopedTimeTrack`。
 
-##### Example
+<a id="example"></a>
+
+##### 示例
 
 ```cpp
 #include <rclcpp/rclcpp.hpp>
@@ -133,7 +145,7 @@ int main(int argc, char ** argv)
 }
 ```
 
-- Output (console)
+- 输出（控制台）
 
   ```text
   ==========================
@@ -142,7 +154,7 @@ int main(int argc, char ** argv)
           └── func_c (3.055ms) : This is a comment for func_c
   ```
 
-- Output (`ros2 topic echo /processing_time`)
+- 输出（`ros2 topic echo /processing_time`）
 
   ```text
   ---
@@ -166,23 +178,29 @@ int main(int argc, char ** argv)
 
 #### `autoware::universe_utils::ScopedTimeTrack`
 
-##### Description
+<a id="description"></a>
 
-Class for automatically tracking the processing time of a function within a scope.
+##### 说明
 
-##### Constructor
+用于在作用域内自动跟踪函数处理时间的类。
+
+<a id="constructor_1"></a>
+
+##### 构造函数
 
 ```cpp
 ScopedTimeTrack(const std::string & func_name, TimeKeeper & time_keeper);
 ```
 
-- `func_name`: Name of the function to be tracked.
-- `time_keeper`: Reference to the `TimeKeeper` object.
+- `func_name`: 要跟踪的函数名称。
+- `time_keeper`: 对 `TimeKeeper` 对象的引用。
 
-##### Destructor
+<a id="destructor"></a>
+
+##### 析构函数
 
 ```cpp
 ~ScopedTimeTrack();
 ```
 
-- Destroys the `ScopedTimeTrack` object, ending the tracking of the function.
+- 销毁 `ScopedTimeTrack` 对象，结束对函数的跟踪。

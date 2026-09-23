@@ -1,64 +1,80 @@
-# scenario_simulator_v2 Adapter
+<a id="scenario_simulator_v2-adapter"></a>
 
-## Purpose
+# scenario_simulator_v2 适配器
 
-This package provides a node to convert various messages from the Autoware into `tier4_simulation_msgs::msg::UserDefinedValue` messages for the scenario_simulator_v2.
-Currently, this node supports conversion of:
+<a id="purpose"></a>
 
-- `tier4_metric_msgs::msg::MetricArray` for metric topics
-- Diagnostic topics passed from `.webauto-ci.yml` via `autoware.diagnostic_config`
+## 用途
 
-## Inner-workings / Algorithms
+此功能包提供一个节点，将 Autoware 的各种消息转换为供 scenario_simulator_v2 使用的 `tier4_simulation_msgs::msg::UserDefinedValue` 消息。
+目前，此节点支持转换：
 
-- For `tier4_metric_msgs::msg::MetricArray`,
-  The node subscribes to all topics listed in the parameter `metric_topic_list`.
-  Each time such message is received, it is converted into as many `UserDefinedValue` messages as the number of `Metric` objects.
-  The format of the output topic is detailed in the _output_ section.
+- 指标话题中的 `tier4_metric_msgs::msg::MetricArray`
+- 从 `.webauto-ci.yml` 通过 `autoware.diagnostic_config` 传入的诊断话题
 
-- For diagnostic topics from `autoware.diagnostic_config`,
-  The node subscribes to `/diagnostics`
-  Each time such message is received, it is converted into as many `UserDefinedValue` messages as the number of `DiagnosticStatus` objects in the `DiagnosticArray`.
-  The format of the input `autoware.diagnostic_config` is detailed in the _input_ section.
-  The format of the output topic is detailed in the _output_ section.
+<a id="inner-workings-algorithms"></a>
 
-## Metric Array Inputs / Outputs
+## 内部机制／算法
 
-### Metric Array Inputs
+- 对于 `tier4_metric_msgs::msg::MetricArray`，
+  节点订阅参数 `metric_topic_list` 中列出的全部话题。
+  每次收到此类消息时，会将其转换为与 `Metric` 对象数量相同的 `UserDefinedValue` 消息。
+  输出话题格式详见_输出_一节。
 
-The node listens to `MetricArray` messages on the topics specified in `metric_topic_list`.
+- 对于来自 `autoware.diagnostic_config` 的诊断话题，
+  节点订阅 `/diagnostics`。
+  每次收到此类消息时，会将其转换为与 `DiagnosticArray` 中 `DiagnosticStatus` 对象数量相同的 `UserDefinedValue` 消息。
+  输入 `autoware.diagnostic_config` 的格式详见_输入_一节。
+  输出话题格式详见_输出_一节。
 
-### Metric Array Outputs
+<a id="metric-array-inputs-outputs"></a>
 
-The node outputs `UserDefinedValue` messages that are converted from the received messages.
+## 指标数组输入/输出
 
-The name of the output topics are generated from the corresponding input topic, the name of the metric.
+<a id="metric-array-inputs"></a>
 
-- For example, we might listen to topic `/planning/planning_evaluator/metrics` and receive a `MetricArray` with 2 metrics:
-  - metric with `name: "metricA/x"`
-  - metric with `name: "metricA/y"`
-- The resulting topics to publish the `UserDefinedValue` are as follows:
+### 指标数组输入
+
+节点在 `metric_topic_list` 指定的话题上监听 `MetricArray` 消息。
+
+<a id="metric-array-outputs"></a>
+
+### 指标数组输出
+
+节点输出由接收消息转换得到的 `UserDefinedValue` 消息。
+
+输出话题名称根据对应的输入话题和指标名称生成。
+
+- 例如，可以监听话题 `/planning/planning_evaluator/metrics`，并收到包含 2 个指标的 `MetricArray`：
+  - `name: "metricA/x"` 的指标
+  - `name: "metricA/y"` 的指标
+- 用于发布 `UserDefinedValue` 的话题如下：
   - `/planning/planning_evaluator/metrics/metricA/x`
   - `/planning/planning_evaluator/metrics/metricA/y`
 
-## Diagnostics Inputs / Outputs
+<a id="diagnostics-inputs-outputs"></a>
 
-Diagnostics extracts the `level` field from `DiagnosticStatus` and outputs it as a single value to correspond with `tier4_simulation_msgs::msg::UserDefinedValue` messages.
+## 诊断输入/输出
 
-### Diagnostics Inputs
+诊断功能从 `DiagnosticStatus` 提取 `level` 字段，并将其作为单个值输出，以适配 `tier4_simulation_msgs::msg::UserDefinedValue` 消息。
 
-- The node listens to `/diagnostics`.
-  Multiple `DiagnosticStatus` objects are extracted from the `DiagnosticArray` within `/diagnostics`.
+<a id="diagnostics-inputs"></a>
 
-- About `autoware.diagnostic_config`:
-  - The configuration file is specified from `.webauto-ci.yml`.
-  - Under `diagnostic_groups`, create a group name and define `output_topic_name` and `aggregation_list` under it.
+### 诊断输入
+
+- 节点监听 `/diagnostics`。
+  从 `/diagnostics` 的 `DiagnosticArray` 中提取多个 `DiagnosticStatus` 对象。
+
+- 关于 `autoware.diagnostic_config`：
+  - 配置文件由 `.webauto-ci.yml` 指定。
+  - 在 `diagnostic_groups` 下创建一个组名，并在该组下定义 `output_topic_name` 和 `aggregation_list`。
     - `output_topic_name`
-      - Specifies the topic name to publish to.
-      - The format `/diagnostics/scenario_simulator_v2_adapter/***` is recommended.
+      - 指定要发布到的话题名称。
+      - 推荐使用 `/diagnostics/scenario_simulator_v2_adapter/***` 格式。
     - `aggregation_list`
-      - Lists the diagnostic topics to be grouped.
-      - Can include `output_topic_name` declared in the same format (recursively expanded).
-  - A sample configuration can be found in `autoware_scenario_simulator_v2_adapter/config/diagnostic_config.param.yaml`.
+      - 列出需要分组的诊断话题。
+      - 可包含以相同格式声明的 `output_topic_name`（递归展开）。
+  - 配置示例见 `autoware_scenario_simulator_v2_adapter/config/diagnostic_config.param.yaml`。
 
 ```yml
 /**:
@@ -76,31 +92,39 @@ Diagnostics extracts the `level` field from `DiagnosticStatus` and outputs it as
           - /diagnostics/topic_state_monitor_scenario_planning_trajectory/planning_topic_status
 ```
 
-### Diagnostics Outputs
+<a id="diagnostics-outputs"></a>
 
-The node outputs `UserDefinedValue` messages that are converted from the received messages.
-Diagnostics output has two patterns:
+### 诊断输出
 
-1. One-to-one correspondence with diagnostic status names.
-2. Grouped output based on `autoware.diagnostic_config` that aggregates diagnostic status names.
+节点输出由接收消息转换得到的 `UserDefinedValue` 消息。
+诊断输出有两种方式：
 
-- For individual publish:
-  The name of the output topics are generated from `/diagnostics/` prefix and the `status.name` field of each `DiagnosticStatus`.
-  The `": "` in the status name is replaced with `/` to form a valid topic name.
-  - status name: `planning_validator: intersection_validation_collision_check`
-  - publish topic name: `/diagnostics/planning_validator/intersection_validation_collision_check`
+1. 与诊断状态名称一一对应。
+2. 根据 `autoware.diagnostic_config` 聚合诊断状态名称，进行分组输出。
 
-- For grouped topic publish:
-  The name of the output topics is used `output_topic_name` in `autoware.diagnostic_config`.
-  Each time a `DiagnosticStatus` that matches any topic in the `aggregation_list` is received, its level value is published to the `output_topic_name` topic.
-  If the level is `ERROR`, a warning is logged with the diagnostic topic name and group name.
+- 单独发布时：
+  输出话题名称由 `/diagnostics/` 前缀和各个 `DiagnosticStatus` 的 `status.name` 字段生成。
+  状态名称中的 `": "` 会被替换为 `/`，以构成有效的话题名称。
+  - 状态名称：`planning_validator: intersection_validation_collision_check`
+  - 发布话题名称：`/diagnostics/planning_validator/intersection_validation_collision_check`
 
-## Parameters
+- 按组发布话题时：
+  输出话题名称使用 `autoware.diagnostic_config` 中的 `output_topic_name`。
+  每次收到与 `aggregation_list` 中任意话题匹配的 `DiagnosticStatus` 时，都会将其 level 值发布到 `output_topic_name` 话题。
+  如果级别为 `ERROR`，则记录包含诊断话题名称和组名的警告日志。
+
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("evaluator/autoware_scenario_simulator_v2_adapter/schema/scenario_simulator_v2_adapter.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-Values in the `Metric` objects of a `MetricArray` are assumed to be of type `double`.
+## 前提假设／已知限制
 
-## Future extensions / Unimplemented parts
+假定 `MetricArray` 中 `Metric` 对象的数值类型为 `double`。
+
+<a id="future-extensions-unimplemented-parts"></a>
+
+## 后续扩展与尚未实现的部分

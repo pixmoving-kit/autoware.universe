@@ -1,38 +1,62 @@
 # passthrough_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `passthrough_filter` is a node that removes points on the outside of a range in a given field (e.g. x, y, z, intensity, ring, etc).
+## 用途
 
-## Inner-workings / Algorithms
+`passthrough_filter` 节点用于移除指定字段（例如 x、y、z、intensity、ring 等）超出给定范围的点。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制／算法
 
-| Name              | Type                            | Description       |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ----------------- | ------------------------------- | ----------------- |
-| `~/input/points`  | `sensor_msgs::msg::PointCloud2` | reference points  |
-| `~/input/indices` | `pcl_msgs::msg::Indices`        | reference indices |
+| `~/input/points` | `sensor_msgs::msg::PointCloud2` | 参考点 |
+| `~/input/indices` | `pcl_msgs::msg::Indices` | 参考索引 |
 
-### Output
+<a id="output"></a>
 
-| Name              | Type                            | Description     |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ----------------- | ------------------------------- | --------------- |
-| `~/output/points` | `sensor_msgs::msg::PointCloud2` | filtered points |
+| `~/output/points` | `sensor_msgs::msg::PointCloud2` | 过滤后的点 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Core Parameters
+## 参数
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/passthrough_filter_uint16_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-## (Optional) Error detection and handling
+## 前提假设／已知限制
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

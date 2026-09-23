@@ -1,5 +1,5 @@
 # autoware_component_state_monitor
 
-The component state monitor checks the state of each component using topic state monitor.
-This is an implementation for backward compatibility with the AD service state monitor.
-It will be replaced in the future using a diagnostics tree.
+组件状态监控器通过话题状态监控器检查各组件的状态。
+此实现用于向后兼容 AD 服务状态监控器。
+后续将使用诊断树替代。

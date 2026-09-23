@@ -2,31 +2,39 @@
 
 ## radar_scan_to_pointcloud2_node
 
-- Convert from `radar_msgs::msg::RadarScan` to `sensor_msgs::msg::PointCloud2`
-- Calculation cost O(n)
-  - n: The number of radar return
+- 将 `radar_msgs::msg::RadarScan` 转换为 `sensor_msgs::msg::PointCloud2`
+- 计算复杂度为 O(n)
+  - n：雷达回波数量
 
-### Input topics
+<a id="input-topics"></a>
 
-| Name        | Type                       | Description |
+### 输入话题
+
+| 名称 | 类型 | 说明 |
 | ----------- | -------------------------- | ----------- |
-| input/radar | radar_msgs::msg::RadarScan | RadarScan   |
+| input/radar | radar_msgs::msg::RadarScan | RadarScan |
 
-### Output topics
+<a id="output-topics"></a>
 
-| Name                        | Type                          | Description                                                       |
+### 输出话题
+
+| 名称 | 类型 | 说明 |
 | --------------------------- | ----------------------------- | ----------------------------------------------------------------- |
-| output/amplitude_pointcloud | sensor_msgs::msg::PointCloud2 | PointCloud2 radar pointcloud whose intensity is amplitude.        |
-| output/doppler_pointcloud   | sensor_msgs::msg::PointCloud2 | PointCloud2 radar pointcloud whose intensity is doppler velocity. |
+| output/amplitude_pointcloud | sensor_msgs::msg::PointCloud2 | 以幅度作为强度值的 PointCloud2 雷达点云。 |
+| output/doppler_pointcloud | sensor_msgs::msg::PointCloud2 | 以多普勒速度作为强度值的 PointCloud2 雷达点云。 |
 
-### Parameters
+<a id="parameters"></a>
 
-| Name                         | Type | Description                                                                               |
+### 参数
+
+| 名称 | 类型 | 说明 |
 | ---------------------------- | ---- | ----------------------------------------------------------------------------------------- |
-| publish_amplitude_pointcloud | bool | Whether publish radar pointcloud whose intensity is amplitude. Default is `true`.         |
-| publish_doppler_pointcloud   | bool | Whether publish radar pointcloud whose intensity is doppler velocity. Default is `false`. |
+| publish_amplitude_pointcloud | bool | 是否发布以幅度作为强度值的雷达点云。默认值为 `true`。 |
+| publish_doppler_pointcloud | bool | 是否发布以多普勒速度作为强度值的雷达点云。默认值为 `false`。 |
 
-### How to launch
+<a id="how-to-launch"></a>
+
+### 启动方法
 
 ```sh
 ros2 launch autoware_radar_scan_to_pointcloud2 radar_scan_to_pointcloud2.launch.xml

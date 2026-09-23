@@ -2,31 +2,39 @@
 
 ## radar_threshold_filter_node
 
-Remove noise from radar return by threshold.
+通过阈值过滤去除雷达回波中的噪声。
 
-- Amplitude filter: Low amplitude consider noise
-- FOV filter: Pointcloud from radar's FOV edge occur perturbation
-- Range filter: Too near pointcloud often occur noise
+- 幅度过滤：将低幅度回波视为噪声
+- 视场过滤：雷达视场边缘的点云容易出现扰动
+- 距离过滤：过近的点云往往存在噪声
 
-Calculation cost is O(n). `n` is the number of radar return.
+计算复杂度为 O(n)，`n` 为雷达回波数量。
 
-### Input topics
+<a id="input-topics"></a>
 
-| Name        | Type                         | Description           |
+### 输入话题
+
+| 名称 | 类型 | 说明 |
 | ----------- | ---------------------------- | --------------------- |
-| input/radar | radar_msgs/msg/RadarScan.msg | Radar pointcloud data |
+| input/radar | radar_msgs/msg/RadarScan.msg | 雷达点云数据 |
 
-### Output topics
+<a id="output-topics"></a>
 
-| Name         | Type                         | Description               |
+### 输出话题
+
+| 名称 | 类型 | 说明 |
 | ------------ | ---------------------------- | ------------------------- |
-| output/radar | radar_msgs/msg/RadarScan.msg | Filtered radar pointcloud |
+| output/radar | radar_msgs/msg/RadarScan.msg | 过滤后的雷达点云 |
 
-### Parameters
+<a id="parameters"></a>
+
+### 参数
 
 {{ json_to_markdown("sensing/autoware_radar_threshold_filter/schema/radar_threshold_filter.schema.json") }} |
 
-### How to launch
+<a id="how-to-launch"></a>
+
+### 启动方法
 
 ```sh
 ros2 launch autoware_radar_threshold_filter radar_threshold_filter.launch.xml

@@ -1,25 +1,39 @@
 # outlier_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `outlier_filter` is a package for filtering outlier of points.
+## 用途
 
-## Inner-workings / Algorithms
+`outlier_filter` 是用于过滤点云离群点的功能包。
 
-| Filter Name                                    | Description                                                                                                                             | Detail                                       |
+<a id="inner-workings-algorithms"></a>
+
+## 内部机制／算法
+
+| 滤波器名称 | 说明 | 详情 |
 | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| radius search 2d outlier filter                | A method of removing point cloud noise based on the number of points existing within a certain radius                                   | [link](./radius-search-2d-outlier-filter.md) |
-| ring outlier filter                            | A method of operating scan in chronological order and removing noise based on the rate of change in the distance between points         | [link](./ring-outlier-filter.md)             |
-| voxel grid outlier filter                      | A method of removing point cloud noise based on the number of points existing within a voxel                                            | [link](./voxel-grid-outlier-filter.md)       |
-| polar voxel outlier filter                     | A method of removing point cloud noise using polar coordinate voxels, optimized for LiDAR sensor characteristics                        | [link](./polar-voxel-outlier-filter.md)      |
-| dual return outlier filter (under development) | A method of removing rain and fog by considering the light reflected from the object in two stages according to the attenuation factor. | [link](./dual-return-outlier-filter.md)      |
+| 二维半径搜索离群点滤波器 | 根据一定半径内的点数移除点云噪声 | [链接](./radius-search-2d-outlier-filter.md) |
+| 扫描环离群点滤波器 | 按时间顺序处理扫描，并根据点间距离的变化率移除噪声 | [链接](./ring-outlier-filter.md) |
+| 体素网格离群点滤波器 | 根据体素内的点数移除点云噪声 | [链接](./voxel-grid-outlier-filter.md) |
+| 极坐标体素离群点滤波器 | 使用极坐标体素移除点云噪声，并针对激光雷达特性进行优化 | [链接](./polar-voxel-outlier-filter.md) |
+| 双回波离群点滤波器（开发中） | 根据衰减因子，将物体反射的光按两个阶段处理，以去除雨雾噪声。 | [链接](./dual-return-outlier-filter.md) |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-## (Optional) Error detection and handling
+## 前提假设／已知限制
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

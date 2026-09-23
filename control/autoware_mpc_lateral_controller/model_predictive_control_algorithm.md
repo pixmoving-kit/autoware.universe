@@ -1,24 +1,32 @@
-# MPC Algorithm
+<a id="mpc-algorithm"></a>
 
-## Introduction
+# MPC 算法
 
-Model Predictive Control (MPC) is a control method that solves an optimization problem during each control cycle to determine an optimal control sequence based on a given vehicle model. The calculated sequence of control inputs is used to control the system.
+<a id="introduction"></a>
 
-In simpler terms, an MPC controller calculates a series of control inputs that optimize the state and output trajectories to achieve the desired behavior. The key characteristics of an MPC control system can be summarized as follows:
+## 简介
 
-1. Prediction of Future Trajectories: MPC computes a control sequence by predicting the future state and output trajectories. The first control input is applied to the system, and this process repeats in a receding horizon manner at each control cycle.
-2. Handling of Constraints: MPC is capable of handling constraints on the state and input variables during the optimization phase. This ensures that the system operates within specified limits.
-3. Handling of Complex Dynamics: MPC algorithms can handle complex dynamics, whether they are linear or nonlinear in nature.
+模型预测控制（MPC）是一种控制方法，它在每个控制周期求解优化问题，根据给定车辆模型确定最优控制序列，并使用计算出的控制输入序列控制系统。
 
-The choice between a linear or nonlinear model or constraint equation depends on the specific formulation of the MPC problem. If any nonlinear expressions are present in the motion equation or constraints, the optimization problem becomes nonlinear. In the following sections, we provide a step-by-step explanation of how linear and nonlinear optimization problems are solved within the MPC framework. Note that in this documentation, we utilize the linearization method to accommodate the nonlinear model.
+简单来说，MPC 控制器计算一系列控制输入，优化状态轨迹和输出轨迹，从而实现期望行为。MPC 控制系统的主要特点如下：
 
-## Linear MPC formulation
+1. 预测未来轨迹：MPC 通过预测未来状态和输出轨迹计算控制序列，将第一个控制输入应用于系统，并在每个控制周期以滚动时域方式重复此过程。
+2. 处理约束：MPC 能在优化过程中处理状态和输入变量的约束，确保系统在规定范围内运行。
+3. 处理复杂动力学：MPC 算法能够处理复杂的线性或非线性动力学。
 
-### Formulate as an optimization problem
+选择线性还是非线性模型或约束方程，取决于 MPC 问题的具体形式。如果运动方程或约束中存在非线性表达式，优化问题就成为非线性问题。以下各节逐步说明如何在 MPC 框架内求解线性和非线性优化问题。请注意，本文使用线性化方法处理非线性模型。
 
-This section provides an explanation of MPC specifically for linear systems. In the following section, it also demonstrates the formulation of a vehicle path following problem as an application.
+<a id="linear-mpc-formulation"></a>
 
-In the linear MPC formulation, all motion and constraint expressions are linear. For the path following problem, let's assume that the system's motion can be described by a set of equations, denoted as (1). The state evolution and measurements are presented in a discrete state space format, where matrices $A$, $B$, and $C$ represent the state transition, control, and measurement matrices, respectively.
+## 线性 MPC 建模
+
+<a id="formulate-as-an-optimization-problem"></a>
+
+### 表述为优化问题
+
+本节介绍线性系统的 MPC。下一节将以车辆路径跟踪为应用，展示问题的建模过程。
+
+在线性 MPC 中，所有运动和约束表达式都是线性的。对于路径跟踪问题，假设系统运动可由方程组（1）描述。状态演化和测量采用离散状态空间形式，其中矩阵 $A$、$B$ 和 $C$ 分别表示状态转移矩阵、控制矩阵和测量矩阵。
 
 $$
 \begin{gather}
@@ -27,15 +35,15 @@ x_{k}\in R^{n},u_{k}\in R^{m},w_{k}\in R^{n}, y_{k}\in R^{l}, A\in R^{n\times n}
 \end{gather}
 $$
 
-Equation (1) represents the state-space equation, where $x_k$ represents the internal states, $u_k$ denotes the input, and $w_k$ represents a known disturbance caused by linearization or problem structure. The measurements are indicated by the variable $y_k$.
+方程（1）是状态空间方程，其中 $x_k$ 表示内部状态，$u_k$ 表示输入，$w_k$ 表示由线性化或问题结构引起的已知扰动，$y_k$ 表示测量值。
 
-It's worth noting that another advantage of MPC is its ability to effectively handle the disturbance term $w$. While it is referred to as a disturbance here, it can take various forms as long as it adheres to the equation's structure.
+MPC 的另一个优点是能够有效处理扰动项 $w$。尽管此处称之为扰动，只要符合方程结构，它可以采用多种形式。
 
-The state transition and measurement equations in (1) are iterative, moving from time $k$ to time $k+1$. By propagating the equation starting from an initial state and control pair $(x_0, u_0)$ along with a specified horizon of $N$ steps, one can predict the trajectories of states and measurements.
+方程（1）中的状态转移和测量方程以迭代方式从时刻 $k$ 推进到 $k+1$。从初始状态与控制输入对 $(x_0, u_0)$ 出发，在指定的 $N$ 步预测时域内递推，便可预测状态和测量轨迹。
 
-For simplicity, let's assume the initial state is $x_0$ with $k=0$.
+为简化讨论，假设初始状态为 $x_0$，此时 $k=0$。
 
-To begin, we can compute the state $x_1$ at $k=1$ using equation (1) by substituting the initial state into the equation. Since we are seeking a solution for the input sequence, we represent the inputs as decision variables in the symbolic expressions.
+首先，将初始状态代入方程（1），计算 $k=1$ 时的状态 $x_1$。由于我们要求解输入序列，因此在符号表达式中将输入作为决策变量。
 
 $$
 \begin{align}
@@ -43,7 +51,7 @@ x_{1} = Ax_{0} + Bu_{0} + w_{0} \tag{2}
 \end{align}
 $$
 
-Then, when $k=2$, using also equation (2), we get
+然后，当 $k=2$ 时，结合方程（2）得到：
 
 $$
 \begin{align}
@@ -54,7 +62,7 @@ x_{2} & = Ax_{1} + Bu_{1} + w_{1} \\\
 \end{align}
 $$
 
-When $k=3$ , from equation (3)
+当 $k=3$ 时，根据方程（3）：
 
 $$
 \begin{align}
@@ -65,7 +73,7 @@ x_{3} & = Ax_{2} + Bu_{2} + w_{2} \\\
 \end{align}
 $$
 
-If $k=n$ , then
+如果 $k=n$，则：
 
 $$
 \begin{align}
@@ -74,7 +82,7 @@ x_{n} = A^{n}x_{0} + \begin{bmatrix}A^{n-1}B & A^{n-2}B & \dots  & B  \end{bmatr
 \end{align}
 $$
 
-Putting all of them together with (2) to (5) yields the following matrix equation;
+将方程（2）至（5）组合，可得到以下矩阵方程：
 
 $$
 \begin{align}
@@ -84,7 +92,7 @@ $$
 \end{align}
 $$
 
-In this case, the measurements (outputs) become; $y_{k}=Cx_{k}$, so
+此时，测量值（输出）为 $y_{k}=Cx_{k}$，因此：
 
 $$
 \begin{align}
@@ -92,7 +100,7 @@ $$
 \end{align}
 $$
 
-We can combine equations (6) and (7) into the following form:
+可以将方程（6）和（7）组合为以下形式：
 
 $$
 \begin{align}
@@ -100,11 +108,11 @@ X = Fx_{0} + GU +SW, Y=HX \tag{8}
 \end{align}
 $$
 
-This form is similar to the original state-space equations (1), but it introduces new matrices: the state transition matrix $F$, control matrix $G$, disturbance matrix $W$, and measurement matrix $H$. In these equations, $X$ represents the predicted states, given by $\begin{bmatrix}x_{1} & x_{2} & \dots & x_{n} \end{bmatrix}^{T}$.
+这种形式与原始状态空间方程（1）类似，但引入了新的矩阵：状态转移矩阵 $F$、控制矩阵 $G$、扰动矩阵 $W$ 和测量矩阵 $H$。其中，$X$ 表示预测状态，即 $\begin{bmatrix}x_{1} & x_{2} & \dots & x_{n} \end{bmatrix}^{T}$。
 
-Now that $G$, $S$, $W$, and $H$ are known, we can express the output behavior $Y$ for the next $n$ steps as a function of the input $U$. This allows us to calculate the control input $U$ so that $Y(U)$ follows the target trajectory $Y_{ref}$.
+由于 $G$、$S$、$W$ 和 $H$ 已知，可以将未来 $n$ 步的输出行为 $Y$ 表示为输入 $U$ 的函数。这样就能计算控制输入 $U$，使 $Y(U)$ 跟随目标轨迹 $Y_{ref}$。
 
-The next step is to define a cost function. The cost function generally uses the following quadratic form;
+下一步是定义代价函数。代价函数通常采用以下二次形式：
 
 $$
 \begin{align}
@@ -112,15 +120,15 @@ J = (Y - Y_{ref})^{T}Q(Y - Y_{ref}) + (U - U_{ref})^{T}R(U - U_{ref}) \tag{9}
 \end{align}
 $$
 
-where $U_{ref}$ is the target or steady-state input around which the system is linearized for $U$.
+其中，$U_{ref}$ 是目标输入或稳态输入，也是系统针对 $U$ 进行线性化时的参考输入。
 
-This cost function is the same as that of the LQR controller. The first term of $J$ penalizes the deviation from the reference trajectory. The second term penalizes the deviation from the reference (or steady-state) control trajectory. The $Q$ and $R$ are the cost weights Positive and Positive semi-semidefinite matrices.
+该代价函数与 LQR 控制器相同。$J$ 的第一项惩罚与参考轨迹的偏差，第二项惩罚与参考（或稳态）控制轨迹的偏差。$Q$ 和 $R$ 是代价权重矩阵，分别具有正定和半正定性质。
 
-Note: in some cases, $U_{ref}=0$ is used, but this can mean the steering angle should be set to $0$ even if the vehicle is turning a curve. Thus $U_{ref}$ is used for the explanation here. This $U_{ref}$ can be pre-calculated from the curvature of the target trajectory or the steady-state analyses.
+注意：有时会使用 $U_{ref}=0$，但这可能意味着即使车辆正在转弯，也要求转向角设为 $0$。因此，此处使用 $U_{ref}$ 进行说明。$U_{ref}$ 可以根据目标轨迹的曲率或稳态分析预先计算。
 
-As the resulting trajectory output is now $Y=Y(x_{0}, U)$, the cost function depends only on U and the initial state conditions which yields the cost $J=J(x_{0}, U)$. Let’s find the $U$ that minimizes this.
+由于轨迹输出现为 $Y=Y(x_{0}, U)$，代价函数仅取决于 U 和初始状态条件，即 $J=J(x_{0}, U)$。下面求使其最小的 $U$。
 
-Substituting equation (8) into equation (9) and tidying up the equation for $U$.
+将方程（8）代入方程（9），并按 $U$ 整理。
 
 $$
 \begin{align}
@@ -129,15 +137,17 @@ J(U) &= (H(Fx_{0}+GU+SW)-Y_{ref})^{T}Q(H(Fx_{0}+GU+SW)-Y_{ref})+(U-U_{ref})^{T}R
 \end{align}
 $$
 
-This equation is a quadratic form of $U$ (i.e. $U^{T}AU+B^{T}U$)
+此方程是关于 $U$ 的二次型（即 $U^{T}AU+B^{T}U$）。
 
-The coefficient matrix of the quadratic term of $U$, $G^{T}C^{T}QCG+R$ , is positive definite due to the positive and semi-positive definiteness requirement for $Q$ and $R$. Therefore, the cost function is a convex quadratic function in U, which can efficiently be solved by convex optimization.
+由于 $Q$ 和 $R$ 的正定与半正定要求，$U$ 的二次项系数矩阵 $G^{T}C^{T}QCG+R$ 为正定矩阵。因此，代价函数是关于 U 的凸二次函数，可以通过凸优化高效求解。
 
-### Apply to vehicle path-following problem (nonlinear problem)
+<a id="apply-to-vehicle-path-following-problem-nonlinear-problem"></a>
 
-Because the path-following problem with a kinematic vehicle model is nonlinear, we cannot directly use the linear MPC methods described in the preceding section. There are several ways to deal with a nonlinearity such as using the nonlinear optimization solver. Here, the linearization is applied to the nonlinear vehicle model along the reference trajectory, and consequently, the nonlinear model is converted into a linear time-varying model.
+### 应用于车辆路径跟踪问题（非线性问题）
 
-For a nonlinear kinematic vehicle model, the discrete-time update equations are as follows:
+基于车辆运动学模型的路径跟踪问题是非线性的，因此不能直接使用上一节中的线性 MPC 方法。处理非线性的方法有多种，例如使用非线性优化求解器。此处沿参考轨迹对非线性车辆模型进行线性化，将其转换为线性时变模型。
+
+对于非线性车辆运动学模型，离散时间更新方程如下：
 
 $$
 \begin{align}
@@ -148,26 +158,26 @@ y_{k+1} &= y_{k} + v\sin\theta_{k} \text{d}t \\\
 \end{align}
 $$
 
-![vehicle_kinematics](./image/vehicle_kinematics.png)
+![车辆运动学](./image/vehicle_kinematics.png)
 
-The vehicle reference is the center of the rear axle and all states are measured at this point. The states, parameters, and control variables are shown in the following table.
+车辆参考点位于后轴中心，所有状态均在此点测量。状态、参数和控制变量如下表所示。
 
-| Symbol         | Represent                                                     |
+| 符号 | 含义 |
 | -------------- | ------------------------------------------------------------- |
-| $v$            | Vehicle speed measured at the center of rear axle             |
-| $\theta$       | Yaw (heading angle) in global coordinate system               |
-| $\delta$       | Vehicle steering angle                                        |
-| $\delta_{des}$ | Vehicle target steering angle                                 |
-| $L$            | Vehicle wheelbase (distance between the rear and front axles) |
-| $\tau$         | Time constant for the first order steering dynamics           |
+| $v$ | 后轴中心测得的车速 |
+| $\theta$ | 全局坐标系中的偏航角（航向角） |
+| $\delta$ | 车辆转向角 |
+| $\delta_{des}$ | 车辆目标转向角 |
+| $L$ | 车辆轴距（后轴与前轴之间的距离） |
+| $\tau$ | 一阶转向动力学的时间常数 |
 
-We assume in this example that the MPC only generates the steering control, and the trajectory generator gives the vehicle speed along the trajectory.
+本例假设 MPC 只生成转向控制，车辆沿轨迹的速度由轨迹生成器提供。
 
-The kinematic vehicle model discrete update equations contain trigonometric functions; sin and cos, and the vehicle coordinates $x$, $y$, and yaw angles are global coordinates. In path tracking applications, it is common to reformulate the model in error dynamics to convert the control into a regulator problem in which the targets become zero (zero error).
+车辆运动学模型的离散更新方程包含 sin 和 cos 等三角函数，车辆坐标 $x$、$y$ 及偏航角均位于全局坐标系。在路径跟踪应用中，通常将模型改写为误差动力学，把控制问题转换为目标值为零（零误差）的调节问题。
 
-![vehicle_error_kinematics](./image/vehicle_error_kinematics.png)
+![车辆误差运动学](./image/vehicle_error_kinematics.png)
 
-We make small angle assumptions for the following derivations of linear equations. Given the nonlinear dynamics and omitting the longitudinal coordinate $x$, the resulting set of equations become;
+在下面推导线性方程时，采用小角度假设。基于非线性动力学，并省略纵向坐标 $x$，可得到以下方程组：
 
 $$
 \begin{align}
@@ -178,11 +188,11 @@ y_{k+1} &= y_{k} + v\sin\theta_{k} \text{d}t \\\
 \end{align}
 $$
 
-Where $\kappa_{r}\left(s\right)$ is the curvature along the trajectory parametrized by the arc length.
+其中，$\kappa_{r}\left(s\right)$ 是以弧长为参数的轨迹曲率。
 
-There are three expressions in the update equations that are subject to linear approximation: the lateral deviation (or lateral coordinate) $y$, the heading angle (or the heading angle error) $\theta$, and the steering $\delta$. We can make a small angle assumption on the heading angle $\theta$.
+更新方程中有三个表达式需要线性近似：横向偏差（或横向坐标）$y$、航向角（或航向角误差）$\theta$，以及转向角 $\delta$。可以对航向角 $\theta$ 采用小角度假设。
 
-In the path tracking problem, the curvature of the trajectory $\kappa_{r}$ is known in advance. At the lower speeds, the Ackermann formula approximates the reference steering angle $\theta_{r}$(this value corresponds to the $U_{ref}$ mentioned above). The Ackermann steering expression can be written as;
+在路径跟踪问题中，轨迹曲率 $\kappa_{r}$ 预先已知。在较低速度下，可以通过阿克曼公式近似参考转向角 $\theta_{r}$（对应前文的 $U_{ref}$）。阿克曼转向关系可写为：
 
 $$
 \begin{align}
@@ -190,7 +200,7 @@ $$
 \end{align}
 $$
 
-When the vehicle is turning a path, its steer angle $\delta$ should be close to the value $\delta_{r}$. Therefore, $\delta$ can be expressed,
+车辆沿弯曲路径行驶时，转向角 $\delta$ 应接近 $\delta_{r}$。因此，$\delta$ 可以表示为：
 
 $$
 \begin{align}
@@ -198,7 +208,7 @@ $$
 \end{align}
 $$
 
-Substituting this equation into equation (12), and approximate $\Delta\delta$ to be small.
+将此式代入方程（12），并假设 $\Delta\delta$ 很小，进行近似。
 
 $$
 \begin{align}
@@ -209,7 +219,7 @@ $$
 \end{align}
 $$
 
-Using this, $\theta_{k+1}$ can be expressed
+由此，$\theta_{k+1}$ 可表示为：
 
 $$
 \begin{align}
@@ -220,7 +230,7 @@ $$
 \end{align}
 $$
 
-Finally, the linearized time-varying model equation becomes;
+最终，线性化后的时变模型方程为：
 
 $$
 \begin{align}
@@ -228,7 +238,7 @@ $$
 \end{align}
 $$
 
-This equation has the same form as equation (1) of the linear MPC assumption, but the matrices $A$, $B$, and $w$ change depending on the coordinate transformation. To make this explicit, the entire equation is written as follows
+此方程与线性 MPC 假设中的方程（1）形式相同，但矩阵 $A$、$B$ 和 $w$ 随坐标变换而变化。为明确这一点，将整个方程写为：
 
 $$
 \begin{align}
@@ -236,9 +246,9 @@ x_{k+1} = A_{k}x_{k} + B_{k}u_{k}+w_{k}
 \end{align}
 $$
 
-Comparing equation (1), $A \rightarrow A_{k}$. This means that the $A$ matrix is a linear approximation in the vicinity of the trajectory after $k$ steps (i.e., $k* \text{d}t$ seconds), and it can be obtained if the trajectory is known in advance.
+与方程（1）相比，$A \rightarrow A_{k}$。这意味着 $A$ 矩阵是在 $k$ 步之后（即 $k* \text{d}t$ 秒后）轨迹附近的线性近似；如果轨迹预先已知，就可以求得该矩阵。
 
-Using this equation, write down the update equation likewise (2) ~ (6)
+使用此方程，按与（2）至（6）相同的方式写出更新方程：
 
 $$
 \begin{align}
@@ -264,19 +274,25 @@ I & 0 & \dots & & 0 \\\ A_{1} & I & 0 & \dots & 0 \\\ A_{2}A_{1} & A_{2} & I & \
 \end{align}
 $$
 
-As it has the same form as equation (6), convex optimization is applicable for as much as the model in the former section.
+由于其形式与方程（6）相同，因此与前一节模型一样，可以应用凸优化。
 
-## The cost functions and constraints
+<a id="the-cost-functions-and-constraints"></a>
 
-In this section, we give the details on how to set up the cost function and constraint conditions.
+## 代价函数与约束
 
-### The cost function
+本节详细说明如何设置代价函数和约束条件。
 
-#### Weight for error and input
+<a id="the-cost-function"></a>
 
-MPC states and control weights appear in the cost function in a similar way as LQR (9). In the vehicle path following the problem described above, if C is the unit matrix, the output $y = x = \left[y, \theta, \delta\right]$. (To avoid confusion with the y-directional deviation, here $e$ is used for the lateral deviation.)
+### 代价函数
 
-As an example, let's determine the weight matrix $Q_{1}$ of the evaluation function for the number of prediction steps $n=2$ system as follows.
+<a id="weight-for-error-and-input"></a>
+
+#### 误差和输入的权重
+
+MPC 的状态和控制权重以类似 LQR（9）的方式出现在代价函数中。对于前述车辆路径跟踪问题，如果 C 是单位矩阵，则输出为 $y = x = \left[y, \theta, \delta\right]$。（为避免与 y 方向偏差混淆，此处使用 $e$ 表示横向偏差。）
+
+例如，对于预测步数为 $n=2$ 的系统，可以如下确定评价函数的权重矩阵 $Q_{1}$。
 
 $$
 \begin{align}
@@ -284,7 +300,7 @@ Q_{1} = \begin{bmatrix} q_{e} & 0 & 0 & 0 & 0& 0 \\\ 0 & q_{\theta} & 0 & 0 & 0 
 \end{align}
 $$
 
-The first term in the cost function (9) with $n=2$, is shown as follow ($Y_{ref}$ is set to $0$)
+当 $n=2$ 时，代价函数（9）的第一项如下（将 $Y_{ref}$ 设为 $0$）：
 
 $$
 \begin{align}
@@ -292,13 +308,15 @@ q_{e}\left(e_{0}^{2} + e_{1}^{2} \right) + q_{\theta}\left(\theta_{0}^{2} + \the
 \end{align}
 $$
 
-This shows that $q_{e}$ is the weight for the lateral error and $q$ is for the angular error. In this example, $q_{e}$ acts as the proportional - P gain and $q_{\theta}$ as the derivative - D gain for the lateral tracking error. The balance of these factors (including R) will be determined through actual experiments.
+这表明 $q_{e}$ 是横向误差权重，$q$ 是角度误差权重。本例中，$q_{e}$ 对横向跟踪误差的作用类似比例 P 增益，$q_{\theta}$ 类似微分 D 增益。这些因素（包括 R）之间的平衡需要通过实际实验确定。
 
-#### Weight for non-diagonal term
+<a id="weight-for-non-diagonal-term"></a>
 
-MPC can handle the non-diagonal term in its calculation (as long as the resulting matrix is positive definite).
+#### 非对角项的权重
 
-For instance, write $Q_{2}$ as follows for the $n=2$ system.
+MPC 可以在计算中处理非对角项（只要最终矩阵为正定矩阵）。
+
+例如，对于 $n=2$ 的系统，将 $Q_{2}$ 写为：
 
 $$
 \begin{align}
@@ -306,7 +324,7 @@ Q_{2} = \begin{bmatrix} 0 & 0 & 0 & 0 & 0 & 0 \\\ 0 & 0 & 0 & 0 & 0 & 0 \\\ 0 & 
 \end{align}
 $$
 
-Expanding the first term of the evaluation function using $Q_{2}$
+使用 $Q_{2}$ 展开评价函数的第一项：
 
 $$
 \begin{align}
@@ -314,17 +332,21 @@ q_{d}\left(\delta_{0}^{2} -2\delta_{0}\delta_{1} + \delta_{1}^{2} \right) = q_{d
 \end{align}
 $$
 
-The value of $q_{d}$ is weighted by the amount of change in $\delta$, which will prevent the tire from moving quickly. By adding this section, the system can evaluate the balance between tracking accuracy and change of steering wheel angle.
+$q_{d}$ 对 $\delta$ 的变化量加权，可防止轮胎快速转动。添加这一项后，系统便可权衡跟踪精度与方向盘转角变化。
 
-Since the weight matrix can be added linearly, the final weight can be set as $Q = Q_{1} + Q_{2}$.
+由于权重矩阵可以线性相加，最终权重可设为 $Q = Q_{1} + Q_{2}$。
 
-Furthermore, MPC optimizes over a period of time, the time-varying weight can be considered in the optimization.
+此外，MPC 在一段时间范围内进行优化，因此也可以在优化中考虑时变权重。
 
-### Constraints
+<a id="constraints"></a>
 
-#### Input constraint
+### 约束
 
-The main advantage of MPC controllers is the capability to deal with any state or input constraints. The constraints can be expressed as box constraints, such as "the tire angle must be within ±30 degrees", and can be put in the following form;
+<a id="input-constraint"></a>
+
+#### 输入约束
+
+MPC 控制器的主要优点是能够处理状态或输入约束。约束可表示为区间约束，例如“轮胎转角必须在 ±30 度以内”，写成以下形式：
 
 $$
 \begin{align}
@@ -332,11 +354,13 @@ u_{min} < u < u_{max}
 \end{align}
 $$
 
-The constraints must be linear and convex in the linear MPC applications.
+在线性 MPC 应用中，约束必须是线性且凸的。
 
-#### Constraints on the derivative of the input
+<a id="constraints-on-the-derivative-of-the-input"></a>
 
-We can also put constraints on the input deviations. As the derivative of steering angle is $\dot{u}$, its box constraint is
+#### 输入导数的约束
+
+还可以对输入的变化施加约束。转向角的导数为 $\dot{u}$，其区间约束为：
 
 $$
 \begin{align}
@@ -344,7 +368,7 @@ $$
 \end{align}
 $$
 
-We discretize $\dot{u}$ as $\left(u_{k} - u_{k-1}\right)/\text{d}t$ and multiply both sides by dt, and the resulting constraint become linear and convex
+将 $\dot{u}$ 离散化为 $\left(u_{k} - u_{k-1}\right)/\text{d}t$，并将两边乘以 dt，所得约束是线性且凸的：
 
 $$
 \begin{align}
@@ -352,7 +376,7 @@ $$
 \end{align}
 $$
 
-Along the prediction or control horizon, i.e for setting $n=3$
+在预测或控制时域内，例如设 $n=3$：
 
 $$
 \begin{align}
@@ -361,7 +385,7 @@ $$
 \end{align}
 $$
 
-and aligning the inequality signs
+将不等号方向统一：
 
 $$
 \begin{align}
@@ -372,7 +396,7 @@ u_{2} - u_{1} &< \dot u_{max}\text{d}t \\\
 \end{align}
 $$
 
-We can obtain a matrix expression for the resulting constraint equation in the form of
+可将得到的约束方程写为以下矩阵形式：
 
 $$
 \begin{align}
@@ -380,7 +404,7 @@ Ax \leq b
 \end{align}
 $$
 
-Thus, putting this inequality to fit the form above, the constraints against $\dot{u}$ can be included at the first-order approximation level.
+因此，将此不等式整理为上述形式，就能以一阶近似方式加入对 $\dot{u}$ 的约束。
 
 $$
 \begin{align}

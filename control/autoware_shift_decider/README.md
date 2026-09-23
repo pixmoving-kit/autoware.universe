@@ -1,12 +1,20 @@
-# Shift Decider
+<a id="shift-decider"></a>
 
-## Purpose
+# 挡位决策器
 
-`autoware_shift_decider` is a module to decide shift from ackermann control command.
+<a id="purpose"></a>
 
-## Inner-workings / Algorithms
+## 目的
 
-### Flow chart
+`autoware_shift_decider` 模块根据阿克曼控制命令决定挡位。
+
+<a id="inner-workings-algorithms"></a>
+
+## 内部机制／算法
+
+<a id="flow-chart"></a>
+
+### 流程图
 
 ```plantuml
 @startuml
@@ -31,26 +39,38 @@ stop
 @enduml
 ```
 
-### Algorithms
+<a id="algorithms"></a>
 
-## Inputs / Outputs
+### 算法
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name                  | Type                                  | Description                  |
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | --------------------- | ------------------------------------- | ---------------------------- |
-| `~/input/control_cmd` | `autoware_control_msgs::msg::Control` | Control command for vehicle. |
+| `~/input/control_cmd` | `autoware_control_msgs::msg::Control` | 车辆控制命令。 |
 
-### Output
+<a id="output"></a>
 
-| Name               | Type                                      | Description                        |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------------ | ----------------------------------------- | ---------------------------------- |
-| `~output/gear_cmd` | `autoware_vehicle_msgs::msg::GearCommand` | Gear for drive forward / backward. |
+| `~output/gear_cmd` | `autoware_vehicle_msgs::msg::GearCommand` | 前进或后退的挡位。 |
 
-## Parameters
+<a id="parameters"></a>
 
-none.
+## 参数
 
-## Assumptions / Known limits
+无。
 
-TBD.
+<a id="assumptions-known-limits"></a>
+
+## 假设与已知限制
+
+待确定。

@@ -1,32 +1,42 @@
 # autoware_localization_error_monitor
 
-## Purpose
+<a id="purpose"></a>
+
+## 用途
 
 <p align="center">
 <img src="./media/diagnostics.png" width="400">
 </p>
 
-autoware_localization_error_monitor is a package for diagnosing localization errors by monitoring uncertainty of the localization results.
-The package monitors the following two values:
+autoware_localization_error_monitor 通过监控定位结果的不确定性来诊断定位误差。
+此功能包监控以下两个值：
 
-- size of long radius of confidence ellipse
-- size of confidence ellipse along lateral direction (body-frame)
+- 置信椭圆的长半轴长度
+- 置信椭圆沿车体坐标系横向的尺寸
 
-## Inputs / Outputs
+<a id="inputs-outputs"></a>
 
-### Input
+## 输入／输出
 
-| Name         | Type                      | Description         |
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------ | ------------------------- | ------------------- |
-| `input/odom` | `nav_msgs::msg::Odometry` | localization result |
+| `input/odom` | `nav_msgs::msg::Odometry` | 定位结果 |
 
-### Output
+<a id="output"></a>
 
-| Name                   | Type                                    | Description         |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ---------------------- | --------------------------------------- | ------------------- |
-| `debug/ellipse_marker` | `visualization_msgs::msg::Marker`       | ellipse marker      |
-| `diagnostics`          | `diagnostic_msgs::msg::DiagnosticArray` | diagnostics outputs |
+| `debug/ellipse_marker` | `visualization_msgs::msg::Marker` | 椭圆标记 |
+| `diagnostics` | `diagnostic_msgs::msg::DiagnosticArray` | 诊断输出 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("localization/autoware_localization_error_monitor/schema/localization_error_monitor.schema.json") }}

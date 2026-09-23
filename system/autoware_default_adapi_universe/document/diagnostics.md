@@ -1,14 +1,16 @@
-# Diagnostics
+<a id="diagnostics"></a>
+
+# 诊断
 
 ## /adapi/node/localization: state
 
-The level is OK when the localization state is INITIALIZED. Otherwise ERROR.
+当定位状态为 INITIALIZED 时，诊断级别为 OK；否则为 ERROR。
 
 ## /adapi/node/routing: state
 
-The level is OK when the routing state is SET, REROUTING, or ARRIVED. Otherwise ERROR.
+当路线状态为 SET、REROUTING 或 ARRIVED 时，诊断级别为 OK；否则为 ERROR。
 
 ## /adapi/node/mrm_request: delegate
 
-The level is OK when the delegate strategy is not requested. Otherwise ERROR.
-The senders of the delegate strategy are set to keys.
+未请求 delegate 策略时，诊断级别为 OK；否则为 ERROR。
+将 delegate 策略的发送方设置为键。

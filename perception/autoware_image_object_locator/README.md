@@ -1,9 +1,11 @@
 # autoware_image_object_locator
 
-## Purpose
+<a id="purpose"></a>
 
-The `autoware_image_object_locator` package is designed to use objects detected from 2D images to generate 3D object detections for more robust perception.
+## 用途
 
-| Locator Name        | Description                                                    | Detail                                |
+`autoware_image_object_locator` 软件包利用二维图像中检测到的目标生成三维目标检测结果，从而提高感知的稳健性。
+
+| 定位器名称        | 说明                                                    | 详情                                |
 | ------------------- | -------------------------------------------------------------- | ------------------------------------- |
-| bbox_object_locator | Produces 3D object detections from bounding boxes of an image. | [link](./docs/bbox-object-locator.md) |
+| bbox_object_locator | 根据图像中的包围框生成三维目标检测结果。 | [链接](./docs/bbox-object-locator.md) |

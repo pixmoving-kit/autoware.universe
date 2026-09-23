@@ -1,17 +1,25 @@
-# Polar Grid
+<a id="polar-grid"></a>
 
-## Purpose
+# 极坐标网格
 
-This plugin displays polar grid around ego vehicle in Rviz.
+<a id="purpose"></a>
 
-### Core Parameters
+## 用途
 
-| Name            | Type  | Default Value | Explanation                            |
+此插件在 Rviz 中显示自车周围的极坐标网格。
+
+<a id="core-parameters"></a>
+
+### 核心参数
+
+| 名称            | 类型  | 默认值 | 说明                            |
 | --------------- | ----- | ------------- | -------------------------------------- |
-| `Max Range`     | float | 200.0f        | max range for polar grid. [m]          |
-| `Wave Velocity` | float | 100.0f        | wave ring velocity. [m/s]              |
-| `Delta Range`   | float | 10.0f         | wave ring distance for polar grid. [m] |
+| `Max Range`     | float | 200.0f        | 极坐标网格的最大范围。[m]          |
+| `Wave Velocity` | float | 100.0f        | 波环速度。[m/s]              |
+| `Delta Range`   | float | 10.0f         | 极坐标网格的波环间距。[m] |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-TBD.
+## 假设与已知限制
+
+待补充。

@@ -1,23 +1,31 @@
-# Pure Pursuit Controller
+<a id="pure-pursuit-controller"></a>
 
-The Pure Pursuit Controller module calculates the steering angle for tracking a desired trajectory using the pure pursuit algorithm. This is used as a lateral controller plugin in the `autoware_trajectory_follower_node`.
+# 纯追踪控制器
 
-## Inputs
+纯追踪控制器模块使用纯追踪算法计算跟踪期望轨迹所需的转向角。它作为 `autoware_trajectory_follower_node` 中的横向控制器插件使用。
 
-Set the following from the [controller_node](../autoware_trajectory_follower_node/README.md)
+<a id="inputs"></a>
 
-- `autoware_planning_msgs/Trajectory` : reference trajectory to follow.
-- `nav_msgs/Odometry`: current ego pose and velocity information
+## 输入
 
-## Outputs
+由 [controller_node](../autoware_trajectory_follower_node/README.md) 设置以下内容：
 
-Return LateralOutput which contains the following to the controller node
+- `autoware_planning_msgs/Trajectory`：需要跟踪的参考轨迹。
+- `nav_msgs/Odometry`：当前自车位姿与速度信息。
 
-- `autoware_control_msgs/Lateral`: target steering angle
+<a id="outputs"></a>
+
+## 输出
+
+向控制器节点返回包含以下内容的 LateralOutput：
+
+- `autoware_control_msgs/Lateral`：目标转向角。
 - LateralSyncData
-  - steer angle convergence
-- `autoware_planning_msgs/Trajectory`: predicted path for ego vehicle
+  - 转向角收敛状态。
+- `autoware_planning_msgs/Trajectory`：自车预测路径。
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{json_to_markdown("control/autoware_pure_pursuit/schema/pure_pursuit.schema.json")}}

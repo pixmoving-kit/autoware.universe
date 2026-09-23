@@ -1,7 +1,11 @@
-# Localization API
+<a id="localization-api"></a>
 
-## Overview
+# 定位 API
 
-Unify the location initialization method to the service. The topic `/initialpose` from rviz is now only subscribed to by adapter node and converted to API call. This API call is forwarded to the pose initializer node so it can centralize the state of pose initialization. For other nodes that require initialpose, pose initializer node publishes as `/initialpose3d`. See the [autoware-documentation](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/ad-api/features/localization/) for AD API specifications.
+<a id="overview"></a>
+
+## 概述
+
+将定位初始化方式统一为服务。来自 rviz 的 `/initialpose` 话题现在仅由适配节点订阅，并转换为 API 调用。该调用转发给位姿初始化节点，以集中管理位姿初始化状态。对于需要初始位姿的其他节点，位姿初始化节点通过 `/initialpose3d` 发布。 AD API 规范请参阅 [Autoware 文档](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/ad-api/features/localization/)。
 
 ![localization-architecture](images/localization.drawio.svg)

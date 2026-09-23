@@ -1,61 +1,83 @@
 # image_transport_decompressor
 
-## Purpose
+<a id="purpose"></a>
 
-The `image_transport_decompressor` is a node that decompresses images.
+## 用途
 
-## Inner-workings / Algorithms
+`image_transport_decompressor` 是用于解压图像的节点。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制／算法
 
-| Name                       | Type                                | Description      |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | -------------------------- | ----------------------------------- | ---------------- |
-| `~/input/compressed_image` | `sensor_msgs::msg::CompressedImage` | compressed image |
+| `~/input/compressed_image` | `sensor_msgs::msg::CompressedImage` | 压缩图像 |
 
-### Output
+<a id="output"></a>
 
-| Name                 | Type                      | Description        |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------------- | ------------------------- | ------------------ |
-| `~/output/raw_image` | `sensor_msgs::msg::Image` | decompressed image |
+| `~/output/raw_image` | `sensor_msgs::msg::Image` | 解压后的图像 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("sensing/autoware_image_transport_decompressor/schema/image_transport_decompressor.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-The supported case is an 8-bit RGB or BGR camera with `encoding` set to `rgb8` or `bgr8`. Anything
-else still decodes and publishes, but the result is wrong in one of two ways, because the decode
-always yields 8-bit BGR with three channels whatever the camera sent.
+## 前提假设／已知限制
 
-- **Another camera, with `encoding: rgb8` or `bgr8`.** The message is well formed, so no consumer
-  complains, but the pixels are no longer what the camera measured.
-- **Any other `encoding`.** The published `encoding` is the one the sender named, and the payload no
-  longer matches it. `cv_bridge` throws on the 16-bit encodings and misreads the rest in silence.
+支持的场景是 8 位 RGB 或 BGR 相机，并将 `encoding` 设置为 `rgb8` 或 `bgr8`。其他情况
+仍然会解码并发布，但结果会出现以下两类错误之一，因为无论相机发送什么数据，
+解码结果始终为三通道的 8 位 BGR。
 
-Specifically:
+- **其他相机，且 `encoding: rgb8` 或 `bgr8`。** 消息格式正确，因此使用该消息的节点
+  不会报错，但像素值已不再是相机实际测得的值。
+- **其他任何 `encoding`。** 发布消息的 `encoding` 仍使用发送方指定的值，但数据内容
+  已与该编码不符。对于 16 位编码，`cv_bridge` 会抛出异常；对于其他编码，则会静默地错误解读数据。
 
-| Camera image       | `encoding: rgb8` or `bgr8`         | any other `encoding`                |
+具体如下：
+
+| 相机图像 | `encoding: rgb8` 或 `bgr8` | 其他任何 `encoding` |
 | ------------------ | ---------------------------------- | ----------------------------------- |
-| `rgb8`, `bgr8`     | as sent                            | as sent                             |
-| `rgba8`, `bgra8`   | alpha dropped                      | alpha replaced by 255               |
-| `mono8`            | one channel copied into three      | **three channels named `mono8`**    |
-| `mono16`           | upper 8 bits, copied into three    | **three channels named `mono16`**   |
-| `rgb16`, `bgr16`   | upper 8 bits                       | **8-bit samples named 16-bit**      |
-| `rgba16`, `bgra16` | upper 8 bits, alpha dropped        | **8-bit samples named 16-bit**      |
-| `bayer_rggb8`      | pattern copied, no color recovered | **three channels named as a Bayer** |
-| `yuv422`           | as sent                            | **BGR pixels named `yuv422`**       |
+| `rgb8`, `bgr8` | 与发送内容一致 | 与发送内容一致 |
+| `rgba8`, `bgra8` | 丢弃 alpha 通道 | alpha 通道替换为 255 |
+| `mono8` | 将单通道复制为三通道 | **三通道数据被标为 `mono8`** |
+| `mono16` | 取高 8 位并复制为三通道 | **三通道数据被标为 `mono16`** |
+| `rgb16`, `bgr16` | 取高 8 位 | **8 位采样值被标为 16 位** |
+| `rgba16`, `bgra16` | 取高 8 位并丢弃 alpha 通道 | **8 位采样值被标为 16 位** |
+| `bayer_rggb8` | 复制拜耳模式，未恢复颜色 | **三通道数据被标为拜耳格式** |
+| `yuv422` | 与发送内容一致 | **BGR 像素被标为 `yuv422`** |
 
-The bold cells are the second case: the payload does not have the encoding it is published under.
+加粗的单元格属于第二种情况：数据内容与其发布时声明的编码不符。
 
-An undecodable payload is dropped and reported with `RCLCPP_ERROR`.
+无法解码的数据会被丢弃，并通过 `RCLCPP_ERROR` 报告。
 
-## (Optional) Error detection and handling
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) Performance characterization
+## （可选）错误检测与处理
 
-## (Optional) References/External links
+<a id="optional-performance-characterization"></a>
 
-## (Optional) Future extensions / Unimplemented parts
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

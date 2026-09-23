@@ -1,36 +1,31 @@
-# Fake Test Node
+<a id="fake-test-node"></a>
 
-## What this package provides
+# 模拟测试节点
 
-When writing an integration test for a node in C++ using GTest, there is quite some boilerplate code
-that needs to be written to set up a fake node that would publish expected messages on an expected
-topic and subscribes to messages on some other topic. This is usually implemented as a custom GTest
-fixture.
+<a id="what-this-package-provides"></a>
 
-This package contains a library that introduces two utility classes that can be used in place of
-custom fixtures described above to write integration tests for a node:
+## 此软件包提供的功能
 
-- `autoware::fake_test_node::FakeTestNode` - to use as a custom test fixture with `TEST_F` tests
-- `autoware::fake_test_node::FakeTestNodeParametrized` - to use a custom test fixture with the
-  parametrized `TEST_P` tests (accepts a template parameter that gets forwarded to
-  `testing::TestWithParam<T>`)
+在 C++ 中使用 GTest 编写节点集成测试时，通常需要编写大量样板代码来创建模拟节点，使其在指定话题上发布预期消息，并订阅其他话题的消息。这一般通过自定义 GTest 测试夹具实现。
 
-These fixtures take care of initializing and re-initializing rclcpp as well as of checking that all
-subscribers and publishers have a match, thus reducing the amount of boilerplate code that the user
-needs to write.
+此软件包中的库提供了两个实用类，可代替上述自定义测试夹具，为节点编写集成测试：
 
-## How to use this library
+- `autoware::fake_test_node::FakeTestNode`：用作 `TEST_F` 测试的自定义测试夹具
+- `autoware::fake_test_node::FakeTestNodeParametrized`：用作参数化 `TEST_P` 测试的自定义测试夹具（接受一个模板参数，并将其传递给 `testing::TestWithParam<T>`）
 
-After including the relevant header the user can use a typedef to use a custom fixture name and use
-the provided classes as fixtures in `TEST_F` and `TEST_P` tests directly.
+这些测试夹具负责初始化和重新初始化 rclcpp，并检查所有订阅器和发布器是否匹配，从而减少用户需要编写的样板代码。
 
-### Example usage
+<a id="how-to-use-this-library"></a>
 
-Let's say there is a node `NodeUnderTest` that requires testing. It just
-subscribes to `std_msgs::msg::Int32` messages and publishes a
-`std_msgs::msg::Bool` to indicate that the input is positive. To test such a
-node the following code can be used utilizing the
-`autoware::fake_test_node::FakeTestNode`:
+## 使用方法
+
+包含相关头文件后，用户可以通过 typedef 自定义测试夹具名称，并直接将提供的类用作 `TEST_F` 和 `TEST_P` 测试的夹具。
+
+<a id="example-usage"></a>
+
+### 使用示例
+
+假设需要测试一个 `NodeUnderTest` 节点。该节点订阅 `std_msgs::msg::Int32` 消息，并发布 `std_msgs::msg::Bool` 消息，表示输入是否为正数。可以使用以下代码，通过 `autoware::fake_test_node::FakeTestNode` 测试此节点：
 
 ```cpp
 using FakeNodeFixture = autoware::fake_test_node::FakeTestNode;
@@ -64,5 +59,4 @@ TEST_F(FakeNodeFixture, Test) {
 }
 ```
 
-Here only the `TEST_F` example is shown but a `TEST_P` usage is very similar with a little bit more
-boilerplate to set up all the parameter values, see `test_fake_test_node.cpp` for an example usage.
+此处仅展示 `TEST_F` 示例；`TEST_P` 的用法非常相似，只需增加少量用于设置各参数值的样板代码。使用示例见 `test_fake_test_node.cpp`。

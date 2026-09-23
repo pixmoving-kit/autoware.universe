@@ -1,18 +1,26 @@
 # tier4_traffic_light_rviz_plugin
 
-## Purpose
+<a id="purpose"></a>
 
-This plugin panel publishes dummy traffic light signals.
+## 用途
 
-## Inputs / Outputs
+此插件面板用于发布虚拟交通信号灯信号。
 
-### Output
+<a id="inputs-outputs"></a>
 
-| Name                                                    | Type                                                    | Description                   |
+## 输入／输出
+
+<a id="output"></a>
+
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------------------------------------------------- | ------------------------------------------------------- | ----------------------------- |
-| `/perception/traffic_light_recognition/traffic_signals` | `autoware_perception_msgs::msg::TrafficLightGroupArray` | Publish traffic light signals |
+| `/perception/traffic_light_recognition/traffic_signals` | `autoware_perception_msgs::msg::TrafficLightGroupArray` | 发布交通信号灯信号 |
 
-## HowToUse
+<a id="howtouse"></a>
+
+## 使用方法
 
 <div align="center">
   <img src="images/select_panels.png" width=50%>
@@ -24,10 +32,10 @@ This plugin panel publishes dummy traffic light signals.
   <img src="images/select_traffic_light_id.png" width=50%>
 </div>
 
-1. Start rviz and select panels/Add new panel.
-2. Select TrafficLightPublishPanel and press OK.
-3. Set `Traffic Light ID` & `Traffic Light Status` and press `SET` button.
-4. Traffic light signals are published, while `PUBLISH` button is pushed.
+1. 启动 RViz，并选择 panels/Add new panel。
+2. 选择 TrafficLightPublishPanel，然后点击 OK。
+3. 设置 `Traffic Light ID` 和 `Traffic Light Status`，然后点击 `SET` 按钮。
+4. 按下 `PUBLISH` 按钮后，发布交通信号灯信号。
 
 <div align="center">
   <img src="images/traffic_light_publish_panel.gif">

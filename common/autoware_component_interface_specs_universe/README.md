@@ -1,3 +1,3 @@
 # autoware_component_interface_specs_universe
 
-This package is a specification of component interfaces.
+此软件包定义组件接口规范。

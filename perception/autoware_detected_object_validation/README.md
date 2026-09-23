@@ -1,25 +1,35 @@
 # detected_object_validation
 
-## Purpose
+<a id="purpose"></a>
 
-The purpose of this package is to eliminate obvious false positives of DetectedObjects.
+## 用途
 
-## References/External links
+此功能包旨在消除 DetectedObjects 中明显的误检。
 
-- [Obstacle pointcloud based validator](obstacle-pointcloud-based-validator.md)
-- [Occupancy grid based validator](occupancy-grid-based-validator.md)
-- [Object lanelet filter](object-lanelet-filter.md)
-- [Object position filter](object-position-filter.md)
+<a id="referencesexternal-links"></a>
 
-### Node Parameters
+## 参考资料／外部链接
+
+- [基于障碍物点云的验证器](obstacle-pointcloud-based-validator.md)
+- [基于占据栅格的验证器](occupancy-grid-based-validator.md)
+- [目标 lanelet 过滤器](object-lanelet-filter.md)
+- [目标位置过滤器](object-position-filter.md)
+
+<a id="node-parameters"></a>
+
+### 节点参数
 
 #### object_lanelet_filter
 
-##### Detected Objects
+<a id="detected-objects"></a>
+
+##### 检测目标
 
 {{ json_to_markdown("perception/autoware_detected_object_validation/schema/detected_object_lanelet_filter.schema.json") }}
 
-##### Tracked Objects
+<a id="tracked-objects"></a>
+
+##### 跟踪目标
 
 {{ json_to_markdown("perception/autoware_detected_object_validation/schema/tracked_object_lanelet_filter.schema.json") }}
 

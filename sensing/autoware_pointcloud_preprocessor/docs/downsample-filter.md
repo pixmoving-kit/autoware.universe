@@ -1,65 +1,103 @@
 # downsample_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `downsample_filter` is a node that reduces the number of points.
+## 用途
 
-## Inner-workings / Algorithms
+`downsample_filter` 是用于减少点数的节点。
 
-### Approximate Downsample Filter
+<a id="inner-workings-algorithms"></a>
 
-`pcl::VoxelGridNearestCentroid` is used. The algorithm is described in [autoware_pcl_extensions](../../autoware_pcl_extensions/README.md)
+## 内部机制／算法
 
-### Random Downsample Filter
+<a id="approximate-downsample-filter"></a>
 
-`pcl::RandomSample` is used, which points are sampled with uniform probability.
+### 近似降采样滤波器
 
-### Voxel Grid Downsample Filter
+使用 `pcl::VoxelGridNearestCentroid`。算法说明见 [autoware_pcl_extensions](../../autoware_pcl_extensions/README.md)。
 
-`pcl::VoxelGrid` is used, which points in each voxel are approximated with their centroid.
+<a id="random-downsample-filter"></a>
 
-### Pickup Based Voxel Grid Downsample Filter
+### 随机降采样滤波器
 
-This algorithm samples a single actual point existing within the voxel, not the centroid. The computation cost is low compared to Centroid Based Voxel Grid Filter.
+使用 `pcl::RandomSample`，以均匀概率对点进行采样。
 
-## Inputs / Outputs
+<a id="voxel-grid-downsample-filter"></a>
 
-These implementations inherit `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+### 体素网格降采样滤波器
 
-## Parameters
+使用 `pcl::VoxelGrid`，以各体素的质心近似替代该体素内的点。
 
-### Note Parameters
+<a id="pickup-based-voxel-grid-downsample-filter"></a>
 
-These implementations inherit `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+### 基于选点的体素网格降采样滤波器
 
-### Core Parameters
+此算法从体素中选取一个实际存在的点，而非质心。与基于质心的体素网格滤波器相比，计算成本更低。
 
-#### Approximate Downsample Filter
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+这些实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
+
+<a id="parameters"></a>
+
+## 参数
+
+<a id="note-parameters"></a>
+
+### 参数说明
+
+这些实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
+
+<a id="core-parameters"></a>
+
+### 核心参数
+
+<a id="approximate-downsample-filter_1"></a>
+
+#### 近似降采样滤波器
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/approximate_downsample_filter_node.schema.json") }}
 
-### Random Downsample Filter
+<a id="random-downsample-filter_1"></a>
+
+### 随机降采样滤波器
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/random_downsample_filter_node.schema.json") }}
 
-### Voxel Grid Downsample Filter
+<a id="voxel-grid-downsample-filter_1"></a>
+
+### 体素网格降采样滤波器
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/voxel_grid_downsample_filter_node.schema.json") }}
 
-### Pickup Based Voxel Grid Downsample Filter
+<a id="pickup-based-voxel-grid-downsample-filter_1"></a>
+
+### 基于选点的体素网格降采样滤波器
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/pickup_based_voxel_grid_downsample_filter_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制
 
 <!-- cspell: ignore martinus -->
 
-This implementation uses the `robin_hood.h` hashing library by martinus, available under the MIT License at [martinus/robin-hood-hashing](https://github.com/martinus/robin-hood-hashing) on GitHub. Special thanks to martinus for this contribution.
+此实现使用 martinus 编写的 `robin_hood.h` 哈希库，该库以 MIT 许可证发布于 GitHub 的 [martinus/robin-hood-hashing](https://github.com/martinus/robin-hood-hashing)。特别感谢 martinus 的贡献。
 
-## (Optional) Error detection and handling
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) Performance characterization
+## （可选）错误检测与处理
 
-## (Optional) References/External links
+<a id="optional-performance-characterization"></a>
 
-## (Optional) Future extensions / Unimplemented parts
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

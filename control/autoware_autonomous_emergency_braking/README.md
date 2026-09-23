@@ -1,68 +1,84 @@
-# Autonomous Emergency Braking (AEB)
+<a id="autonomous-emergency-braking-aeb"></a>
 
-## Purpose / Role
+# 自动紧急制动（AEB）
 
-`autonomous_emergency_braking` is a module that prevents collisions with obstacles on the predicted path created by a control module or sensor values estimated from the control module.
+<a id="purpose-role"></a>
 
-### Assumptions
+## 目的与作用
 
-This module has following assumptions.
+`autonomous_emergency_braking` 模块用于防止车辆与预测路径上的障碍物碰撞，该路径由控制模块生成，或根据控制模块估计所用的传感器数值生成。
 
-- The predicted path of the ego vehicle can be made from either the path created from sensors or the path created from a control module, or both.
+<a id="assumptions"></a>
 
-- The current speed and angular velocity can be obtained from the sensors of the ego vehicle, and it uses points as obstacles.
+### 前提假设
 
-- The AEBs target obstacles are 2D points that can be obtained from the input point cloud or by obtaining the intersection points between the predicted ego footprint path and a predicted object's shape.
+本模块基于以下假设。
 
-### IMU path generation: steering angle vs IMU's angular velocity
+- 自车预测路径可以使用基于传感器生成的路径、控制模块生成的路径，或同时使用两者。
 
-Currently, the IMU-based path is generated using the angular velocity obtained by the IMU itself. It has been suggested that the steering angle could be used instead onf the angular velocity.
+- 可以从自车传感器获取当前速度和角速度，并使用点来表示障碍物。
 
-The pros and cons of both approaches are:
+- AEB 的目标障碍物是二维点，可从输入点云获得，也可通过计算自车预测轮廓路径与预测物体形状的交点获得。
 
-IMU angular velocity:
+<a id="imu-path-generation-steering-angle-vs-imus-angular-velocity"></a>
 
-- (+) Usually, it has high accuracy
-- (-) Vehicle vibration might introduce noise.
+### IMU 路径生成：转向角与 IMU 角速度
 
-Steering angle:
+目前，基于 IMU 的路径使用 IMU 自身测得的角速度生成。有人建议用转向角替代角速度。
 
-- (+) Not so noisy
-- (-) May have a steering offset or a wrong gear ratio, and the steering angle of Autoware and the real steering may not be the same.
+两种方法的优缺点如下：
 
-For the moment, there are no plans to implement the steering angle on the path creation process of the AEB module.
+IMU 角速度：
 
-## Inner-workings / Algorithms
+- （优点）通常精度较高。
+- （缺点）车辆振动可能引入噪声。
 
-AEB has the following steps before it outputs the emergency stop signal.
+转向角：
 
-1. Activate AEB if necessary.
+- （优点）噪声较小。
+- （缺点）可能存在转向偏置或传动比错误，而且 Autoware 中的转向角可能与实际转向角不一致。
 
-2. Generate a predicted path of the ego vehicle.
+目前暂不计划在 AEB 模块的路径生成过程中引入转向角。
 
-3. Get target obstacles from the input point cloud and/or predicted object data.
+<a id="inner-workings-algorithms"></a>
 
-4. Estimate the closest obstacle speed.
+## 内部机制／算法
 
-5. Collision check with target obstacles.
+AEB 在输出紧急停车信号之前执行以下步骤。
 
-6. Send emergency stop signals to `/diagnostics`.
+1. 必要时启用 AEB。
 
-We give more details of each section below.
+2. 生成自车预测路径。
 
-### 1. Activate AEB if necessary
+3. 从输入点云和/或预测物体数据中获取目标障碍物。
 
-We do not activate AEB module if it satisfies the following conditions.
+4. 估计最近障碍物的速度。
 
-- Ego vehicle is not in autonomous driving state
+5. 与目标障碍物进行碰撞检查。
 
-- When the ego vehicle is not moving (Current Velocity is below a 0.1 m/s threshold)
+6. 向 `/diagnostics` 发送紧急停车信号。
 
-### 2. Generate a predicted path of the ego vehicle
+下面详细介绍各个步骤。
 
-#### 2.1 Overview of IMU Path Generation
+<a id="1-activate-aeb-if-necessary"></a>
 
-AEB generates a predicted footprint path based on current velocity and current angular velocity obtained from attached sensors. Note that if `use_imu_path` is `false`, it skips this step. This predicted path is generated as:
+### 1. 必要时启用 AEB
+
+满足以下情况时，不启用 AEB 模块。
+
+- 自车未处于自动驾驶状态。
+
+- 自车未运动（当前速度低于 0.1 m/s 阈值）。
+
+<a id="2-generate-a-predicted-path-of-the-ego-vehicle"></a>
+
+### 2. 生成自车预测路径
+
+<a id="21-overview-of-imu-path-generation"></a>
+
+#### 2.1 IMU 路径生成概述
+
+AEB 根据车载传感器获取的当前速度和角速度，生成预测轮廓路径。请注意，如果 `use_imu_path` 为 `false`，则跳过此步骤。预测路径按以下公式生成：
 
 $$
 x_{k+1} = x_k + v cos(\theta_k) dt \\
@@ -70,138 +86,170 @@ y_{k+1} = y_k + v sin(\theta_k) dt \\
 \theta_{k+1} = \theta_k + \omega dt
 $$
 
-where $v$ and $\omega$ are current longitudinal velocity and angular velocity respectively. $dt$ is time interval that users can define in advance with the `imu_prediction_time_interval` parameter. The IMU path is generated considering a time horizon, defined by the `imu_prediction_time_horizon` parameter.
+其中，$v$ 和 $\omega$ 分别为当前纵向速度和角速度。$dt$ 是时间间隔，用户可通过 `imu_prediction_time_interval` 参数预先定义。IMU 路径在 `imu_prediction_time_horizon` 参数定义的预测时域内生成。
 
-#### 2.2 Constraints and Countermeasures in IMU Path Generation
+<a id="22-constraints-and-countermeasures-in-imu-path-generation"></a>
 
-Since the IMU path generation only uses the ego vehicle's current angular velocity, disregarding the MPC's planner steering, the shape of the IMU path tends to get distorted quite easily and protrude out of the ego vehicle's current lane, possibly causing unwanted emergency stops. There are two countermeasures for this issue:
+#### 2.2 IMU 路径生成的约束与应对措施
 
-1. Control using the `max_generated_imu_path_length` parameter
-   - Generation stops when path length exceeds the set value
-   - Avoid using a large `imu_prediction_time_horizon`
+由于 IMU 路径生成仅使用自车当前角速度，不考虑 MPC 规划的转向，IMU 路径形状容易发生畸变并伸出当前车道，可能导致不必要的紧急停车。对此有两种应对措施：
 
-2. Control based on lateral deviation
-   - Set the `limit_imu_path_lat_dev` parameter to "true"
-   - Set deviation threshold using `imu_path_lat_dev_threshold`
-   - Path generation stops when lateral deviation exceeds the threshold
+1. 通过 `max_generated_imu_path_length` 参数控制。
+   - 路径长度超过设定值时停止生成。
+   - 避免使用过大的 `imu_prediction_time_horizon`。
 
-#### 2.3 Advantages and Limitations of Lateral Deviation Control
+2. 根据横向偏差控制。
+   - 将 `limit_imu_path_lat_dev` 参数设为 "true"。
+   - 使用 `imu_path_lat_dev_threshold` 设置偏差阈值。
+   - 横向偏差超过阈值时停止生成路径。
 
-The advantage of setting a lateral deviation limit with the `limit_imu_path_lat_dev` parameter is that the `imu_prediction_time_horizon` and the `max_generated_imu_path_length` can be increased without worries about the IMU predicted path deforming beyond a certain threshold. The downside is that the IMU path will be cut short when the ego has a high angular velocity, in said cases, the AEB module would mostly rely on the MPC path to prevent or mitigate collisions.
+<a id="23-advantages-and-limitations-of-lateral-deviation-control"></a>
 
-If it is assumed the ego vehicle will mostly travel along the centerline of its lanelets, it can be useful to set the lateral deviation threshold parameter `imu_path_lat_dev_threshold` to be equal to or smaller than the average lanelet width divided by 2, that way, the chance of the IMU predicted path leaving the current ego lanelet is smaller, and it is possible to increase the `imu_prediction_time_horizon` to prevent frontal collisions when the ego is mostly traveling in a straight line.
+#### 2.3 横向偏差控制的优点与局限
 
-The lateral deviation is measured using the ego vehicle's current position as a reference, and it measures the distance of the furthermost vertex of the predicted ego footprint to the predicted path. The following image illustrates how the lateral deviation of a given ego pose is measured.
+通过 `limit_imu_path_lat_dev` 设置横向偏差限制的优点是，可以增大 `imu_prediction_time_horizon` 和 `max_generated_imu_path_length`，而不必担心 IMU 预测路径的畸变超过一定阈值。缺点是自车角速度较高时，IMU 路径会被提前截断；此时 AEB 模块主要依靠 MPC 路径来防止或减轻碰撞。
 
-![measuring_lat_dev](./image/measuring-lat-dev-on-imu-path.drawio.svg)
+如果假设自车大多沿所在 lanelet 的中心线行驶，可以将横向偏差阈值 `imu_path_lat_dev_threshold` 设为不大于平均 lanelet 宽度的一半。这样 IMU 预测路径驶出当前 lanelet 的可能性更小，并且可以增大 `imu_prediction_time_horizon`，以在车辆主要直线行驶时预防前方碰撞。
 
-#### 2.4 IMU Path Generation Algorithm
+横向偏差以自车当前位置为参考，测量自车预测轮廓中最远顶点到预测路径的距离。下图说明如何测量给定自车位姿的横向偏差。
 
-##### 2.4.1 Selection of Lateral Deviation Check Points
+![横向偏差测量](./image/measuring-lat-dev-on-imu-path.drawio.svg)
 
-Select vehicle vertices for lateral deviation checks based on the following conditions:
+<a id="24-imu-path-generation-algorithm"></a>
 
-- Forward motion ($v > 0$)
-  - Right turn ($\omega > 0$): Right front vertex
-  - Left turn ($\omega < 0$): Left front vertex
-- Reverse motion ($v < 0$)
-  - Right turn ($\omega > 0$): Right rear vertex
-  - Left turn ($\omega < 0$): Left rear vertex
-- Straight motion ($\omega = 0$): Check both front/rear vertices depending on forward/reverse motion
+#### 2.4 IMU 路径生成算法
 
-##### 2.4.2 Path Generation Process
+<a id="241-selection-of-lateral-deviation-check-points"></a>
 
-Execute the following steps at each time step:
+##### 2.4.1 选择横向偏差检查点
 
-1. State Update
-   - Calculate next position $(x_{k+1}, y_{k+1})$ and yaw angle $\theta_{k+1}$ based on current velocity $v$ and angular velocity $\omega$
-   - Time interval $dt$ is based on the `imu_prediction_time_interval` parameter
+根据以下条件选择用于横向偏差检查的车辆顶点：
 
-2. Vehicle Footprint Generation
-   - Place vehicle footprint at calculated position
-   - Calculate check point coordinates
+- 前进（$v > 0$）
+  - 右转（$\omega > 0$）：右前顶点。
+  - 左转（$\omega < 0$）：左前顶点。
+- 后退（$v < 0$）
+  - 右转（$\omega > 0$）：右后顶点。
+  - 左转（$\omega < 0$）：左后顶点。
+- 直行（$\omega = 0$）：根据前进或后退，检查两个前顶点或后顶点。
 
-3. Lateral Deviation Calculation
-   - Calculate lateral deviation from selected vertex to path
-   - Update path length and elapsed time
+<a id="242-path-generation-process"></a>
 
-4. Evaluation of Termination Conditions
+##### 2.4.2 路径生成过程
 
-##### 2.4.3 Termination Conditions
+在每个时间步执行以下步骤：
 
-Path generation terminates when any of the following conditions are met:
+1. 状态更新
+   - 根据当前速度 $v$ 和角速度 $\omega$，计算下一个位置 $(x_{k+1}, y_{k+1})$ 和偏航角 $\theta_{k+1}$。
+   - 时间间隔 $dt$ 由 `imu_prediction_time_interval` 参数决定。
 
-1. Basic Termination Conditions (both must be satisfied)
-   - Predicted time exceeds `imu_prediction_time_horizon`
-   - AND path length exceeds `min_generated_imu_path_length`
+2. 生成车辆轮廓
+   - 在计算出的位置放置车辆轮廓。
+   - 计算检查点坐标。
 
-2. Path Length Termination Condition
-   - Path length exceeds `max_generated_imu_path_length`
+3. 计算横向偏差
+   - 计算所选顶点到路径的横向偏差。
+   - 更新路径长度和已用时间。
 
-3. Lateral Deviation Termination Condition (when `limit_imu_path_lat_dev = true`)
-   - Lateral deviation of selected vertex exceeds `imu_path_lat_dev_threshold`
+4. 判断终止条件
 
-#### MPC path generation
+<a id="243-termination-conditions"></a>
 
-If the `use_predicted_trajectory` parameter is set to true, the AEB module will directly use the predicted path from the MPC as a base to generate a footprint path. It will copy the ego poses generated by the MPC until a given time horizon. The `mpc_prediction_time_horizon` parameter dictates how far ahead in the future the MPC path will predict the ego vehicle's movement. Both the IMU footprint path and the MPC footprint path can be used at the same time.
+##### 2.4.3 终止条件
 
-### 3. Get target obstacles
+满足以下任一条件时，终止路径生成：
 
-After generating the ego footprint path(s), the target obstacles are identified. There are two methods to find target obstacles: using the input point cloud, or using the predicted object information coming from perception modules.
+1. 基本终止条件（两项必须同时满足）
+   - 预测时间超过 `imu_prediction_time_horizon`。
+   - 并且路径长度超过 `min_generated_imu_path_length`。
 
-#### Pointcloud obstacle filtering
+2. 路径长度终止条件
+   - 路径长度超过 `max_generated_imu_path_length`。
 
-The AEB module can filter the input pointcloud to find target obstacles with which the ego vehicle might collide. This method can be enable if the `use_pointcloud_data` parameter is set to true. The pointcloud obstacle filtering has three major steps, which are rough filtering, noise filtering with clustering and rigorous filtering.
+3. 横向偏差终止条件（当 `limit_imu_path_lat_dev = true` 时）
+   - 所选顶点的横向偏差超过 `imu_path_lat_dev_threshold`。
 
-##### Rough filtering
+<a id="mpc-path-generation"></a>
 
-In rough filtering step, we select target obstacle with simple filter. Create a search area up to a certain distance (default is half of the ego vehicle width plus the `path_footprint_extra_margin` parameter plus the `expand_width` parameter) away from the predicted path of the ego vehicle and ignore the point cloud that are not within it. The rough filtering step is illustrated below.
+#### MPC 路径生成
 
-![rough_filtering](./image/obstacle_filtering_1.drawio.svg)
+如果 `use_predicted_trajectory` 参数设为 true，AEB 模块会直接以 MPC 的预测路径为基础生成轮廓路径。它会复制 MPC 在给定预测时域内生成的自车位姿。`mpc_prediction_time_horizon` 决定 MPC 路径向未来预测自车运动的时长。IMU 轮廓路径和 MPC 轮廓路径可以同时使用。
 
-##### Noise filtering with clustering and convex hulls
+<a id="3-get-target-obstacles"></a>
 
-To prevent the AEB from considering noisy points, euclidean clustering is performed on the filtered point cloud. The points in the point cloud that are not close enough to other points to form a cluster are discarded. Furthermore, each point in a cluster is compared against the `cluster_minimum_height` parameter, if no point inside a cluster has a height/z value greater than `cluster_minimum_height`, the whole cluster of points is discarded. The parameters `cluster_tolerance`, `minimum_cluster_size` and `maximum_cluster_size` can be used to tune the clustering and the size of objects to be ignored, for more information about the clustering method used by the AEB module, please check the official documentation on euclidean clustering of the PCL library: <https://pcl.readthedocs.io/projects/tutorials/en/master/cluster_extraction.html>.
+### 3. 获取目标障碍物
 
-Furthermore, a 2D convex hull is created around each detected cluster, the vertices of each hull represent the most extreme/outside points of the cluster. These vertices are then checked in the next step.
+生成自车轮廓路径后，需要识别目标障碍物。有两种获取方法：使用输入点云，或使用感知模块提供的预测物体信息。
 
-##### Rigorous filtering
+<a id="pointcloud-obstacle-filtering"></a>
 
-After Noise filtering, the module performs a geometric collision check to determine whether the filtered obstacles/hull vertices actually have possibility to collide with the ego vehicle. In this check, the ego vehicle is represented as a rectangle, and the point cloud obstacles are represented as points. Only the vertices with a possibility of collision are labeled as target obstacles.
+#### 点云障碍物过滤
 
-![rigorous_filtering](./image/obstacle_filtering_2.drawio.svg)
+AEB 模块可以过滤输入点云，找出自车可能与之碰撞的目标障碍物。将 `use_pointcloud_data` 设为 true 即可启用此方法。点云障碍物过滤包括三个主要步骤：粗过滤、通过聚类去除噪声、精过滤。
 
-##### Obstacle labeling
+<a id="rough-filtering"></a>
 
-After rigorous filtering, the remaining obstacles are labeled. An obstacle is given a "target" label for collision checking only if it falls within the ego vehicle's defined footprint (made using the ego vehicle's width and the `expand_width` parameter). For an emergency stop to occur, at least one obstacle needs to be labeled as a target.
+##### 粗过滤
 
-![labeling](./image/labeling.drawio.svg)
+粗过滤阶段使用简单过滤器选择目标障碍物。在距自车预测路径一定距离内建立搜索区域（默认距离为自车宽度的一半加上 `path_footprint_extra_margin` 和 `expand_width` 参数），忽略该区域之外的点云。粗过滤过程如下图所示。
 
-#### Using predicted objects to get target obstacles
+![粗过滤](./image/obstacle_filtering_1.drawio.svg)
 
-If the `use_predicted_object_data` parameter is set to true, the AEB can use predicted object data coming from the perception modules, to get target obstacle points. This is done by obtaining the 2D intersection points between the ego's predicted footprint path (made using the ego vehicle's width and the `expand_width` parameter) and each of the predicted objects enveloping polygon or bounding box. if there is no intersection, all points are discarded.
+<a id="noise-filtering-with-clustering-and-convex-hulls"></a>
 
-![predicted_object_and_path_intersection](./image/using-predicted-objects.drawio.svg)
+##### 使用聚类与凸包过滤噪声
 
-### Finding the closest target obstacle
+为防止 AEB 将噪声点纳入考虑，模块对过滤后的点云执行欧氏聚类。无法与其他点靠近到足以形成簇的点会被丢弃。此外，会将簇中各点的高度与 `cluster_minimum_height` 比较；如果簇内没有任何点的高度或 z 值大于 `cluster_minimum_height`，则丢弃整个点簇。可以通过 `cluster_tolerance`、`minimum_cluster_size` 和 `maximum_cluster_size` 调整聚类及需要忽略的物体大小。有关 AEB 使用的聚类方法，请参阅 PCL 库的欧氏聚类官方文档：<https://pcl.readthedocs.io/projects/tutorials/en/master/cluster_extraction.html>。
 
-After identifying all possible obstacles using pointcloud data and/or predicted object data, the AEB module selects the closest point to the ego vehicle as the candidate for collision checking. The "closest object" is defined as an obstacle within the ego vehicle's footprint, determined by its width and the `expand_width` parameter, that is closest to the ego vehicle along the longitudinal axis, using the IMU or MPC path as a reference. Target obstacles are prioritized over those outside the ego path, even if the latter are longitudinally closer. This prioritization ensures that the collision check focuses on objects that pose the highest risk based on the vehicle's trajectory.
+此外，会为每个检测到的簇构建二维凸包，其顶点表示该簇最外侧的极值点。这些顶点将在下一步中检查。
 
-If no target obstacles are found, the AEB module considers other nearby obstacles outside the path. In such cases, it skips the collision check but records the position of the closest obstacle to calculate its speed (Step #4). Note that, obstacles obtained with predicted object data are all target obstacles since they are within the ego footprint path and it is not necessary to calculate their speed (it is already calculated by the perception module). Such obstacles are excluded from step #4.
+<a id="rigorous-filtering"></a>
 
-![closest_object](./image/closest-point.drawio.svg)
+##### 精过滤
 
-### 4. Obstacle velocity estimation
+去除噪声后，模块执行几何碰撞检查，判断过滤后的障碍物或凸包顶点是否确实可能与自车碰撞。检查时，自车表示为矩形，点云障碍物表示为点。只有可能发生碰撞的顶点才会被标记为目标障碍物。
 
-To begin calculating the target point's velocity, the point must enter the speed calculation area,
-which is defined by the `speed_calculation_expansion_margin` parameter plus the ego vehicles width and the `expand_width` parameter.
-Depending on the operational environment,
-this margin can reduce unnecessary autonomous emergency braking
-caused by velocity miscalculations during the initial calculation steps.
+![精过滤](./image/obstacle_filtering_2.drawio.svg)
 
-![speed_calculation_expansion](./image/speed_calculation_expansion.drawio.svg)
+<a id="obstacle-labeling"></a>
 
-Once the position of the closest obstacle/point is determined, the AEB modules uses the history of previously detected objects to estimate the closest object relative speed using the following equations:
+##### 障碍物标记
+
+精过滤后，对剩余障碍物进行标记。只有位于所定义自车轮廓内的障碍物才会获得用于碰撞检查的“目标”标签；该轮廓由自车宽度与 `expand_width` 参数构建。至少有一个障碍物被标记为目标，才可能触发紧急停车。
+
+![障碍物标记](./image/labeling.drawio.svg)
+
+<a id="using-predicted-objects-to-get-target-obstacles"></a>
+
+#### 使用预测物体获取目标障碍物
+
+如果 `use_predicted_object_data` 参数设为 true，AEB 可使用感知模块提供的预测物体数据获取目标障碍点。具体方式是计算自车预测轮廓路径（由自车宽度与 `expand_width` 参数构建）与每个预测物体的包络多边形或包围框之间的二维交点。如果没有交点，则丢弃所有点。
+
+![预测物体与路径的交点](./image/using-predicted-objects.drawio.svg)
+
+<a id="finding-the-closest-target-obstacle"></a>
+
+### 查找最近的目标障碍物
+
+使用点云数据和/或预测物体数据识别所有可能的障碍物后，AEB 模块选择距自车最近的点作为碰撞检查候选。“最近物体”是指位于自车轮廓内（由车宽与 `expand_width` 确定），以 IMU 或 MPC 路径为参考，在纵向上距自车最近的障碍物。目标障碍物的优先级高于自车路径外的障碍物，即使后者在纵向上更近。这确保碰撞检查聚焦于对车辆轨迹威胁最大的物体。
+
+如果没有找到目标障碍物，AEB 会考虑路径外的其他邻近障碍物。这时会跳过碰撞检查，但记录最近障碍物的位置，用于计算其速度（第 4 步）。请注意，通过预测物体数据获得的障碍物均位于自车轮廓路径内，因此都是目标障碍物，并且无须计算速度（感知模块已完成计算）。这类障碍物不参与第 4 步。
+
+![最近物体](./image/closest-point.drawio.svg)
+
+<a id="4-obstacle-velocity-estimation"></a>
+
+### 4. 障碍物速度估计
+
+开始计算目标点速度之前，该点必须进入速度计算区域，
+此区域由 `speed_calculation_expansion_margin` 参数、自车宽度和 `expand_width` 参数共同定义。
+根据运行环境，
+该余量可以减少不必要的自动紧急制动，
+这些误制动可能由初始计算阶段的速度误算引起。
+
+![速度计算区域扩展](./image/speed_calculation_expansion.drawio.svg)
+
+确定最近障碍物或点的位置后，AEB 模块利用此前检测物体的历史数据，按以下公式估计最近物体的相对速度：
 
 $$
 d_{t} = t_{1} - t_{0}
@@ -215,90 +263,108 @@ $$
 v_{norm} = d_{x} / d_{t}
 $$
 
-Where $t_{1}$ and $t_{0}$ are the timestamps of the point clouds used to detect the current closest object and the closest object of the previous point cloud frame, and $o_{x}$ and $prev_{x}$ are the positions of those objects, respectively.
+其中，$t_{1}$ 和 $t_{0}$ 分别是用于检测当前最近物体和上一帧最近物体的点云时间戳，$o_{x}$ 和 $prev_{x}$ 分别是这两个物体的位置。
 
-![relative_speed](./image/object_relative_speed.drawio.svg)
+![相对速度](./image/object_relative_speed.drawio.svg)
 
-Note that, when the closest obstacle/point comes from using predicted object data, $v_{norm}$ is calculated by directly computing the norm of the predicted object's velocity in the x and y axes.
+请注意，如果最近障碍物或点来自预测物体数据，则直接对预测物体在 x、y 轴上的速度求范数，得到 $v_{norm}$。
 
-The velocity vector is then compared against the ego's predicted path to get the longitudinal velocity $v_{obj}$:
+随后，将速度向量与自车预测路径比较，得到纵向速度 $v_{obj}$：
 
 $$
 v_{obj} = v_{norm} * Cos(yaw_{diff}) + v_{ego}
 $$
 
-where $yaw_{diff}$ is the difference in yaw between the ego path and the displacement vector $$v_{pos} = o_{pos} - prev_{pos} $$ and $v_{ego}$ is the ego's current speed, which accounts for the movement of points caused by the ego moving and not the object. All these equations are performed disregarding the z axis (in 2D).
+其中，$yaw_{diff}$ 是自车路径与位移向量 $$v_{pos} = o_{pos} - prev_{pos} $$ 之间的偏航角差，$v_{ego}$ 是自车当前速度，用于补偿由自车运动而非物体运动引起的点位移。所有这些计算均忽略 z 轴，在二维平面内进行。
 
-Note that the object velocity is calculated against the ego's current movement direction. If the object moves in the opposite direction to the ego's movement, the object velocity will be negative, which will reduce the collision assessment's metrics on the next step.
+请注意，物体速度相对于自车当前运动方向计算。如果物体运动方向与自车相反，其速度为负，这会降低下一步碰撞评估中的指标值。
 
-The AEB module adds the estimated object speed and its timestamp to a speed history queue. The module then checks this queue for expired data. If the time elapsed since a speed measurement was recorded is greater than the `previous_obstacle_keep_time` parameter, the module removes that speed measurement and its timestamp from the queue. Finally, the module calculates the median speed of the remaining speed measurements in the queue. The AEB module uses this median value to determine the braking distance required for collision checking.
+AEB 模块将估计的物体速度及其时间戳加入速度历史队列，然后检查其中是否有过期数据。如果某次速度测量距当前的时间超过 `previous_obstacle_keep_time`，则从队列中移除该速度及时间戳。最后，模块计算剩余速度测量值的中位数，并用该值确定碰撞检查所需的制动距离。
 
-### 5. Collision check with target obstacles
+<a id="5-collision-check-with-target-obstacles"></a>
 
-In the fifth step, the AEB module checks for a potential collision with the closest target object. To do this, the module calculates the minimum safe braking distance required to prevent a rear-end collision.
+### 5. 与目标障碍物进行碰撞检查
 
-The module only evaluates the closest target object because this safe braking distance acts as a threshold for all target objects. If the distance to the nearest target object is determined to be safe, the module assumes that all other objects further along the path are also safe.
+第五步中，AEB 模块检查与最近目标物体是否可能发生碰撞。为此，模块计算防止追尾所需的最小安全制动距离。
 
-The braking distance is formulated as:
+模块仅评估最近目标物体，因为安全制动距离可作为所有目标物体的判断阈值。如果到最近目标物体的距离被判定为安全，则认为路径上更远的物体也安全。
+
+制动距离的公式为：
 
 $$
 d_{braking} = v_{ego}*t_{response} + v_{ego}^2/(2*a_{min}) -(sign(v_{obj})) * v_{obj}^2/(2*a_{obj_{min}}) + offset
 $$
 
-Where:
+其中：
 
-- $v_{ego}$ and $v_{obj}$ are the current velocities of the ego vehicle and the obstacle.
-- $a_{min}$ and $a_{obj\_min}$ are the maximum decelerations (minimum accelerations) of the ego vehicle and the obstacle.
-- $t_{response}$ is the response time required for the ego vehicle to begin decelerating.
+- $v_{ego}$ 和 $v_{obj}$ 分别是自车与障碍物的当前速度。
+- $a_{min}$ 和 $a_{obj\_min}$ 分别是自车与障碍物的最大减速度（最小加速度）。
+- $t_{response}$ 是自车开始减速所需的响应时间。
 
-If the actual distance to the obstacle is less than this calculated distance ($d_{braking}$), the AEB module sends an emergency stop signal.
+如果到障碍物的实际距离小于计算出的距离（$d_{braking}$），AEB 模块会发送紧急停车信号。
 
-Only objects classified as "targets" (as defined in Step #3) are considered for collision assessment. Among these "target" obstacles, the one closest to the ego vehicle is used for the calculation. If no "target" obstacles are present—meaning no obstacles fall within the ego vehicle's predicted path (determined by its width and an expanded margin)—this step is skipped. Instead, the position of the closest obstacle is recorded for future speed calculations (Step #4). In this scenario, no emergency stop diagnostic message is generated. The process is illustrated in the accompanying diagram.
+只有被归类为“目标”的物体（定义见第 3 步）才参与碰撞评估。其中，距自车最近的目标障碍物用于计算。如果没有“目标”障碍物，即自车预测路径内（由车宽和扩展余量确定）没有障碍物，则跳过此步骤，并记录最近障碍物的位置，供后续速度计算使用（第 4 步）。此时不会生成紧急停车诊断消息。流程如下图所示。
 
-![braking_distance](./image/braking_distance.drawio.svg)
+![制动距离](./image/braking_distance.drawio.svg)
 
-### 6. Send emergency stop signals to `/diagnostics`
+<a id="6-send-emergency-stop-signals-to-diagnostics"></a>
 
-If AEB detects collision with point cloud obstacles in the previous step, it sends emergency signal to `/diagnostics` in this step. Note that in order to enable emergency stop, it has to send ERROR level emergency. Moreover, AEB user should modify the setting file to keep the emergency level, otherwise Autoware does not hold the emergency state.
+### 6. 向 `/diagnostics` 发送紧急停车信号
 
-## Use cases
+如果 AEB 在上一步检测到与点云障碍物的碰撞，则在此步骤向 `/diagnostics` 发送紧急信号。请注意，要启用紧急停车，必须发送 ERROR 级别的紧急状态。此外，AEB 用户应修改配置文件，使紧急级别保持，否则 Autoware 不会持续保持紧急状态。
 
-### Front vehicle suddenly brakes
+<a id="use-cases"></a>
 
-The AEB can activate when a vehicle in front suddenly brakes, and a collision is detected by the AEB module. Provided the distance between the ego vehicle and the front vehicle is large enough and the ego’s emergency acceleration value is high enough, it is possible to avoid or soften collisions with vehicles in front that suddenly brake. NOTE: the acceleration used by the AEB to calculate braking distance is NOT necessarily the acceleration used by the ego while doing an emergency brake. The acceleration used by the real vehicle can be tuned by changing the [mrm_emergency stop jerk and acceleration values](https://github.com/tier4/autoware_launch/blob/d1b2688f2788acab95bb9995d72efd7182e9006a/autoware_launch/config/system/mrm_emergency_stop_operator/mrm_emergency_stop_operator.param.yaml#L4).
+## 用例
 
-![front vehicle collision prevention](./image/front_vehicle_collision.drawio.svg)
+<a id="front-vehicle-suddenly-brakes"></a>
 
-### Stop for objects that appear suddenly
+### 前车突然制动
 
-When an object appears suddenly, the AEB can act as a fail-safe to stop the ego vehicle when other modules fail to detect the object on time. If sudden object cut ins are expected, it might be useful for the AEB module to detect collisions of objects BEFORE they enter the real ego vehicle path by increasing the `expand_width` parameter.
+当前车突然制动，且 AEB 模块检测到碰撞风险时，AEB 可以触发。只要自车与前车距离足够大，且自车紧急制动加速度的幅值足够大，就有可能避免或减轻与突然制动前车的碰撞。注意：AEB 计算制动距离时使用的加速度，不一定是自车实际紧急制动时采用的加速度。可以通过修改 [mrm_emergency stop 的加加速度和加速度值](https://github.com/tier4/autoware_launch/blob/d1b2688f2788acab95bb9995d72efd7182e9006a/autoware_launch/config/system/mrm_emergency_stop_operator/mrm_emergency_stop_operator.param.yaml#L4)来调整实车使用的加速度。
 
-![occluded object collision prevention](./image/occluded_space.drawio.svg)
+![防止与前车碰撞](./image/front_vehicle_collision.drawio.svg)
 
-### Preventing Collisions with rear objects
+<a id="stop-for-objects-that-appear-suddenly"></a>
 
-The AEB module can also prevent collisions when the ego vehicle is moving backwards.
+### 为突然出现的物体停车
 
-![backward driving](./image/backward-driving.drawio.svg)
+如果其他模块未能及时检测到突然出现的物体，AEB 可以作为故障安全措施使自车停车。如果预计物体可能突然切入，可以增大 `expand_width`，让 AEB 在物体进入自车实际路径之前就检测碰撞风险。
 
-### Preventing collisions in case of wrong Odometry (IMU path only)
+![防止与遮挡物体碰撞](./image/occluded_space.drawio.svg)
 
-When vehicle odometry information is faulty, it is possible that the MPC fails to predict a correct path for the ego vehicle. If the MPC predicted path is wrong, collision avoidance will not work as intended on the planning modules. However, the AEB’s IMU path does not depend on the MPC and could be able to predict a collision when the other modules cannot. As an example you can see a figure of a hypothetical case in which the MPC path is wrong and only the AEB’s IMU path detects a collision.
+<a id="preventing-collisions-with-rear-objects"></a>
 
-![wrong mpc](./image/wrong-mpc.drawio.svg)
+### 防止与后方物体碰撞
 
-## Parameters
+AEB 模块也可以在自车倒车时防止碰撞。
+
+![倒车](./image/backward-driving.drawio.svg)
+
+<a id="preventing-collisions-in-case-of-wrong-odometry-imu-path-only"></a>
+
+### 里程计错误时防止碰撞（仅 IMU 路径）
+
+当车辆里程计信息出错时，MPC 可能无法正确预测自车路径。如果 MPC 预测路径错误，规划模块中的避碰功能可能无法按预期工作。但 AEB 的 IMU 路径不依赖 MPC，因此在其他模块无法预测碰撞时，它仍可能检测到风险。下图展示了一个假设案例：MPC 路径错误，只有 AEB 的 IMU 路径检测到碰撞。
+
+![错误的 MPC 路径](./image/wrong-mpc.drawio.svg)
+
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("control/autoware_autonomous_emergency_braking/schema/autonomous_emergency_braking.schema.json") }}
 
-## Limitations
+<a id="limitations"></a>
 
-- The distance required to stop after collision detection depends on the ego vehicle's speed and deceleration performance. To avoid collisions, it's necessary to increase the detection distance and set a higher deceleration rate. However, this creates a trade-off as it may also increase the number of unnecessary activations. Therefore, it's essential to consider what role this module should play and adjust the parameters accordingly.
+## 局限性
 
-- AEB might not be able to react with obstacles that are close to the ground. It depends on the performance of the pre-processing methods applied to the point cloud.
+- 检测到碰撞风险后的停车距离取决于自车速度和减速能力。为了避免碰撞，需要增大检测距离并设置更高的减速度，但这也可能增加不必要的触发次数。因此，应明确本模块应承担的角色，并据此调整参数。
 
-- Longitudinal acceleration information obtained from sensors is not used due to the high amount of noise.
+- AEB 可能无法对贴近地面的障碍物做出反应，这取决于点云预处理方法的性能。
 
-- The accuracy of the predicted path created from sensor data depends on the accuracy of sensors attached to the ego vehicle.
+- 由于噪声较大，不使用传感器获取的纵向加速度信息。
 
-![aeb_range](./image/range.drawio.svg)
+- 基于传感器数据生成的预测路径，其精度取决于车载传感器的精度。
+
+![AEB 范围](./image/range.drawio.svg)

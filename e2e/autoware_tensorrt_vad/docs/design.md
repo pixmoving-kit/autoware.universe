@@ -1,70 +1,82 @@
-# Design
+<a id="design"></a>
 
-This document explains the key design concepts of `autoware_tensorrt_vad`.
+# 设计
 
-## Context and scope
+本文说明 `autoware_tensorrt_vad` 的关键设计概念。
 
-While designing perception and planning as loosely coupled components enables easy construction of stable autonomous vehicles, the following challenges exist:
+<a id="context-and-scope"></a>
 
-- The interface design between perception and planning architectures constrains the amount of information that can be passed from perception to planning.
-  - e.g. If planning component wants to handle a pedestrian walking while using a smartphone, the interface must be designed to pass information like "this pedestrian is using a smartphone while walking" from perception to planning.
+## 背景与范围
 
-In recent years, approaches have been proposed to address these challenges by training sensor input planners (also known as E2E) with large amounts of data. Assuming that users who want to use sensor input planners (also known as E2E) exist in Autoware, we add the ROS Node for [VAD: Vectorized Scene Representation for Efficient Autonomous Driving](https://arxiv.org/abs/2303.12077), which is one of the E2E methods.
+将感知和规划设计为松耦合组件有利于轻松构建稳定的自动驾驶车辆，但仍存在以下挑战：
 
-## Goals and Non-goals
+- 感知与规划架构之间的接口设计限制了从感知传递到规划的信息量。
+  - 例如，如果规划组件需要处理边走路边使用手机的行人，就必须将接口设计为可从感知向规划传递“该行人正在边走路边使用手机”这类信息。
 
-- Goals
-  - Enable users who want to use sensor input planner (also known as E2E) to easily integrate with Autoware
+近年来，人们提出了利用大量数据训练传感器输入规划器（也称 E2E）的方法，以应对这些挑战。考虑到 Autoware 中存在希望使用传感器输入规划器（也称 E2E）的用户，我们为 E2E 方法之一的 [VAD: Vectorized Scene Representation for Efficient Autonomous Driving](https://arxiv.org/abs/2303.12077) 添加了 ROS 节点。
 
-- Non-goals
-  - Create the ROS Node that can only be used with specific sensors or vehicles and cannot be used with others
+<a id="goals-and-non-goals"></a>
 
-## Concepts
+## 目标与非目标
 
-- [Separation between ROS and CUDA domains](#separation-between-ros-and-cuda-domains)
-  - Changes to ROS topic types do not affect CUDA implementations
-  - Changes to CUDA versions or interfaces do not affect ROS Nodes
-- [Separation between model architecture and deployment parameters](#separation-between-model-architecture-and-deployment-parameters)
-- [Extensible design for Autoware `camera_id` changes](#extensible-design-for-autoware-camera_id-changes)
-  - Even if the front camera ID changes from `0` to `1`, it can be handled through parameter changes without major design modifications
+- 目标
+  - 让希望使用传感器输入规划器（也称 E2E）的用户能够轻松与 Autoware 集成
 
-- Key design concepts for important classes are documented separately:
+- 非目标
+  - 创建只能用于特定传感器或车辆、无法用于其他设备的 ROS 节点
+
+<a id="concepts"></a>
+
+## 概念
+
+- [分离 ROS 与 CUDA 领域](#separation-between-ros-and-cuda-domains)
+  - ROS 话题类型的更改不影响 CUDA 实现
+  - CUDA 版本或接口的更改不影响 ROS 节点
+- [分离模型架构与部署参数](#separation-between-model-architecture-and-deployment-parameters)
+- [适应 Autoware `camera_id` 变化的可扩展设计](#extensible-design-for-autoware-camera_id-changes)
+  - 即使前置相机 ID 从 `0` 改为 `1`，也可通过更改参数应对，而无需大幅修改设计
+
+- 重要类的关键设计概念分别记录于：
   - [VadNode](./design_vad_node.md)
   - [VadInterface](./design_vad_interface.md)
   - [VadModel](./design_vad_model.md)
-- Additional design considerations that affect the overall system are documented [here](#additional-design-considerations)
-- Coding standards are documented [here](#coding-standards)
+- 影响整个系统的其他设计考虑记录于[此处](#additional-design-considerations)
+- 编码规范记录于[此处](#coding-standards)
 
-### Separation between ROS and CUDA domains
+<a id="separation-between-ros-and-cuda-domains"></a>
 
-`autoware_tensorrt_vad` is clearly separated into two domains: the "ROS/Autoware domain" (`VadNode`) and the "CUDA domain" (`VadModel`).
+### 分离 ROS 与 CUDA 领域
 
-- **ROS domain responsibilities**:
-  - ROS topic subscription/publication
-    - Topic drop and synchronization verification
-  - Integration with Autoware
+`autoware_tensorrt_vad` 明确划分为两个领域：“ROS/Autoware 领域”（`VadNode`）和“CUDA 领域”（`VadModel`）。
 
-- **Interface responsibilities**:
-  - Input processing
-    - Coordinate transformation
-    - Conversion from ROS Topics (`VadInputTopicData`) to `VadInputData`
-      - CUDA-independent preprocessing
-    - Camera ID mapping
-  - Output processing
-    - Coordinate transformation
-    - Conversion from `VadOutputData` to ROS Topics (`VadOutputTopicData`)
-      - CUDA-independent postprocessing
+- **ROS 领域职责**：
+  - 订阅和发布 ROS 话题
+    - 验证话题丢失与同步
+  - 与 Autoware 集成
 
-- **CUDA domain responsibilities**:
-  - Camera image preprocessing (CUDA-dependent)
-  - VAD inference (from `VadInputData` to `VadOutputData`)
-  - Output postprocessing (CUDA-dependent)
+- **接口职责**：
+  - 输入处理
+    - 坐标变换
+    - 将 ROS 话题（`VadInputTopicData`）转换为 `VadInputData`
+      - 与 CUDA 无关的预处理
+    - 相机 ID 映射
+  - 输出处理
+    - 坐标变换
+    - 将 `VadOutputData` 转换为 ROS 话题（`VadOutputTopicData`）
+      - 与 CUDA 无关的后处理
 
-The interface (`VadInterface`) bridges the ROS domain (`VadNode`) and CUDA domain (`VadModel`), designed to minimize the impact of changes between domains.
+- **CUDA 领域职责**：
+  - 相机图像预处理（依赖 CUDA）
+  - VAD 推理（从 `VadInputData` 到 `VadOutputData`）
+  - 输出后处理（依赖 CUDA）
+
+接口（`VadInterface`）连接 ROS 领域（`VadNode`）和 CUDA 领域（`VadModel`），旨在最大程度降低两个领域之间变更的影响。
 
 ---
 
-#### Dependency Graph
+<a id="dependency-graph"></a>
+
+#### 依赖关系图
 
 ```mermaid
 graph TD
@@ -104,24 +116,26 @@ graph TD
     click VadOutputData "https://github.com/autowarefoundation/autoware_universe/tree/main/e2e/autoware_tensorrt_vad/src/data_types.hpp" "Data types header file"
 ```
 
-- `VadInterface`: Interface between ROS and CUDA domains
+- `VadInterface`：ROS 与 CUDA 领域之间的接口
 
-- `VadInputData`, `VadOutputData`: Data structures used for inference in the CUDA domain (`VadModel`)
+- `VadInputData`、`VadOutputData`：CUDA 领域（`VadModel`）中用于推理的数据结构
 
-- `VadModel`: Inference model using CUDA and TensorRT
+- `VadModel`：使用 CUDA 和 TensorRT 的推理模型
 
-`VadInterface` depends on ROS domain data (`VadInputTopicData`, `VadOutputTopicData`) and CUDA domain data (`VadInputData`, `VadOutputData`), handling conversions between these data formats.
+`VadInterface` 依赖 ROS 领域数据（`VadInputTopicData`、`VadOutputTopicData`）和 CUDA 领域数据（`VadInputData`、`VadOutputData`），负责这些数据格式之间的转换。
 
-`VadModel` depends **only** on `VadInputData` and `VadOutputData` within the CUDA domain.
+`VadModel` 在 CUDA 领域内**仅**依赖 `VadInputData` 和 `VadOutputData`。
 
-This dependency structure allows `VadInterface` to function as a buffer between the ROS and CUDA domains, isolating their responsibilities and minimizing the impact of changes. Specifically, this design achieves the following:
+这种依赖结构使 `VadInterface` 能够作为 ROS 与 CUDA 领域之间的缓冲层，隔离各自职责并尽量减少变更影响。具体来说，该设计实现了以下效果：
 
-- When changes are needed on the ROS/Autoware side (such as ROS topic name/content changes), no changes need to be made to `VadModel`, `VadInputData`, `VadOutputData`
-- When changes are needed on the CUDA/TensorRT side (such as CUDA/TensorRT version changes), no changes need to be made to `VadInputTopicData`, `VadOutputTopicData`
+- 当 ROS/Autoware 侧需要修改（例如 ROS 话题名称或内容变更）时，无需修改 `VadModel`、`VadInputData` 和 `VadOutputData`
+- 当 CUDA/TensorRT 侧需要修改（例如 CUDA/TensorRT 版本变更）时，无需修改 `VadInputTopicData` 和 `VadOutputTopicData`
 
 ---
 
-#### Processing Flow Diagram
+<a id="processing-flow-diagram"></a>
+
+#### 处理流程图
 
 ```mermaid
 flowchart TD
@@ -179,58 +193,76 @@ flowchart TD
     click VadOutputData "https://github.com/autowarefoundation/autoware_universe/tree/main/e2e/autoware_tensorrt_vad/src/data_types.hpp" "Data types header file"
 ```
 
-- Topic conversion and coordinate transformation are handled by the interface (`VadInterface`)
+- 话题转换和坐标变换由接口（`VadInterface`）处理
 
-- The inference processing is encapsulated completely within `VadModel`
+- 推理处理完全封装在 `VadModel` 内
 
 ---
 
-#### Expected Use Cases
+<a id="expected-use-cases"></a>
 
-##### Adding new input to VAD
+#### 预期用例
 
-- Add new input to `VadModel` by retraining ONNX
-- Modify `VadNode` to subscribe to new topic
-- Add topic to `VadInputTopicData`
-- Modify input conversion processing in `VadInterface`
-- Add member to `VadInputData`
+<a id="adding-new-input-to-vad"></a>
 
-### Separation between model architecture and deployment parameters
+##### 为 VAD 添加新输入
 
-- Model architecture parameters (network structure, normalization, training dataset classes) are defined in `vad-carla-tiny.param.json` (downloaded with model to `~/autoware_data/ml_models/vad/v0.1/`)
-- Deployment parameters (hardware settings, file paths, detection thresholds) are configured in [`vad_carla_tiny.param.yaml`](../config/vad_carla_tiny.param.yaml)
-  - Object class remapping parameters are added to [`object_class_remapper_carla_tiny.param.yaml`](../config/object_class_remapper_carla_tiny.param.yaml)
-    - Following the precedent of [`autoware_bevfusion`](../../../perception/autoware_bevfusion/README.md)
+- 通过重新训练 ONNX 为 `VadModel` 添加新输入
+- 修改 `VadNode` 以订阅新话题
+- 将话题添加到 `VadInputTopicData`
+- 修改 `VadInterface` 中的输入转换处理
+- 向 `VadInputData` 添加成员
 
-#### Expected Use Cases
+<a id="separation-between-model-architecture-and-deployment-parameters"></a>
 
-| Use Case                         | vad_carla_tiny.param.yaml | vad-carla-tiny.param.json | object_class_remapper_carla_tiny.param.yaml                  |
+### 分离模型架构与部署参数
+
+- 模型架构参数（网络结构、归一化、训练数据集类别）定义于 `vad-carla-tiny.param.json`（随模型下载至 `~/autoware_data/ml_models/vad/v0.1/`）
+- 部署参数（硬件设置、文件路径、检测阈值）配置于 [`vad_carla_tiny.param.yaml`](../config/vad_carla_tiny.param.yaml)
+  - 目标类别重映射参数添加于 [`object_class_remapper_carla_tiny.param.yaml`](../config/object_class_remapper_carla_tiny.param.yaml)
+    - 遵循 [`autoware_bevfusion`](../../../perception/autoware_bevfusion/README.md) 的先例
+
+<a id="expected-use-cases_1"></a>
+
+#### 预期用例
+
+| 用例                         | vad_carla_tiny.param.yaml | vad-carla-tiny.param.json | object_class_remapper_carla_tiny.param.yaml                  |
 | -------------------------------- | ------------------------- | ------------------------- | ------------------------------------------------------------ |
-| Model architecture changes       | Do not modify             | Modify                    | Modify only when VAD ONNX output class definitions change    |
-| Deployment configuration changes | Modify                    | Do not modify             | Modify only when object class definitions in Autoware change |
+| 模型架构变更       | 不修改             | 修改                    | 仅在 VAD ONNX 输出类别定义变更时修改    |
+| 部署配置变更 | 修改                    | 不修改             | 仅在 Autoware 中的目标类别定义变更时修改 |
 
-### Extensible design for Autoware `camera_id` changes
+<a id="extensible-design-for-autoware-camera_id-changes"></a>
 
-- The design is extensible for changes to `camera_id` used in Autoware
-- `camera_id` used in Autoware only affects `VadInterface`
-  - It does not affect `VadInputData` or `VadModel`
-- Camera ID changes can be handled by modifying only `autoware_to_vad_camera_mapping`
+### 适应 Autoware `camera_id` 变化的可扩展设计
 
-#### Expected Use Cases
+- 该设计可扩展，以适应 Autoware 中使用的 `camera_id` 变更
+- Autoware 使用的 `camera_id` 仅影响 `VadInterface`
+  - 不影响 `VadInputData` 或 `VadModel`
+- 只需修改 `autoware_to_vad_camera_mapping` 即可处理相机 ID 变更
 
-##### When camera image ID used for VAD input is changed
+<a id="expected-use-cases_2"></a>
 
-- Modify `autoware_to_vad_camera_mapping` in the ROS param file ([`vad_carla_tiny.param.yaml`](../config/vad_carla_tiny.param.yaml))
+#### 预期用例
 
-### Additional Design Considerations
+<a id="when-camera-image-id-used-for-vad-input-is-changed"></a>
 
-This section contains design concepts that affect the overall system but are not significant enough to warrant separate documentation pages.
+##### 更改 VAD 输入使用的相机图像 ID 时
 
-- Data types (e.g. `VadInputData`) are declared collectively in `data_types.hpp`
+- 修改 ROS 参数文件（[`vad_carla_tiny.param.yaml`](../config/vad_carla_tiny.param.yaml)）中的 `autoware_to_vad_camera_mapping`
 
-### Coding Standards
+<a id="additional-design-considerations"></a>
 
-- Do not use `int`. Use `int32_t` instead.
-- Do not use `char` solely to indicate 1-byte data. Use `uint8_t` instead.
-- Do not use `printf` or `cout`. Use `RCLCPP_INFO_THROTTLE`, `RCLCPP_DEBUG_THROTTLE` and `RCLCPP_ERROR_THROTTLE` instead.
-- Use `double` for map coordinate because it requires high precision.
+### 其他设计考虑
+
+本节包含影响整个系统、但尚不足以单独撰写文档页面的设计概念。
+
+- 数据类型（例如 `VadInputData`）集中声明于 `data_types.hpp`
+
+<a id="coding-standards"></a>
+
+### 编码规范
+
+- 不要使用 `int`，请改用 `int32_t`。
+- 不要仅用 `char` 表示 1 字节数据，请改用 `uint8_t`。
+- 不要使用 `printf` 或 `cout`，请改用 `RCLCPP_INFO_THROTTLE`、`RCLCPP_DEBUG_THROTTLE` 和 `RCLCPP_ERROR_THROTTLE`。
+- 地图坐标需要较高精度，请使用 `double`。

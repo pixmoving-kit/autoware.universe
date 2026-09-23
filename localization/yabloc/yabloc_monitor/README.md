@@ -1,31 +1,45 @@
 # yabloc_monitor
 
-YabLoc monitor is a node that monitors the status of the YabLoc localization system. It is a wrapper node that monitors the status of the YabLoc localization system and publishes the status as diagnostics.
+YabLoc monitor 是监控 YabLoc 定位系统状态的节点。它封装了状态监控功能，并将监控结果作为诊断信息发布。
 
-## Feature
+<a id="feature"></a>
 
-### Availability
+## 功能
 
-The node monitors the final output pose of YabLoc to verify the availability of YabLoc.
+<a id="availability"></a>
 
-### Others
+### 可用性
 
-To be added,
+此节点通过监控 YabLoc 最终输出的位姿来验证其可用性。
 
-## Interfaces
+<a id="others"></a>
 
-### Input
+### 其他
 
-| Name                  | Type                        | Description                     |
+待补充。
+
+<a id="interfaces"></a>
+
+## 接口
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | --------------------- | --------------------------- | ------------------------------- |
-| `~/input/yabloc_pose` | `geometry_msgs/PoseStamped` | The final output pose of YabLoc |
+| `~/input/yabloc_pose` | `geometry_msgs/PoseStamped` | YabLoc 的最终输出位姿 |
 
-### Output
+<a id="output"></a>
 
-| Name           | Type                              | Description         |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------- | --------------------------------- | ------------------- |
-| `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | Diagnostics outputs |
+| `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | 诊断输出 |
 
-### Parameters
+<a id="parameters"></a>
+
+### 参数
 
 {{ json_to_markdown("localization/yabloc/yabloc_monitor/schema/yabloc_monitor.schema.json") }}

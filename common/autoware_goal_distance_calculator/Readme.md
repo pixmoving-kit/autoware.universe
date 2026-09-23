@@ -1,43 +1,61 @@
 # autoware_goal_distance_calculator
 
-## Purpose
+<a id="purpose"></a>
 
-This node publishes deviation of self-pose from goal pose.
+## 用途
 
-## Inner-workings / Algorithms
+此节点发布自车位姿相对于目标位姿的偏差。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制与算法
 
-| Name                               | Type                                 | Description           |
+<a id="inputs-outputs"></a>
+
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ---------------------------------- | ------------------------------------ | --------------------- |
-| `/planning/mission_planning/route` | `autoware_planning_msgs::msg::Route` | Used to get goal pose |
-| `/tf`                              | `tf2_msgs/TFMessage`                 | TF (self-pose)        |
+| `/planning/mission_planning/route` | `autoware_planning_msgs::msg::Route` | 用于获取目标位姿 |
+| `/tf` | `tf2_msgs/TFMessage` | TF（自车位姿） |
 
-### Output
+<a id="output"></a>
 
-| Name                     | Type                                                | Description                                                   |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------------------ | --------------------------------------------------- | ------------------------------------------------------------- |
-| `deviation/lateral`      | `autoware_internal_debug_msgs::msg::Float64Stamped` | publish lateral deviation of self-pose from goal pose[m]      |
-| `deviation/longitudinal` | `autoware_internal_debug_msgs::msg::Float64Stamped` | publish longitudinal deviation of self-pose from goal pose[m] |
-| `deviation/yaw`          | `autoware_internal_debug_msgs::msg::Float64Stamped` | publish yaw deviation of self-pose from goal pose[rad]        |
-| `deviation/yaw_deg`      | `autoware_internal_debug_msgs::msg::Float64Stamped` | publish yaw deviation of self-pose from goal pose[deg]        |
+| `deviation/lateral` | `autoware_internal_debug_msgs::msg::Float64Stamped` | 发布自车位姿相对于目标位姿的横向偏差 [m] |
+| `deviation/longitudinal` | `autoware_internal_debug_msgs::msg::Float64Stamped` | 发布自车位姿相对于目标位姿的纵向偏差 [m] |
+| `deviation/yaw` | `autoware_internal_debug_msgs::msg::Float64Stamped` | 发布自车位姿相对于目标位姿的偏航角偏差 [rad] |
+| `deviation/yaw_deg` | `autoware_internal_debug_msgs::msg::Float64Stamped` | 发布自车位姿相对于目标位姿的偏航角偏差 [deg] |
 
-## Parameters
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-| Name          | Type   | Default Value | Explanation                 |
+<a id="node-parameters"></a>
+
+### 节点参数
+
+| 名称 | 类型 | 默认值 | 说明 |
 | ------------- | ------ | ------------- | --------------------------- |
-| `update_rate` | double | 10.0          | Timer callback period. [Hz] |
+| `update_rate` | double | 10.0 | 定时器回调周期。[Hz] |
 
-### Core Parameters
+<a id="core-parameters"></a>
 
-| Name      | Type | Default Value | Explanation                                |
+### 核心参数
+
+| 名称 | 类型 | 默认值 | 说明 |
 | --------- | ---- | ------------- | ------------------------------------------ |
-| `oneshot` | bool | true          | publish deviations just once or repeatedly |
+| `oneshot` | bool | true | 仅发布一次偏差，还是重复发布 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-TBD.
+## 假设与已知限制
+
+待补充。

@@ -1,5 +1,7 @@
 # autoware_cuda_dependency_meta
 
-## Purpose
+<a id="purpose"></a>
 
-This is a virtual package that packages on Autoware Universe that use CUDA must depend on.
+## 用途
+
+这是一个虚拟软件包。Autoware Universe 中使用 CUDA 的软件包必须依赖此包。

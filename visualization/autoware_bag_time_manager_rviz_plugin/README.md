@@ -1,26 +1,32 @@
 # autoware_bag_time_manager_rviz_plugin
 
-## Purpose
+<a id="purpose"></a>
 
-This plugin allows publishing and controlling the ros bag time.
+## 用途
 
-## Output
+此插件支持发布和控制 ROS bag 时间。
 
-tbd.
+<a id="output"></a>
 
-## HowToUse
+## 输出
 
-1. Start rviz and select panels/Add new panel.
+待补充。
+
+<a id="howtouse"></a>
+
+## 使用方法
+
+1. 启动 rviz，选择 panels/Add new panel。
 
    ![select_panel](./images/select_panels.png)
 
-2. Select BagTimeManagerPanel and press OK.
+2. 选择 BagTimeManagerPanel，然后点击 OK。
 
    ![select_manager_plugin](./images/add_bag_time_manager_panel.png)
 
-3. See bag_time_manager_rviz_plugin/BagTimeManagerPanel is added.
+3. 确认已添加 bag_time_manager_rviz_plugin/BagTimeManagerPanel。
 
    ![manager_plugin](./images/bag_time_manager_panel.png)
 
-- Pause/Resume: pause/resume the clock.
-- ApplyRate: apply rate of the clock.
+- Pause/Resume：暂停或恢复时钟。
+- ApplyRate：应用时钟速率。

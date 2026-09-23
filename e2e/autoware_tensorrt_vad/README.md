@@ -1,72 +1,90 @@
 # autoware_tensorrt_vad
 
-## Overview
+<a id="overview"></a>
 
-The `autoware_tensorrt_vad` is a ROS 2 component that implements end-to-end autonomous driving using the TensorRT-optimized Vectorized Autonomous Driving (VAD) model. It leverages the [VAD model](https://github.com/hustvl/VAD) (Jiang et al., 2023), optimized for deployment using NVIDIA's [DL4AGX](https://github.com/NVIDIA/DL4AGX) TensorRT framework. <!-- cSpell:ignore Jiang Shaoyu Bencheng Liao Jiajie Helong Wenyu Xinggang -->
+## 概述
 
-This module replaces traditional localization, perception, and planning modules with a single neural network, trained on the [Bench2Drive](https://github.com/Thinklab-SJTU/Bench2Drive) benchmark (Jia et al., 2024) using CARLA simulation data. It integrates seamlessly with [Autoware](https://autowarefoundation.github.io/autoware-documentation/main/) and is designed to work within the Autoware framework.
+`autoware_tensorrt_vad` 是一个 ROS 2 组件，使用经过 TensorRT 优化的矢量化自动驾驶（VAD）模型实现端到端自动驾驶。它采用 [VAD 模型](https://github.com/hustvl/VAD)（Jiang 等，2023），并使用 NVIDIA 的 [DL4AGX](https://github.com/NVIDIA/DL4AGX) TensorRT 框架进行部署优化。 <!-- cSpell:ignore Jiang Shaoyu Bencheng Liao Jiajie Helong Wenyu Xinggang -->
 
----
-
-## Features
-
-- **Monolithic End-to-End Architecture**: Single neural network directly maps camera inputs to trajectories, replacing the entire traditional perception-planning pipeline with one unified model - no separate detection, tracking, prediction, or planning modules
-- **Multi-Camera Perception**: Processes 6 surround-view cameras simultaneously for 360° awareness
-- **Vectorized Scene Representation**: Efficient scene encoding using vector maps for reduced computational overhead
-- **Real-time TensorRT Inference**: Optimized for embedded deployment with ~20ms inference time
-- **Integrated Perception Outputs**: Generates both object predictions (with future trajectories) and map elements as auxiliary outputs
-- **Temporal Modeling**: Leverages historical features for improved temporal consistency and prediction accuracy
+此模块使用单个神经网络替代传统的定位、感知和规划模块，利用 CARLA 仿真数据在 [Bench2Drive](https://github.com/Thinklab-SJTU/Bench2Drive) 基准（Jia 等，2024）上训练。它与 [Autoware](https://autowarefoundation.github.io/autoware-documentation/main/) 无缝集成，专为 Autoware 框架设计。
 
 ---
 
-## Visualization
+<a id="features"></a>
 
-### Lane Following Demo
+## 功能
 
-![Lane Following](media/lane_follow_demo.jpg)
-
-### Turn Right Demo
-
-![Turn Right](media/turn_right_demo.jpg)
-
----
-
-## Parameters
-
-Parameters can be set via configuration files:
-
-- Deployment configuration (node and interface parameters): `config/vad_carla_tiny.param.yaml`
-- Model architecture parameters: `vad-carla-tiny.param.json` (downloaded with model to `~/autoware_data/ml_models/vad/v0.1/`)
+- **一体式端到端架构**：单个神经网络直接将相机输入映射为轨迹，以统一模型替代整个传统感知与规划流程，无需独立的检测、跟踪、预测或规划模块
+- **多相机感知**：同时处理 6 路环视相机，实现 360° 环境感知
+- **矢量化场景表示**：使用矢量地图高效编码场景，降低计算开销
+- **实时 TensorRT 推理**：针对嵌入式部署进行优化，推理耗时约为 20ms
+- **集成感知输出**：生成目标预测（含未来轨迹）和地图元素作为辅助输出
+- **时序建模**：利用历史特征改善时间一致性和预测精度
 
 ---
 
-## Inputs
+<a id="visualization"></a>
 
-| Topic                   | Message Type                                 | Description                                                                    |
+## 可视化
+
+<a id="lane-following-demo"></a>
+
+### 车道跟随演示
+
+![车道跟随](media/lane_follow_demo.jpg)
+
+<a id="turn-right-demo"></a>
+
+### 右转演示
+
+![右转](media/turn_right_demo.jpg)
+
+---
+
+<a id="parameters"></a>
+
+## 参数
+
+可通过配置文件设置参数：
+
+- 部署配置（节点和接口参数）：`config/vad_carla_tiny.param.yaml`
+- 模型架构参数：`vad-carla-tiny.param.json`（随模型下载至 `~/autoware_data/ml_models/vad/v0.1/`）
+
+---
+
+<a id="inputs"></a>
+
+## 输入
+
+| 话题                   | 消息类型                                 | 说明                                                                    |
 | ----------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| ~/input/image\*         | sensor_msgs/msg/Image\*                      | Camera images 0-5: FRONT, BACK, FRONT_LEFT, BACK_LEFT, FRONT_RIGHT, BACK_RIGHT |
-| ~/input/camera_info\*   | sensor_msgs/msg/CameraInfo                   | Camera calibration for cameras 0-5                                             |
-| ~/input/kinematic_state | nav_msgs/msg/Odometry                        | Vehicle odometry                                                               |
-| ~/input/acceleration    | geometry_msgs/msg/AccelWithCovarianceStamped | Vehicle acceleration                                                           |
+| ~/input/image\*         | sensor_msgs/msg/Image\*                      | 相机图像 0-5：FRONT、BACK、FRONT_LEFT、BACK_LEFT、FRONT_RIGHT、BACK_RIGHT |
+| ~/input/camera_info\*   | sensor_msgs/msg/CameraInfo                   | 相机 0-5 的标定信息                                             |
+| ~/input/kinematic_state | nav_msgs/msg/Odometry                        | 车辆里程计                                                               |
+| ~/input/acceleration    | geometry_msgs/msg/AccelWithCovarianceStamped | 车辆加速度                                                           |
 
-\*Image transport supports both raw and compressed formats. Configure per-camera via `use_raw` parameter (default: compressed).
+\*图像传输支持原始和压缩格式。可通过 `use_raw` 参数逐相机配置（默认：压缩格式）。
 
 ---
 
-## Outputs
+<a id="outputs"></a>
 
-| Topic                 | Message Type                                              | Description                         |
+## 输出
+
+| 话题                 | 消息类型                                              | 说明                         |
 | --------------------- | --------------------------------------------------------- | ----------------------------------- |
-| ~/output/trajectory   | autoware_planning_msgs/msg/Trajectory                     | Selected ego trajectory             |
-| ~/output/trajectories | autoware_internal_planning_msgs/msg/CandidateTrajectories | All 6 candidate trajectories        |
-| ~/output/objects      | autoware_perception_msgs/msg/PredictedObjects             | Predicted objects with trajectories |
-| ~/output/map          | visualization_msgs/msg/MarkerArray                        | Predicted map elements              |
+| ~/output/trajectory   | autoware_planning_msgs/msg/Trajectory                     | 选定的自车轨迹             |
+| ~/output/trajectories | autoware_internal_planning_msgs/msg/CandidateTrajectories | 全部 6 条候选轨迹        |
+| ~/output/objects      | autoware_perception_msgs/msg/PredictedObjects             | 带轨迹的预测目标 |
+| ~/output/map          | visualization_msgs/msg/MarkerArray                        | 预测的地图元素              |
 
 ---
 
-## Building
+<a id="building"></a>
 
-Build the package with colcon:
+## 构建
+
+使用 colcon 构建此功能包：
 
 ```bash
 colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release --packages-up-to autoware_tensorrt_vad
@@ -74,28 +92,34 @@ colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -
 
 ---
 
-## Testing
+<a id="testing"></a>
 
-### Unit Tests
+## 测试
 
-Unit tests are provided and can be run with:
+<a id="unit-tests"></a>
+
+### 单元测试
+
+已提供单元测试，可通过以下命令运行：
 
 ```bash
 colcon test --packages-select autoware_tensorrt_vad
 colcon test-result --all
 ```
 
-For verbose output:
+如需详细输出：
 
 ```bash
 colcon test --packages-select autoware_tensorrt_vad --event-handlers console_cohesion+
 ```
 
-### CARLA Simulator Testing
+<a id="carla-simulator-testing"></a>
 
-First, setup CARLA following the [autoware_carla_interface](https://github.com/autowarefoundation/autoware.universe/tree/main/simulator/autoware_carla_interface) instructions.
+### CARLA 仿真器测试
 
-Then launch the E2E VAD system:
+首先按照 [autoware_carla_interface](https://github.com/autowarefoundation/autoware.universe/tree/main/simulator/autoware_carla_interface) 的说明设置 CARLA。
+
+然后启动 E2E VAD 系统：
 
 ```bash
 ros2 launch autoware_launch e2e_simulator.launch.xml \
@@ -108,31 +132,37 @@ ros2 launch autoware_launch e2e_simulator.launch.xml \
 
 ---
 
-## Model Setup and Versioning
+<a id="model-setup-and-versioning"></a>
 
-### Model Download
+## 模型设置与版本管理
 
-The VAD model files are automatically downloaded when setting up the Autoware development environment.
+<a id="model-download"></a>
 
-To download the latest models, simply run the provided setup script:
-[How to set up a development environment](https://autowarefoundation.github.io/autoware-documentation/main/installation/autoware/source-installation/#how-to-set-up-a-development-environment)
+### 模型下载
 
-The models will be downloaded to `~/autoware_data/ml_models/vad/` by default.
+设置 Autoware 开发环境时会自动下载 VAD 模型文件。
 
-**Manual Download** (if needed):
-Models are hosted at: <https://huggingface.co/AutowareFoundation/tensorrt_vad/tree/v0.1>
+要下载最新模型，只需运行提供的设置脚本：
+[如何设置开发环境](https://autowarefoundation.github.io/autoware-documentation/main/installation/autoware/source-installation/#how-to-set-up-a-development-environment)
 
-### Model Preparation
+默认情况下，模型将下载至 `~/autoware_data/ml_models/vad/`。
 
-> :warning: **Note**: The node automatically builds TensorRT engines from ONNX models on first run. Pre-built engines are cached for subsequent runs and are hardware-specific.
+**手动下载**（如有需要）：
+模型托管地址：<https://huggingface.co/AutowareFoundation/tensorrt_vad/tree/v0.1>
 
-**Model Components** (trained on Bench2Drive CARLA dataset):
+<a id="model-preparation"></a>
 
-- `vad-carla-tiny_backbone.onnx` - Image feature extraction backbone
-- `vad-carla-tiny_head_no_prev.onnx` - Planning head (first frame)
-- `vad-carla-tiny_head.onnx` - Temporal planning head
+### 模型准备
 
-If you need to manually configure the model paths, update them in `config/vad_carla_tiny.param.yaml`:
+> :warning: **注意**：节点首次运行时会自动从 ONNX 模型构建 TensorRT 引擎。构建好的引擎将被缓存供后续运行使用，并与硬件相关。
+
+**模型组件**（使用 Bench2Drive CARLA 数据集训练）：
+
+- `vad-carla-tiny_backbone.onnx` - 图像特征提取骨干网络
+- `vad-carla-tiny_head_no_prev.onnx` - 规划头（首帧）
+- `vad-carla-tiny_head.onnx` - 时序规划头
+
+如需手动配置模型路径，请在 `config/vad_carla_tiny.param.yaml` 中更新：
 
 ```yaml
 model_params:
@@ -148,70 +178,90 @@ model_params:
       engine_path: "$(var model_path)/v0.1/vad-carla-tiny_head_no_prev.engine"
 ```
 
-1. **Launch the node**: On first run, the node will automatically:
-   - Build TensorRT engines from ONNX models
-   - Optimize for your specific GPU
-   - Cache engines at the specified `engine_path` locations
-   - Use FP16 precision for backbone and FP32 for heads (configurable)
+1. **启动节点**：首次运行时，节点将自动：
+   - 从 ONNX 模型构建 TensorRT 引擎
+   - 针对当前 GPU 进行优化
+   - 将引擎缓存到指定的 `engine_path` 位置
+   - 骨干网络使用 FP16 精度，头部网络使用 FP32 精度（可配置）
 
-### Model Version History
+<a id="model-version-history"></a>
 
-| Version | Training Dataset  | Release Date | Notes                                                                                                    | Node Compatibility |
+### 模型版本历史
+
+| 版本 | 训练数据集  | 发布日期 | 备注                                                                                                    | 节点兼容版本 |
 | ------- | ----------------- | ------------ | -------------------------------------------------------------------------------------------------------- | ------------------ |
-| **0.1** | Bench2Drive CARLA | 2025-11-04   | - Initial release<br>- 6-camera surround view<br>- Trained on CARLA Towns<br>- FP16/FP32 mixed precision | >= 0.1.0           |
+| **0.1** | Bench2Drive CARLA | 2025-11-04   | - 首次发布<br>- 6 相机环视<br>- 使用 CARLA Towns 训练<br>- FP16/FP32 混合精度 | >= 0.1.0           |
 
 ---
 
-## ❗ Limitations
+<a id="limitations"></a>
 
-While VAD demonstrates promising end-to-end driving capabilities, users should be aware of the following limitations:
+## ❗ 局限性
 
-### Training Data Constraints
+虽然 VAD 展现出了有前景的端到端驾驶能力，但用户应了解以下局限：
 
-- **Simulation-Only Training**: The model is trained exclusively on CARLA simulator data, which may not capture the full complexity and variability of real-world driving scenarios
+<a id="training-data-constraints"></a>
 
-### Lack of High-Level Command Interface
+### 训练数据限制
 
-- **No Dynamic Mission Control**: The current implementation lacks a high-level command interface, meaning the model cannot dynamically switch between driving behaviors (e.g., "follow lane" → "turn right at next intersection") during runtime
+- **仅使用仿真数据训练**：模型完全使用 CARLA 仿真器数据训练，可能无法涵盖真实驾驶场景的全部复杂性和变化
+
+<a id="lack-of-high-level-command-interface"></a>
+
+### 缺少高层指令接口
+
+- **不支持动态任务控制**：当前实现缺少高层指令接口，因此模型无法在运行时动态切换驾驶行为（例如从“沿车道行驶”切换到“在下一个路口右转”）
 
 ---
 
-## Development & Contribution
+<a id="development-contribution"></a>
 
-- Follow the [Autoware coding guidelines](https://autowarefoundation.github.io/autoware-documentation/main/contributing/).
-- Contributions, bug reports, and feature requests are welcome via GitHub issues and pull requests.
+## 开发与贡献
+
+- 遵循 [Autoware 编码规范](https://autowarefoundation.github.io/autoware-documentation/main/contributing/)。
+- 欢迎通过 GitHub issue 和 pull request 提交贡献、缺陷报告和功能需求。
 
 ---
 
-## References
+<a id="references"></a>
 
-### Core Model
+## 参考资料
+
+<a id="core-model"></a>
+
+### 核心模型
 
 1. VAD: Vectorized Scene Representation for Efficient Autonomous Driving (2023)
-   - Paper: [arXiv:2303.12077](https://arxiv.org/abs/2303.12077)
-   - Code: [github.com/hustvl/VAD](https://github.com/hustvl/VAD)
+   - 论文：[arXiv:2303.12077](https://arxiv.org/abs/2303.12077)
+   - 代码：[github.com/hustvl/VAD](https://github.com/hustvl/VAD)
 
-### Training and Datasets
+<a id="training-and-datasets"></a>
+
+### 训练与数据集
 
 1. Bench2Drive: Towards Multi-Ability Benchmarking of Closed-Loop End-To-End Autonomous Driving (2024)
-   - Paper: [arXiv:2406.03877](https://arxiv.org/abs/2406.03877)
-   - Code: [github.com/Thinklab-SJTU/Bench2Drive](https://github.com/Thinklab-SJTU/Bench2Drive)
-   - Description: CARLA-based benchmark for end-to-end autonomous driving evaluation
+   - 论文：[arXiv:2406.03877](https://arxiv.org/abs/2406.03877)
+   - 代码：[github.com/Thinklab-SJTU/Bench2Drive](https://github.com/Thinklab-SJTU/Bench2Drive)
+   - 说明：基于 CARLA 的端到端自动驾驶评估基准
 
-### Deployment and Optimization
+<a id="deployment-and-optimization"></a>
+
+### 部署与优化
 
 1. DL4AGX (2024)
-   - Resource: [github.com/NVIDIA/DL4AGX](https://github.com/NVIDIA/DL4AGX)
-   - Description: TensorRT optimization for autonomous driving workloads and embedded GPU deployment strategies
+   - 资源：[github.com/NVIDIA/DL4AGX](https://github.com/NVIDIA/DL4AGX)
+   - 说明：面向自动驾驶工作负载的 TensorRT 优化及嵌入式 GPU 部署策略
 
-### Related Work
+<a id="related-work"></a>
+
+### 相关工作
 
 1. nuScenes: A Multimodal Dataset for Autonomous Driving (2020)
-   - Paper: [arXiv:1903.11027](https://arxiv.org/abs/1903.11027)
-   - Dataset: [nuscenes.org](https://www.nuscenes.org)
+   - 论文：[arXiv:1903.11027](https://arxiv.org/abs/1903.11027)
+   - 数据集：[nuscenes.org](https://www.nuscenes.org)
 
 2. BEVFormer: Learning Bird's-Eye-View Representation from Multi-Camera Images via Spatiotemporal Transformers (2022)
-   - Paper: [arXiv:2203.17270](https://arxiv.org/abs/2203.17270)
+   - 论文：[arXiv:2203.17270](https://arxiv.org/abs/2203.17270)
 
 ---
 

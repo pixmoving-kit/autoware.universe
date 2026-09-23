@@ -1,62 +1,80 @@
-# PointCloud Densifier
+<a id="pointcloud-densifier"></a>
 
-## Purpose
+# 点云增密器
 
-The `pointcloud_densifier` enhances sparse point cloud data by leveraging information from previous LiDAR frames,
-creating a denser representation especially for long-range points. This is particularly useful for improving perception
-of distant objects where LiDAR data tends to be sparse.
+<a id="purpose"></a>
 
-## Inner-workings / Algorithm
+## 用途
 
-The algorithm works as follows:
+`pointcloud_densifier` 利用前序激光雷达帧的信息增强稀疏点云，
+生成更密集的表示，尤其适用于远距离点。这对改善远处物体的感知
+特别有用，因为远距离激光雷达数据往往较为稀疏。
 
-1. **ROI Filtering**: First filters the input point cloud to only keep points in a specific region of interest (ROI),
-   typically focused on the distant area in front of the vehicle.
+<a id="inner-workings-algorithm"></a>
 
-2. **Occupancy Grid Creation**: Creates a 2D occupancy grid from the filtered points to track which areas contain valid
-   points in the current frame.
+## 内部机制／算法
 
-3. **Previous Frame Integration**: Transforms points from previous frames into the current frame's coordinate system
-   using TF transformations.
+算法流程如下：
 
-4. **Selective Point Addition**: Adds points from previous frames only if they fall into grid cells that are occupied
-   in the current frame. This ensures that only relevant points are added, avoiding ghost points from dynamic objects.
+1. **ROI 过滤**：首先过滤输入点云，仅保留特定感兴趣区域（ROI）内的点，
+   通常关注车辆前方的远处区域。
 
-5. **Combined Output**: Returns a combined point cloud that includes both the current frame's points and selected
-   points from previous frames.
+2. **创建占据栅格**：根据过滤后的点创建二维占据栅格，以记录当前帧中
+   哪些区域包含有效点。
 
-## Inputs / Outputs
+3. **整合前序帧**：通过 TF 变换，
+   将前序帧中的点转换到当前帧的坐标系。
 
-### Input
+4. **选择性添加点**：仅当历史点落入当前帧已占据的栅格单元时，
+   才将其加入。这确保只添加相关点，避免动态物体产生的重影点。
 
-| Name    | Type                            | Description       |
+5. **合并输出**：返回合并后的点云，其中包含当前帧的点以及从前序帧中
+   选取的点。
+
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------- | ------------------------------- | ----------------- |
-| `input` | `sensor_msgs::msg::PointCloud2` | Input point cloud |
+| `input` | `sensor_msgs::msg::PointCloud2` | 输入点云 |
 
-### Output
+<a id="output"></a>
 
-| Name     | Type                            | Description                  |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------- | ------------------------------- | ---------------------------- |
-| `output` | `sensor_msgs::msg::PointCloud2` | Densified point cloud output |
+| `output` | `sensor_msgs::msg::PointCloud2` | 增密后的点云输出 |
 
-## Parameters
+<a id="parameters"></a>
 
-| Name                  | Type   | Default Value | Description                            |
+## 参数
+
+| 名称 | 类型 | 默认值 | 说明 |
 | --------------------- | ------ | ------------- | -------------------------------------- |
-| `num_previous_frames` | int    | 1             | Number of previous frames to consider  |
-| `x_min`               | double | 80.0          | Minimum x coordinate of ROI in meters  |
-| `x_max`               | double | 200.0         | Maximum x coordinate of ROI in meters  |
-| `y_min`               | double | -20.0         | Minimum y coordinate of ROI in meters  |
-| `y_max`               | double | 20.0          | Maximum y coordinate of ROI in meters  |
-| `grid_resolution`     | double | 0.3           | Resolution of occupancy grid in meters |
+| `num_previous_frames` | int | 1 | 使用的前序帧数量 |
+| `x_min` | double | 80.0 | ROI 的最小 x 坐标，单位为米 |
+| `x_max` | double | 200.0 | ROI 的最大 x 坐标，单位为米 |
+| `y_min` | double | -20.0 | ROI 的最小 y 坐标，单位为米 |
+| `y_max` | double | 20.0 | ROI 的最大 y 坐标，单位为米 |
+| `grid_resolution` | double | 0.3 | 占据栅格分辨率，单位为米 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-- The filter assumes that the TF tree contains valid transformations between coordinate frames from previous point clouds to the current frame.
-- Performance depends on the number of previous frames used - more frames increase density but also processing time.
-- The filter performs best on static elements in the scene, as dynamic objects may create artifacts if they move between frames.
-- The accuracy of the densification depends on the quality of the TF transformations and ego-vehicle motion estimation.
+## 前提假设／已知限制
 
-## Usage
+- 此滤波器假定 TF 树包含从前序点云坐标系到当前帧坐标系的有效变换。
+- 性能取决于使用的前序帧数量；更多帧可提高密度，但也会增加处理时间。
+- 此滤波器最适合场景中的静态元素，因为动态物体在帧间移动时可能产生伪影。
+- 增密精度取决于 TF 变换和自车运动估计的质量。
 
-The pointcloud_densifier can be launched using:
+<a id="usage"></a>
+
+## 使用方法
+
+可使用以下命令启动 pointcloud_densifier：

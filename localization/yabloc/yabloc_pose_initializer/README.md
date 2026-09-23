@@ -1,13 +1,13 @@
 # yabloc_pose_initializer
 
-This package contains a node related to initial pose estimation.
+此功能包包含与初始位姿估计相关的节点。
 
 - [camera_pose_initializer](#camera_pose_initializer)
 
-This package requires the pre-trained semantic segmentation model for runtime. This model is usually downloaded by the [ansible artifacts role](https://github.com/autowarefoundation/autoware/tree/main/ansible/roles/artifacts) during the installation.
-It is also possible to download it manually. Even if the model is not downloaded, initialization will still complete, but the accuracy may be compromised.
+此功能包运行时需要预训练的语义分割模型，通常会在安装期间由 [Ansible artifacts 角色](https://github.com/autowarefoundation/autoware/tree/main/ansible/roles/artifacts)下载。
+也可以手动下载。即使未下载模型，初始化仍能完成，但精度可能受到影响。
 
-The model is hosted on [Hugging Face](https://huggingface.co/AutowareFoundation/yabloc_pose_initializer/tree/v1.0). To download it manually with the [hf CLI](https://huggingface.co/docs/huggingface_hub/guides/cli):
+模型托管在 [Hugging Face](https://huggingface.co/AutowareFoundation/yabloc_pose_initializer/tree/v1.0)。如需使用 [hf CLI](https://huggingface.co/docs/huggingface_hub/guides/cli) 手动下载：
 
 ```bash
 hf download AutowareFoundation/yabloc_pose_initializer --revision v1.0 --local-dir ~/autoware_data/ml_models/yabloc_pose_initializer
@@ -36,30 +36,40 @@ Converted model URL
 
 ## camera_pose_initializer
 
-### Purpose
+<a id="purpose"></a>
 
-- This node estimates the initial position using the camera at the request of ADAPI.
+### 用途
 
-#### Input
+- 此节点根据 ADAPI 请求，利用相机估计初始位置。
 
-| Name                | Type                                    | Description              |
+<a id="input"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------- | --------------------------------------- | ------------------------ |
-| `input/camera_info` | `sensor_msgs::msg::CameraInfo`          | undistorted camera info  |
-| `input/image_raw`   | `sensor_msgs::msg::Image`               | undistorted camera image |
-| `input/vector_map`  | `autoware_map_msgs::msg::LaneletMapBin` | vector map               |
+| `input/camera_info` | `sensor_msgs::msg::CameraInfo` | 去畸变后的相机信息 |
+| `input/image_raw` | `sensor_msgs::msg::Image` | 去畸变后的相机图像 |
+| `input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | 矢量地图 |
 
-#### Output
+<a id="output"></a>
 
-| Name                    | Type                                   | Description             |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | ----------------------- | -------------------------------------- | ----------------------- |
-| `debug/init_candidates` | `visualization_msgs::msg::MarkerArray` | initial pose candidates |
+| `debug/init_candidates` | `visualization_msgs::msg::MarkerArray` | 初始位姿候选 |
 
-### Parameters
+<a id="parameters"></a>
+
+### 参数
 
 {{ json_to_markdown("localization/yabloc/yabloc_pose_initializer/schema/camera_pose_initializer.schema.json") }}
 
-### Services
+<a id="services"></a>
 
-| Name               | Type                                                                  | Description                     |
+### 服务
+
+| 名称 | 类型 | 说明 |
 | ------------------ | --------------------------------------------------------------------- | ------------------------------- |
-| `yabloc_align_srv` | `autoware_internal_localization_msgs::srv::PoseWithCovarianceStamped` | initial pose estimation request |
+| `yabloc_align_srv` | `autoware_internal_localization_msgs::srv::PoseWithCovarianceStamped` | 初始位姿估计请求 |

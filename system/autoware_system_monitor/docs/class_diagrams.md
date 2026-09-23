@@ -1,29 +1,45 @@
-# Class diagrams
+<a id="class-diagrams"></a>
 
-## <u>CPU Monitor</u>
+# 类图
 
-![CPU Monitor](images/class_cpu_monitor.png)
+<a id="cpu-monitor"></a>
 
-## <u>HDD Monitor</u>
+## <u>CPU 监控器</u>
 
-![HDD Monitor](images/class_hdd_monitor.png)
+![CPU 监控器](images/class_cpu_monitor.png)
 
-## <u>Memory Monitor</u>
+<a id="hdd-monitor"></a>
 
-![Memory Monitor](images/class_mem_monitor.png)
+## <u>硬盘监控器</u>
 
-## <u>Net Monitor</u>
+![硬盘监控器](images/class_hdd_monitor.png)
 
-![Net Monitor](images/class_net_monitor.png)
+<a id="memory-monitor"></a>
 
-## <u>NTP Monitor</u>
+## <u>内存监控器</u>
 
-![NTP Monitor](images/class_ntp_monitor.png)
+![内存监控器](images/class_mem_monitor.png)
 
-## <u>Process Monitor</u>
+<a id="net-monitor"></a>
 
-![Process Monitor](images/class_process_monitor.png)
+## <u>网络监控器</u>
 
-## <u>GPU Monitor</u>
+![网络监控器](images/class_net_monitor.png)
 
-![GPU Monitor](images/class_gpu_monitor.png)
+<a id="ntp-monitor"></a>
+
+## <u>NTP 监控器</u>
+
+![NTP 监控器](images/class_ntp_monitor.png)
+
+<a id="process-monitor"></a>
+
+## <u>进程监控器</u>
+
+![进程监控器](images/class_process_monitor.png)
+
+<a id="gpu-monitor"></a>
+
+## <u>GPU 监控器</u>
+
+![GPU 监控器](images/class_gpu_monitor.png)

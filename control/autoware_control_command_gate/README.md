@@ -1,23 +1,27 @@
 # autoware_control_command_gate
 
-## Overview
+<a id="overview"></a>
 
-This package subscribes to multiple commands, selects one and publish it.
-Here, unless otherwise specified, command refers to a set of four commands: control, gear, turn_indicators, and hazard_lights.
-Each command input is identified as a command source, an arbitrary string.
-The node also applies a nominal filter to the selected commands to correct for obvious abnormal values.
+## 概述
 
-![dataflow](./doc/dataflow.drawio.svg)
+本功能包订阅多个命令，选择其中一个并发布。
+此处除非另有说明，“命令”指由 control、gear、turn_indicators 和 hazard_lights 四类命令组成的一组命令。
+每组输入命令通过命令源标识，命令源可以是任意字符串。
+节点还会对选定命令应用常规过滤器，修正明显异常的值。
 
-## Requirements
+![数据流](./doc/dataflow.drawio.svg)
 
-- Functional
-  - Subscribe to multiple commands as command source.
-  - Generate a builtin stop command as command source.
-  - Select one from the command sources and publish it.
-  - Filter abnormal values in the command selected.
-  - Filter the command selected smoothly on mode transition when requested.
-  - Support parking mode for humans to explicitly stop the vehicle (T.B.D.).
-- Safety
-  - Detect timeouts for each command source.
-  - Select builtin stop when selected command source is not available.
+<a id="requirements"></a>
+
+## 需求
+
+- 功能
+  - 将多组订阅命令作为命令源。
+  - 生成内置停车命令作为命令源。
+  - 从各命令源中选择一个并发布。
+  - 过滤所选命令中的异常值。
+  - 按请求在模式切换时对所选命令进行平滑过滤。
+  - 支持停车模式，让人员能够显式使车辆停车（待确定）。
+- 安全
+  - 检测各命令源的超时。
+  - 所选命令源不可用时，选择内置停车命令。

@@ -1,53 +1,77 @@
 # object_position_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `object_position_filter` is a node that filters detected object based on x,y values.
-The objects only inside of the x, y bound will be published.
+## 用途
 
-## Inner-workings / Algorithms
+`object_position_filter` 节点根据 x、y 值过滤检测目标。
+仅发布位于 x、y 边界内的目标。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制／算法
 
-| Name           | Type                                             | Description            |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称           | 类型                                             | 说明            |
 | -------------- | ------------------------------------------------ | ---------------------- |
-| `input/object` | `autoware_perception_msgs::msg::DetectedObjects` | input detected objects |
+| `input/object` | `autoware_perception_msgs::msg::DetectedObjects` | 输入检测目标 |
 
-### Output
+<a id="output"></a>
 
-| Name            | Type                                             | Description               |
+### 输出
+
+| 名称            | 类型                                             | 说明               |
 | --------------- | ------------------------------------------------ | ------------------------- |
-| `output/object` | `autoware_perception_msgs::msg::DetectedObjects` | filtered detected objects |
+| `output/object` | `autoware_perception_msgs::msg::DetectedObjects` | 过滤后的检测目标 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Core Parameters
+## 参数
 
-| Name                             | Type  | Default Value | Description                                                     |
+<a id="core-parameters"></a>
+
+### 核心参数
+
+| 名称                             | 类型  | 默认值 | 说明                                                     |
 | -------------------------------- | ----- | ------------- | --------------------------------------------------------------- |
-| `filter_target_label.UNKNOWN`    | bool  | false         | If true, unknown objects are filtered.                          |
-| `filter_target_label.CAR`        | bool  | false         | If true, car objects are filtered.                              |
-| `filter_target_label.TRUCK`      | bool  | false         | If true, truck objects are filtered.                            |
-| `filter_target_label.BUS`        | bool  | false         | If true, bus objects are filtered.                              |
-| `filter_target_label.TRAILER`    | bool  | false         | If true, trailer objects are filtered.                          |
-| `filter_target_label.MOTORCYCLE` | bool  | false         | If true, motorcycle objects are filtered.                       |
-| `filter_target_label.BICYCLE`    | bool  | false         | If true, bicycle objects are filtered.                          |
-| `filter_target_label.PEDESTRIAN` | bool  | false         | If true, pedestrian objects are filtered.                       |
-| `upper_bound_x`                  | float | 100.00        | Bound for filtering. Only used if filter_by_xy_position is true |
-| `lower_bound_x`                  | float | 0.00          | Bound for filtering. Only used if filter_by_xy_position is true |
-| `upper_bound_y`                  | float | 50.00         | Bound for filtering. Only used if filter_by_xy_position is true |
-| `lower_bound_y`                  | float | -50.00        | Bound for filtering. Only used if filter_by_xy_position is true |
+| `filter_target_label.UNKNOWN`    | bool  | false         | 若为 true，过滤未知目标。 |
+| `filter_target_label.CAR`        | bool  | false         | 若为 true，过滤汽车目标。 |
+| `filter_target_label.TRUCK`      | bool  | false         | 若为 true，过滤卡车目标。 |
+| `filter_target_label.BUS`        | bool  | false         | 若为 true，过滤巴士目标。 |
+| `filter_target_label.TRAILER`    | bool  | false         | 若为 true，过滤拖车目标。 |
+| `filter_target_label.MOTORCYCLE` | bool  | false         | 若为 true，过滤摩托车目标。 |
+| `filter_target_label.BICYCLE`    | bool  | false         | 若为 true，过滤自行车目标。 |
+| `filter_target_label.PEDESTRIAN` | bool  | false         | 若为 true，过滤行人目标。 |
+| `upper_bound_x`                  | float | 100.00        | 过滤边界。仅在 filter_by_xy_position 为 true 时使用 |
+| `lower_bound_x`                  | float | 0.00          | 过滤边界。仅在 filter_by_xy_position 为 true 时使用 |
+| `upper_bound_y`                  | float | 50.00         | 过滤边界。仅在 filter_by_xy_position 为 true 时使用 |
+| `lower_bound_y`                  | float | -50.00        | 过滤边界。仅在 filter_by_xy_position 为 true 时使用 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-Filtering is performed based on the center position of the object.
+## 前提假设／已知限制
 
-## (Optional) Error detection and handling
+根据目标中心位置进行过滤。
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

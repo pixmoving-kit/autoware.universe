@@ -1,98 +1,116 @@
-# Obstacle Proximity Checker
+<a id="obstacle-proximity-checker"></a>
 
-## Purpose
+# 障碍物接近检查器
 
-This package provides a reusable library for detecting obstacles in close proximity to the ego vehicle.
-It computes the minimum distance between an expanded ego footprint and nearby point cloud points or dynamic object polygons, and reports whether any obstacle is within a caller-defined distance threshold.
+<a id="purpose"></a>
 
-The core logic was extracted from [autoware_surround_obstacle_checker](../../planning/autoware_surround_obstacle_checker/README.md) so it can be shared across planning modules.
-Current consumers include:
+## 用途
 
-## Inner-workings / Algorithms
+此软件包提供可复用的库，用于检测自车近旁的障碍物。
+它计算扩展后的自车轮廓与附近点云点或动态目标多边形之间的最小距离，并报告是否存在位于调用方指定距离阈值内的障碍物。
 
-### Get distance to nearest obstacle
+核心逻辑提取自 [autoware_surround_obstacle_checker](../../planning/autoware_surround_obstacle_checker/README.md)，以便在规划模块之间共享。
+当前使用此库的模块包括：
 
-Calculate the distance between the ego vehicle and the nearest obstacle.
-The minimum distance is computed between ego vehicle footprint and:
+<a id="inner-workings-algorithms"></a>
 
-- all points in the input point cloud
-- the polygons of enabled dynamic objects
+## 内部机制与算法
 
-The ego footprint is created based on vehicle info and user defined margins per obstacle type. For each given obstacle type (e.g car, pedestrian, pointcloud, etc) the following margins are defined:
+<a id="get-distance-to-nearest-obstacle"></a>
+
+### 获取到最近障碍物的距离
+
+计算自车与最近障碍物之间的距离。
+计算自车轮廓与以下对象之间的最小距离：
+
+- 输入点云中的所有点
+- 已启用类别的动态目标多边形
+
+根据车辆信息和用户为各类障碍物设置的边距生成自车轮廓。对于每种障碍物类型（如汽车、行人、点云等），定义以下边距：
 
 - `surround_check_front_distance`
 - `surround_check_side_distance`
 - `surround_check_back_distance`
 
-### Obstacle detection
+<a id="obstacle-detection"></a>
 
-An obstacle is considered nearby when:
+### 障碍物检测
+
+满足以下条件时，认为障碍物位于近旁：
 
 ```text
 nearest_distance < contact_distance_threshold
 ```
 
-`contact_distance_threshold` is provided by the caller on each `check()` call.
-This allows callers to implement distance hysteresis (for example, a tight threshold when entering stop and a wider threshold when clearing stop).
+每次调用 `check()` 时，由调用方提供 `contact_distance_threshold`。
+这使调用方能够实现距离滞回，例如进入停车状态时使用较小阈值，解除停车状态时使用较大阈值。
 
-The library does **not** manage:
+此库**不负责**以下事项：
 
-- ego stopped checks
-- state machines (`PASS` / `STOP`)
-- time-based hysteresis
-- ROS subscriptions, publishers, or TF transforms
+- 检查自车是否停止
+- 状态机（`PASS` / `STOP`）
+- 基于时间的滞回
+- ROS 订阅、发布或 TF 变换
 
-Those responsibilities remain in the calling node or plugin.
+这些职责仍由调用此库的节点或插件承担。
 
 ## API
 
-### Input (`Inputs`)
+<a id="input-inputs"></a>
 
-| Field                     | Type                                                              | Description                             |
+### 输入（`Inputs`）
+
+| 字段                     | 类型                                                              | 说明                             |
 | ------------------------- | ----------------------------------------------------------------- | --------------------------------------- |
-| `ego_pose`                | `geometry_msgs::msg::Pose`                                        | Ego pose used for dynamic object checks |
-| `pointcloud_in_base_link` | `pcl::PointCloud<pcl::PointXYZ>::ConstPtr`                        | Obstacle point cloud in `base_link`     |
-| `objects`                 | `autoware_perception_msgs::msg::PredictedObjects::ConstSharedPtr` | Dynamic objects                         |
+| `ego_pose`                | `geometry_msgs::msg::Pose`                                        | 用于检查动态目标的自车位姿 |
+| `pointcloud_in_base_link` | `pcl::PointCloud<pcl::PointXYZ>::ConstPtr`                        | `base_link` 坐标系中的障碍物点云     |
+| `objects`                 | `autoware_perception_msgs::msg::PredictedObjects::ConstSharedPtr` | 动态目标                         |
 
-Callers must transform the point cloud to `base_link` before passing it to the library.
+调用方必须先将点云变换到 `base_link` 坐标系，再传入此库。
 
-### Output (`CheckResult`)
+<a id="output-checkresult"></a>
 
-| Field               | Type                               | Description                                                           |
+### 输出（`CheckResult`）
+
+| 字段               | 类型                               | 说明                                                           |
 | ------------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| `is_obstacle_found` | `bool`                             | `true` if the nearest obstacle is within `contact_distance_threshold` |
-| `nearest_obstacle`  | `std::optional<ProximityObstacle>` | Nearest obstacle and its distance, if any                             |
+| `is_obstacle_found` | `bool`                             | 最近障碍物位于 `contact_distance_threshold` 范围内时为 `true` |
+| `nearest_obstacle`  | `std::optional<ProximityObstacle>` | 最近的障碍物及其距离（如果存在）                             |
 
-`ProximityObstacle` contains:
+`ProximityObstacle` 包含：
 
-| Field              | Type                                | Description                                            |
+| 字段              | 类型                                | 说明                                            |
 | ------------------ | ----------------------------------- | ------------------------------------------------------ |
-| `is_point_cloud`   | `bool`                              | `true` if the nearest obstacle came from a point cloud |
-| `nearest_distance` | `double`                            | Minimum distance to the ego footprint [m]              |
-| `nearest_point`    | `geometry_msgs::msg::Point`         | Nearest point in map coordinates                       |
-| `uuid`             | `unique_identifier_msgs::msg::UUID` | Object UUID, or empty for point clouds                 |
+| `is_point_cloud`   | `bool`                              | 最近障碍物来自点云时为 `true` |
+| `nearest_distance` | `double`                            | 到自车轮廓的最小距离 [m]              |
+| `nearest_point`    | `geometry_msgs::msg::Point`         | 地图坐标系中的最近点                       |
+| `uuid`             | `unique_identifier_msgs::msg::UUID` | 目标 UUID；点云对应的值为空                 |
 
-### Parameters (`Parameters`)
+<a id="parameters-parameters"></a>
 
-| Name                       | Type                                            | Description                                           |
+### 参数（`Parameters`）
+
+| 名称                       | 类型                                            | 说明                                           |
 | -------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| `pointcloud_enable_check`  | `bool`                                          | Enable point cloud proximity checks                   |
-| `object_type_enable_check` | `unordered_map<string, bool>`                   | Enable checks per object label (`car`, `truck`, etc.) |
-| `obstacle_types_map`       | `unordered_map<string, ObstacleTypeParameters>` | Per-type footprint margins                            |
+| `pointcloud_enable_check`  | `bool`                                          | 启用点云接近检查                   |
+| `object_type_enable_check` | `unordered_map<string, bool>`                   | 按目标类别标签启用检查（`car`、`truck` 等） |
+| `obstacle_types_map`       | `unordered_map<string, ObstacleTypeParameters>` | 各类别的轮廓边距                            |
 
-`ObstacleTypeParameters` fields:
+`ObstacleTypeParameters` 字段：
 
-| Name                            | Type     | Description                                 | Typical value |
+| 名称                            | 类型     | 说明                                 | 典型值 |
 | ------------------------------- | -------- | ------------------------------------------- | ------------- |
-| `surround_check_front_distance` | `double` | Front margin added to the ego footprint [m] | 0.5           |
-| `surround_check_side_distance`  | `double` | Side margin added to the ego footprint [m]  | 0.0–1.0       |
-| `surround_check_back_distance`  | `double` | Rear margin added to the ego footprint [m]  | 0.0–0.5       |
+| `surround_check_front_distance` | `double` | 自车轮廓前方增加的边距 [m] | 0.5           |
+| `surround_check_side_distance`  | `double` | 自车轮廓侧面增加的边距 [m]  | 0.0–1.0       |
+| `surround_check_back_distance`  | `double` | 自车轮廓后方增加的边距 [m]  | 0.0–0.5       |
 
-Supported object labels:
+支持的目标类别标签：
 
 `unknown`, `car`, `truck`, `bus`, `trailer`, `motorcycle`, `bicycle`, `pedestrian`, `animal`, `hazard`, `over_drivable`, `under_drivable`, `pointcloud`
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-- Point clouds must already be transformed to `base_link`.
-- The library performs geometric proximity checks only. Stop/release decisions, velocity limits, and trajectory modification are handled by callers.
+## 假设与已知限制
+
+- 点云必须已经变换到 `base_link` 坐标系。
+- 此库仅进行几何接近检查。停车或解除停车决策、速度限制和轨迹修改由调用方处理。

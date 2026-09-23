@@ -1,16 +1,16 @@
 # tier4_adapi_rviz_plugin
 
-This package contains tools for testing AD API. For general AD API usage, we recommend using [tier4_state_rviz_plugin](../tier4_state_rviz_plugin/README.md).
+此功能包包含用于测试 AD API 的工具。对于常规 AD API 使用，建议使用 [tier4_state_rviz_plugin](../tier4_state_rviz_plugin/README.md)。
 
 ## RoutePanel
 
-To use the panel, set the topic name from 2D Goal Pose Tool to `/rviz/routing/pose`.
-By default, when a tool publish a pose, the panel immediately sets a route with that as the goal.
-Enable or disable of allow_goal_modification option can be set with the check box.
+使用此面板时，请将 2D Goal Pose Tool 的话题名称设置为 `/rviz/routing/pose`。
+默认情况下，工具发布位姿后，面板会立即以该位姿为目标设置路线。
+可以通过复选框启用或禁用 allow_goal_modification 选项。
 
-Push the mode button in the waypoint to enter waypoint mode. In this mode, the pose is added to waypoints.
-Press the apply button to set the route using the saved waypoints (the last one is a goal).
-Reset the saved waypoints with the reset button.
+点击途经点区域中的模式按钮，进入途经点模式。在此模式下，位姿会添加到途经点列表中。
+点击 apply 按钮，使用保存的途经点设置路线（最后一个点为目标位置）。
+使用 reset 按钮清空已保存的途经点。
 
 ## Material Design Icons
 

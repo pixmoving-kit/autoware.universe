@@ -1,49 +1,65 @@
-# LiDAR Marker Localizer
+<a id="lidar-marker-localizer"></a>
 
-**LiDARMarkerLocalizer** is a detect-reflector-based localization node .
+# 激光雷达标记定位器
 
-## Inputs / Outputs
+**LiDARMarkerLocalizer** 是基于反光标记检测的定位节点。
 
-### `lidar_marker_localizer` node
+<a id="inputs-outputs"></a>
 
-#### Input
+## 输入／输出
 
-| Name                   | Type                                            | Description                                                                                                    |
+<a id="lidar_marker_localizer-node"></a>
+
+### `lidar_marker_localizer` 节点
+
+<a id="input"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | :--------------------- | :---------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
-| `~/input/lanelet2_map` | `autoware_map_msgs::msg::HADMapBin`             | Data of lanelet2                                                                                               |
-| `~/input/pointcloud`   | `sensor_msgs::msg::PointCloud2`                 | PointType: `PointXYZIRC` is recommended in Autoware, but `PointXYZIRADRT` are also supported in this node.[^1] |
-| `~/input/ekf_pose`     | `geometry_msgs::msg::PoseWithCovarianceStamped` | EKF Pose                                                                                                       |
+| `~/input/lanelet2_map` | `autoware_map_msgs::msg::HADMapBin` | Lanelet2 数据 |
+| `~/input/pointcloud` | `sensor_msgs::msg::PointCloud2` | 点类型：Autoware 推荐使用 `PointXYZIRC`，此节点也支持 `PointXYZIRADRT`。[^1] |
+| `~/input/ekf_pose` | `geometry_msgs::msg::PoseWithCovarianceStamped` | EKF 位姿 |
 
-[^1]: Assumed `ring` of `PointXYZIRADRT` as `channel` of `PointXYZIRC`.
+[^1]: 将 `PointXYZIRADRT` 的 `ring` 视为 `PointXYZIRC` 的 `channel`。
 
-#### Output
+<a id="output"></a>
 
-| Name                            | Type                                            | Description         |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | :------------------------------ | :---------------------------------------------- | :------------------ |
-| `~/output/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | Estimated pose      |
-| `/diagnostics`                  | `diagnostic_msgs::msg::DiagnosticArray`         | Diagnostics outputs |
+| `~/output/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 估计位姿 |
+| `/diagnostics` | `diagnostic_msgs::msg::DiagnosticArray` | 诊断输出 |
 
-##### For debug
+<a id="for-debug"></a>
 
-| Name                            | Type                                            | Description                                          |
+##### 调试用途
+
+| 名称 | 类型 | 说明 |
 | :------------------------------ | :---------------------------------------------- | :--------------------------------------------------- |
-| `~/debug/pose_with_covariance`  | `geometry_msgs::msg::PoseWithCovarianceStamped` | Estimated pose                                       |
-| `~/debug/marker_detected`       | `geometry_msgs::msg::PoseArray`                 | Detected marker poses                                |
-| `~/debug/marker_mapped`         | `visualization_msgs::msg::MarkerArray`          | Loaded landmarks to visualize in Rviz as thin boards |
-| `~/debug/marker_pointcloud`     | `sensor_msgs::msg::PointCloud2`                 | PointCloud of the detected marker                    |
-| `~/debug/center_intensity_grid` | `nav_msgs::msg::OccupancyGrid`                  | Center intensity grid for debug                      |
-| `~/debug/positive_grid`         | `nav_msgs::msg::OccupancyGrid`                  | Positive match grid for debug                        |
-| `~/debug/negative_grid`         | `nav_msgs::msg::OccupancyGrid`                  | Negative match grid for debug                        |
-| `~/debug/matched_grid`          | `nav_msgs::msg::OccupancyGrid`                  | Matched pattern grid for debug                       |
-| `~/debug/vote_grid`             | `nav_msgs::msg::OccupancyGrid`                  | Vote grid for marker detection debug                 |
+| `~/debug/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 估计位姿 |
+| `~/debug/marker_detected` | `geometry_msgs::msg::PoseArray` | 检测到的标记位姿 |
+| `~/debug/marker_mapped` | `visualization_msgs::msg::MarkerArray` | 已加载的地标，在 RViz 中显示为薄板 |
+| `~/debug/marker_pointcloud` | `sensor_msgs::msg::PointCloud2` | 检测到的标记点云 |
+| `~/debug/center_intensity_grid` | `nav_msgs::msg::OccupancyGrid` | 用于调试的中心强度栅格 |
+| `~/debug/positive_grid` | `nav_msgs::msg::OccupancyGrid` | 用于调试的正匹配栅格 |
+| `~/debug/negative_grid` | `nav_msgs::msg::OccupancyGrid` | 用于调试的负匹配栅格 |
+| `~/debug/matched_grid` | `nav_msgs::msg::OccupancyGrid` | 用于调试的匹配模式栅格 |
+| `~/debug/vote_grid` | `nav_msgs::msg::OccupancyGrid` | 用于标记检测调试的投票栅格 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("localization/autoware_landmark_based_localizer/autoware_lidar_marker_localizer/schema/lidar_marker_localizer.schema.json") }}
 
-## How to launch
+<a id="how-to-launch"></a>
 
-When launching Autoware, set `lidar-marker` for `pose_source`.
+## 启动方法
+
+启动 Autoware 时，将 `pose_source` 设为 `lidar-marker`。
 
 ```bash
 ros2 launch autoware_launch ... \
@@ -51,9 +67,13 @@ ros2 launch autoware_launch ... \
     ...
 ```
 
-## Design
+<a id="design"></a>
 
-### Flowchart
+## 设计
+
+<a id="flowchart"></a>
+
+### 流程图
 
 ```plantuml
 @startuml
@@ -104,23 +124,29 @@ end group
 
 ```
 
-## Detection Algorithm
+<a id="detection-algorithm"></a>
 
-![detection_algorithm](./doc_image/detection_algorithm.png)
+## 检测算法
 
-1. Split the LiDAR point cloud into rings along the x-axis of the base_link coordinate system at intervals of the `resolution` size.
-2. Find the portion of intensity that matches the `intensity_pattern`.
-3. Perform steps 1 and 2 for each ring, accumulate the matching indices, and detect portions where the count exceeds the `vote_threshold_for_detect_marker` as markers.
+![检测算法](./doc_image/detection_algorithm.png)
 
-## Sample Dataset
+1. 沿 base_link 坐标系的 X 轴，以 `resolution` 为间隔，将激光雷达点云划分为多个环。
+2. 查找强度与 `intensity_pattern` 匹配的部分。
+3. 对每个环执行步骤 1 和 2，累积匹配索引，并将计数超过 `vote_threshold_for_detect_marker` 的部分识别为标记。
 
-- [Sample rosbag and map](https://drive.google.com/file/d/1FuGKbkWrvL_iKmtb45PO9SZl1vAaJFVG/view?usp=sharing)
+<a id="sample-dataset"></a>
 
-This dataset was acquired in National Institute for Land and Infrastructure Management, Full-scale tunnel experiment facility.
-The reflectors were installed by [Taisei Corporation](https://www.taisei.co.jp/english/).
+## 示例数据集
 
-## Collaborators
+- [示例 rosbag 和地图](https://drive.google.com/file/d/1FuGKbkWrvL_iKmtb45PO9SZl1vAaJFVG/view?usp=sharing)
+
+此数据集采集于日本国土技术政策综合研究所的全尺寸隧道实验设施。
+反光标记由[大成建设](https://www.taisei.co.jp/english/)安装。
+
+<a id="collaborators"></a>
+
+## 合作方
 
 - [TIER IV](https://tier4.jp/en/)
-- [Taisei Corporation](https://www.taisei.co.jp/english/)
+- [大成建设](https://www.taisei.co.jp/english/)
   - [Yuri Shimizu](https://github.com/YuriShimizu824)

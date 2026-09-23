@@ -1,38 +1,50 @@
 # tier4_control_mode_rviz_plugin
 
-## Purpose
+<a id="purpose"></a>
 
-This plugin displays the current control mode status of Autoware.
-The background color changes according to the mode, enabling intuitive status recognition.
+## 用途
 
-## Inputs / Outputs
+此插件显示 Autoware 当前的控制模式状态。
+背景颜色会随模式变化，便于直观识别状态。
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name                           | Type                                            | Description                                 |
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------------------ | ----------------------------------------------- | ------------------------------------------- |
-| `/vehicle/status/control_mode` | `autoware_vehicle_msgs::msg::ControlModeReport` | Topic representing the current control mode |
+| `/vehicle/status/control_mode` | `autoware_vehicle_msgs::msg::ControlModeReport` | 表示当前控制模式的话题 |
 
-## Control Mode Types
+<a id="control-mode-types"></a>
 
-| Mode                     | Value | Color     | Description                      |
+## 控制模式类型
+
+| 模式 | 值 | 颜色 | 说明 |
 | ------------------------ | ----- | --------- | -------------------------------- |
-| NO_COMMAND               | 0     | Dark Gray | No command state                 |
-| AUTONOMOUS               | 1     | Green     | Autonomous driving mode          |
-| AUTONOMOUS_STEER_ONLY    | 2     | Dark Gray | Autonomous steering control only |
-| AUTONOMOUS_VELOCITY_ONLY | 3     | Dark Gray | Autonomous velocity control only |
-| MANUAL                   | 4     | Red       | Manual driving mode              |
-| DISENGAGED               | 5     | Orange    | Control disengaged state         |
-| NOT_READY                | 6     | Dark Gray | System not ready                 |
+| NO_COMMAND | 0 | 深灰色 | 无命令状态 |
+| AUTONOMOUS | 1 | 绿色 | 自动驾驶模式 |
+| AUTONOMOUS_STEER_ONLY | 2 | 深灰色 | 仅自动控制转向 |
+| AUTONOMOUS_VELOCITY_ONLY | 3 | 深灰色 | 仅自动控制速度 |
+| MANUAL | 4 | 红色 | 人工驾驶模式 |
+| DISENGAGED | 5 | 橙色 | 控制已脱离状态 |
+| NOT_READY | 6 | 深灰色 | 系统尚未就绪 |
 
-## How to Use
+<a id="how-to-use"></a>
 
-1. Launch RViz
-2. Select `Panels` → `Add New Panel` from the menu
-3. Choose `rviz_plugins/ControlModeDisplay`
-4. The panel will display the current control mode
+## 使用方法
 
-## RViz Configuration Example
+1. 启动 RViz
+2. 从菜单中选择 `Panels` → `Add New Panel`
+3. 选择 `rviz_plugins/ControlModeDisplay`
+4. 面板将显示当前控制模式
+
+<a id="rviz-configuration-example"></a>
+
+## RViz 配置示例
 
 ```yaml
 Panels:

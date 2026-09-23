@@ -1,26 +1,30 @@
 # YabLoc
 
-**YabLoc** is vision-based localization with vector map. [https://youtu.be/Eaf6r_BNFfk](https://youtu.be/Eaf6r_BNFfk)
+**YabLoc** 是基于视觉和矢量地图的定位系统。[https://youtu.be/Eaf6r_BNFfk](https://youtu.be/Eaf6r_BNFfk)
 
-[![thumbnail](docs/yabloc_thumbnail.jpg)](https://youtu.be/Eaf6r_BNFfk)
+[![缩略图](docs/yabloc_thumbnail.jpg)](https://youtu.be/Eaf6r_BNFfk)
 
-It estimates position by matching road surface markings extracted from images with a vector map.
-Point cloud maps and LiDAR are not required.
-YabLoc enables users localize vehicles that are not equipped with LiDAR and in environments where point cloud maps are not available.
+它将图像中提取的路面标线与矢量地图匹配，以估计位置。
+无需点云地图或激光雷达。
+YabLoc 可为未配备激光雷达的车辆定位，也可用于无法获取点云地图的环境。
 
-## Packages
+<a id="packages"></a>
+
+## 功能包
 
 - [yabloc_common](yabloc_common/README.md)
 - [yabloc_image_processing](yabloc_image_processing/README.md)
 - [yabloc_particle_filter](yabloc_particle_filter/README.md)
 - [yabloc_pose_initializer](yabloc_pose_initializer/README.md)
 
-## How to launch YabLoc instead of NDT
+<a id="how-to-launch-yabloc-instead-of-ndt"></a>
 
-When launching autoware, if you set `pose_source:=yabloc` as an argument, YabLoc will be launched instead of NDT.
-By default, `pose_source` is `ndt`.
+## 使用 YabLoc 替代 NDT 的启动方法
 
-A sample command to run YabLoc is as follows
+启动 Autoware 时，如果设置参数 `pose_source:=yabloc`，就会启动 YabLoc 来替代 NDT。
+默认情况下，`pose_source` 为 `ndt`。
+
+以下是运行 YabLoc 的示例命令。
 
 ```shell
 ros2 launch autoware_launch logging_simulator.launch.xml \
@@ -30,55 +34,67 @@ ros2 launch autoware_launch logging_simulator.launch.xml \
   pose_source:=yabloc
 ```
 
-## Architecture
+<a id="architecture"></a>
 
-![node_diagram](docs/yabloc_architecture.drawio.svg)
+## 架构
 
-## Principle
+![节点图](docs/yabloc_architecture.drawio.svg)
 
-The diagram below illustrates the basic principle of YabLoc.
-It extracts road surface markings by extracting the line segments using the road area obtained from graph-based segmentation.
-The red line at the center-top of the diagram represents the line segments identified as road surface markings.
-YabLoc transforms these segments for each particle and determines the particle's weight by comparing them with the cost map generated from Lanelet2.
+<a id="principle"></a>
 
-![principle](docs/yabloc_principle.png)
+## 原理
 
-## Visualization
+下图展示 YabLoc 的基本原理。
+它利用基于图的分割得到道路区域，再提取线段，从而获取路面标线。
+图中上方中央的红线表示被识别为路面标线的线段。
+YabLoc 针对每个粒子变换这些线段，并将其与由 Lanelet2 生成的代价地图比较，以确定粒子权重。
 
-### Core visualization topics
+![原理](docs/yabloc_principle.png)
 
-These topics are not visualized by default.
+<a id="visualization"></a>
+
+## 可视化
+
+<a id="core-visualization-topics"></a>
+
+### 核心可视化话题
+
+默认情况下，不会可视化这些话题。
 
 <img src="docs/yabloc_rviz_description.png" width=800>
 
-| index | topic name                                                     | description                                                                                                                                                            |
+| 序号 | 话题名称 | 说明 |
 | ----- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `/localization/yabloc/pf/predicted_particle_marker`            | particle distribution of particle filter. Red particles are probable candidate.                                                                                        |
-| 2     | `/localization/yabloc/pf/scored_cloud`                         | 3D projected line segments. the color indicates how well they match the map.                                                                                           |
-| 3     | `/localization/yabloc/image_processing/lanelet2_overlay_image` | overlay of lanelet2 (yellow lines) onto image based on estimated pose. If they match well with the actual road markings, it means that the localization performs well. |
+| 1 | `/localization/yabloc/pf/predicted_particle_marker` | 粒子滤波器的粒子分布。红色粒子是可能性较高的候选。 |
+| 2 | `/localization/yabloc/pf/scored_cloud` | 投影到三维空间的线段，颜色表示与地图的匹配程度。 |
+| 3 | `/localization/yabloc/image_processing/lanelet2_overlay_image` | 根据估计位姿，将 Lanelet2（黄色线条）叠加到图像上。如果与实际路面标线匹配良好，说明定位效果良好。 |
 
-### Image topics for debug
+<a id="image-topics-for-debug"></a>
 
-These topics are not visualized by default.
+### 用于调试的图像话题
+
+默认情况下，不会可视化这些话题。
 
 <img src="docs/yabloc_image_description.png" width=800>
 
-| index | topic name                                                              | description                                                                   |
+| 序号 | 话题名称 | 说明 |
 | ----- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1     | `/localization/yabloc/pf/cost_map_image`                                | cost map made from lanelet2                                                   |
-| 2     | `/localization/yabloc/pf/match_image`                                   | projected line segments                                                       |
-| 3     | `/localization/yabloc/image_processing/image_with_colored_line_segment` | classified line segments. green line segments are used in particle correction |
-| 4     | `/localization/yabloc/image_processing/lanelet2_overlay_image`          | overlay of lanelet2                                                           |
-| 5     | `/localization/yabloc/image_processing/segmented_image`                 | graph based segmentation result                                               |
+| 1 | `/localization/yabloc/pf/cost_map_image` | 根据 Lanelet2 生成的代价地图 |
+| 2 | `/localization/yabloc/pf/match_image` | 投影后的线段 |
+| 3 | `/localization/yabloc/image_processing/image_with_colored_line_segment` | 分类后的线段。绿色线段用于粒子校正 |
+| 4 | `/localization/yabloc/image_processing/lanelet2_overlay_image` | Lanelet2 叠加图像 |
+| 5 | `/localization/yabloc/image_processing/segmented_image` | 基于图的分割结果 |
 
-## Limitation
+<a id="limitation"></a>
 
-- Running YabLoc and NDT simultaneously is not supported.
-  - This is because running both at the same time may be computationally too expensive.
-  - Also, in most cases, NDT is superior to YabLoc, so there is less benefit to running them at the same time.
-- It does not estimate roll and pitch, therefore some of the perception nodes may not work well.
-- It does not support multiple cameras now. But it will in the future.
-- In places where there are few road surface markings, such as intersections, the estimation heavily relies on GNSS, IMU, and vehicle's wheel odometry.
-- If the road boundary or road surface markings are not included in the Lanelet2, the estimation is likely to fail.
-- The sample rosbag provided in the autoware tutorial does not include images, so it is not possible to run YabLoc with it.
-  - If you want to test the functionality of YabLoc, the sample test data provided in this [PR](https://github.com/autowarefoundation/autoware_universe/pull/3946) is useful.
+## 限制
+
+- 不支持同时运行 YabLoc 和 NDT。
+  - 原因是同时运行两者的计算成本可能过高。
+  - 此外，大多数情况下 NDT 优于 YabLoc，因此同时运行的收益较小。
+- 不估计滚转角和俯仰角，因此部分感知节点可能无法正常工作。
+- 目前不支持多相机，未来将提供支持。
+- 在路口等路面标线较少的区域，估计结果高度依赖 GNSS、IMU 和车辆轮式里程计。
+- 如果 Lanelet2 中不包含道路边界或路面标线，估计很可能失败。
+- Autoware 教程提供的示例 rosbag 不包含图像，因此无法使用它运行 YabLoc。
+  - 如需测试 YabLoc 功能，可以使用此 [PR](https://github.com/autowarefoundation/autoware_universe/pull/3946) 中提供的示例测试数据。

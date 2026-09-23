@@ -1,54 +1,72 @@
 # cuda_polar_voxel_outlier_filter
 
-## Purpose
+<a id="purpose"></a>
 
-This node is a CUDA accelerated version of the `PolarVoxelOutlierFilter` available in [autoware_cuda_pointcloud_preprocessor](../../autoware_pointcloud_preprocessor/README.md).
+## 用途
 
-## Inner-workings / Algorithms
+此节点是 [autoware_cuda_pointcloud_preprocessor](../../autoware_pointcloud_preprocessor/README.md) 中 `PolarVoxelOutlierFilter` 的 CUDA 加速版本。
 
-This node is an alternative implementation to `autoware::pointcloud_preprocessor::PolarVoxelOutlierFilterComponent`, which filters outliers based on voxels in polar coordinate space instead of Cartesian coordinate space.
+<a id="inner-workings-algorithms"></a>
 
-## Inputs / Outputs
+## 内部机制／算法
 
-### Input
+此节点是 `autoware::pointcloud_preprocessor::PolarVoxelOutlierFilterComponent` 的另一种实现，基于极坐标空间中的体素而非笛卡尔坐标空间中的体素过滤离群点。
 
-| Name                      | Type                                             | Description                               |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------------- | ------------------------------------------------ | ----------------------------------------- |
-| `~/input/pointcloud`      | `sensor_msgs::msg::PointCloud2`                  | Input pointcloud's topic.                 |
-| `~/input/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | Input pointcloud's type negotiation topic |
+| `~/input/pointcloud` | `sensor_msgs::msg::PointCloud2` | 输入点云话题。 |
+| `~/input/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 输入点云的类型协商话题。 |
 
-### Output
+<a id="output"></a>
 
-| Name                       | Type                                             | Description                              |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------------------- | ------------------------------------------------ | ---------------------------------------- |
-| `~/output/pointcloud`      | `sensor_msgs::msg::PointCloud2`                  | Processed pointcloud's topic             |
-| `~/output/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | Processed pointcloud's negotiation topic |
+| `~/output/pointcloud` | `sensor_msgs::msg::PointCloud2` | 处理后的点云话题 |
+| `~/output/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 处理后的点云协商话题 |
 
-#### Additional Debug Topics
+<a id="additional-debug-topics"></a>
 
-| Name                            | Type                                                | Description                                                                    |
+#### 附加调试话题
+
+| 名称 | 类型 | 说明 |
 | ------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `~/debug/filter_ratio`          | `autoware_internal_debug_msgs::msg::Float32Stamped` | Ratio of output to input points                                                |
-| `~/debug/visibility`            | `autoware_internal_debug_msgs::msg::Float32Stamped` | Ratio of voxels passing secondary return threshold test (PointXYZIRCAEDT only) |
-| `~/debug/pointcloud_noise`      | `sensor_msgs::msg::PointCloud2`                     | Processed pointcloud's topic which is categorized as outlier                   |
-| `~/debug/pointcloud_noise/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo`    | Negotiation topic                                                              |
+| `~/debug/filter_ratio` | `autoware_internal_debug_msgs::msg::Float32Stamped` | 输出点数与输入点数之比 |
+| `~/debug/visibility` | `autoware_internal_debug_msgs::msg::Float32Stamped` | 通过次要回波阈值测试的体素比例（仅限 PointXYZIRCAEDT） |
+| `~/debug/pointcloud_noise` | `sensor_msgs::msg::PointCloud2` | 处理后被归类为离群点的点云话题 |
+| `~/debug/pointcloud_noise/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 协商话题 |
 
-## Parameters
+<a id="parameters"></a>
 
-See [the original implementation in autoware_cuda_pointcloud_preprocessor](../../autoware_pointcloud_preprocessor/docs/polar-voxel-outlier-filter.md) for the detail.
+## 参数
 
-### Core Parameters (Schema-based)
+详情请参阅 [autoware_cuda_pointcloud_preprocessor 中的原始实现](../../autoware_pointcloud_preprocessor/docs/polar-voxel-outlier-filter.md)。
+
+<a id="core-parameters-schema-based"></a>
+
+### 核心参数（基于模式定义）
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/polar_voxel_outlier_filter_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-Due to differences in floating-point arithmetic between CPUs and GPUs, the outputs of `autoware::pointcloud_preprocessor::PolarVoxelOutlierFilterComponent` and this filter may not be identical.
+## 前提假设／已知限制
 
-Adding compiler options, such as the following, can reduce numerical discrepancies, though a slight performance impact can also be introduced, and it is still difficult to acquire complete identical results.
+由于 CPU 与 GPU 的浮点运算存在差异，`autoware::pointcloud_preprocessor::PolarVoxelOutlierFilterComponent` 与此滤波器的输出可能不完全一致。
+
+添加以下编译器选项可以减小数值差异，但也可能略微影响性能，而且仍难以获得完全一致的结果。
 
 ```CMake
 list(APPEND CUDA_NVCC_FLAGS "--fmad=false")
 ```
 
-To prioritize performance, these compiler options are not enabled.
+为优先保证性能，未启用这些编译器选项。

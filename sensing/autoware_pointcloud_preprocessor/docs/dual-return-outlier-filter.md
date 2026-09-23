@@ -1,66 +1,90 @@
 # dual_return_outlier_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The purpose is to remove point cloud noise such as fog and rain and publish visibility as a diagnostic topic.
+## 用途
 
-## Inner-workings / Algorithms
+此节点旨在移除雾、雨等产生的点云噪声，并通过诊断话题发布能见度。
 
-This node can remove rain and fog by considering the light reflected from the object in two stages according to the attenuation factor. The `dual_return_outlier_filter` is named because it removes noise using data that contains two types of return values separated by attenuation factor, as shown in the figure below.
+<a id="inner-workings-algorithms"></a>
 
-![outlier_filter-return_type](./image/outlier_filter-return_type.drawio.svg)
+## 内部机制／算法
 
-Therefore, in order to use this node, the sensor driver must publish custom data including `return_type`. please refer to [PointXYZIRCAEDT](https://github.com/autowarefoundation/autoware_core/blob/main/common/autoware_point_types/include/autoware/point_types/types.hpp#L95-L116) data structure.
+此节点根据衰减因子，将物体反射的光按两个阶段处理，以去除雨雾噪声。如下图所示，它使用按衰减因子区分的两类回波数据去除噪声，因此命名为 `dual_return_outlier_filter`。
 
-Another feature of this node is that it publishes visibility as a diagnostic topic. With this function, for example, in heavy rain, the sensing module can notify that the processing performance has reached its limit, which can lead to ensuring the safety of the vehicle.
+![离群点过滤的回波类型](./image/outlier_filter-return_type.drawio.svg)
 
-In some complicated road scenes where normal objects also reflect the light in two stages, for instance plants, leaves, some plastic net etc, the visibility faces some drop in fine weather condition. To deal with that, optional settings of a region of interest (ROI) are added.
+因此，使用此节点时，传感器驱动必须发布包含 `return_type` 的自定义数据。请参阅 [PointXYZIRCAEDT](https://github.com/autowarefoundation/autoware_core/blob/main/common/autoware_point_types/include/autoware/point_types/types.hpp#L95-L116) 数据结构。
 
-1. `Fixed_xyz_ROI` mode: Visibility estimation based on the weak points in a fixed cuboid surrounding region of ego-vehicle, defined by x, y, z in base_link perspective.
-2. `Fixed_azimuth_ROI` mode: Visibility estimation based on the weak points in a fixed surrounding region of ego-vehicle, defined by azimuth and distance of LiDAR perspective.
+此节点还会通过诊断话题发布能见度。例如，在暴雨情况下，传感器模块可借助此功能通知系统其处理能力已达到极限，从而帮助保障车辆安全。
 
-When select 2 fixed ROI modes, due to the range of weak points is shrink, the sensitivity of visibility is decrease so that a trade of between `weak_first_local_noise_threshold` and `visibility_threshold` is needed.
+在某些复杂道路场景中，植物、树叶、塑料网等正常物体也会产生两阶段反射，导致晴天条件下能见度估计值下降。为处理这一情况，增加了可选的感兴趣区域（ROI）设置。
 
-![outlier_filter-dual_return_overall](./image/outlier_filter-dual_return_overall.drawio.svg)
+1. `Fixed_xyz_ROI` 模式：根据自车周围固定长方体区域内的弱回波点估计能见度，该区域以 base_link 坐标系中的 x、y、z 定义。
+2. `Fixed_azimuth_ROI` 模式：根据自车周围固定区域内的弱回波点估计能见度，该区域以激光雷达坐标系中的方位角和距离定义。
 
-The figure below describe how the node works.
-![outlier_filter-dual_return_detail](./image/outlier_filter-dual_return_detail.drawio.svg)
+选择这两种固定 ROI 模式时，由于弱回波点的统计范围缩小，能见度估计的灵敏度会降低，因此需要在 `weak_first_local_noise_threshold` 和 `visibility_threshold` 之间进行权衡。
 
-The below picture shows the ROI options.
+![双回波离群点过滤概览](./image/outlier_filter-dual_return_overall.drawio.svg)
 
-![outlier_filter-dual_return_ROI_setting_options](./image/outlier_filter-dual_return_ROI_setting_options.png)
+下图介绍节点的工作方式。
+![双回波离群点过滤细节](./image/outlier_filter-dual_return_detail.drawio.svg)
 
-## Inputs / Outputs
+下图展示 ROI 选项。
 
-This implementation inherits `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+![双回波离群点过滤的 ROI 设置选项](./image/outlier_filter-dual_return_ROI_setting_options.png)
 
-### Output
+<a id="inputs-outputs"></a>
 
-| Name                                           | Type                                                | Description                                             |
+## 输入／输出
+
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
+
+<a id="output"></a>
+
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ---------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------- |
-| `/dual_return_outlier_filter/frequency_image`  | `sensor_msgs::msg::Image`                           | The histogram image that represent visibility           |
-| `/dual_return_outlier_filter/visibility`       | `autoware_internal_debug_msgs::msg::Float32Stamped` | A representation of visibility with a value from 0 to 1 |
-| `/dual_return_outlier_filter/pointcloud_noise` | `sensor_msgs::msg::Pointcloud2`                     | The pointcloud removed as noise                         |
+| `/dual_return_outlier_filter/frequency_image` | `sensor_msgs::msg::Image` | 表示能见度的直方图图像 |
+| `/dual_return_outlier_filter/visibility` | `autoware_internal_debug_msgs::msg::Float32Stamped` | 以 0 到 1 的数值表示能见度 |
+| `/dual_return_outlier_filter/pointcloud_noise` | `sensor_msgs::msg::Pointcloud2` | 作为噪声被移除的点云 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-This implementation inherits `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+<a id="node-parameters"></a>
 
-### Core Parameters
+### 节点参数
+
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/dual_return_outlier_filter_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-Not recommended for use as it is under development.
-Input data must be [PointXYZIRCAEDT](https://github.com/autowarefoundation/autoware_core/blob/main/common/autoware_point_types/include/autoware/point_types/types.hpp#L95-L116) type data including `return_type`.
+## 前提假设／已知限制
 
-## (Optional) Error detection and handling
+目前仍在开发中，不建议使用。
+输入必须为包含 `return_type` 的 [PointXYZIRCAEDT](https://github.com/autowarefoundation/autoware_core/blob/main/common/autoware_point_types/include/autoware/point_types/types.hpp#L95-L116) 类型数据。
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="referencesexternal-links"></a>
+
+## 参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

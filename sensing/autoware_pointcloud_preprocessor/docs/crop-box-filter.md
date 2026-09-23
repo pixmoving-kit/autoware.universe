@@ -1,33 +1,55 @@
 # crop_box_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `crop_box_filter` is a node that removes points with in a given box region. This filter is used to remove the points that hit the vehicle itself.
+## 用途
 
-## Inner-workings / Algorithms
+`crop_box_filter` 节点用于移除给定包围盒区域内的点。此滤波器用于移除击中车辆自身形成的点。
 
-`pcl::CropBox` is used, which filters all points inside a given box.
+<a id="inner-workings-algorithms"></a>
 
-## Inputs / Outputs
+## 内部机制／算法
 
-This implementation inherit `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+使用 `pcl::CropBox` 过滤给定包围盒内的所有点。
 
-## Parameters
+<a id="inputs-outputs"></a>
 
-### Node Parameters
+## 输入／输出
 
-This implementation inherit `autoware::pointcloud_preprocessor::Filter` class, please refer [README](../README.md).
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
 
-### Core Parameters
+<a id="parameters"></a>
+
+## 参数
+
+<a id="node-parameters"></a>
+
+### 节点参数
+
+此实现继承 `autoware::pointcloud_preprocessor::Filter` 类，请参阅 [README](../README.md)。
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/crop_box_filter_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-## (Optional) Error detection and handling
+## 前提假设／已知限制
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

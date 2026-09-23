@@ -1,63 +1,73 @@
-# Landmark Based Localizer
+<a id="landmark-based-localizer"></a>
 
-This directory contains packages for landmark-based localization.
+# 基于地标的定位器
 
-Landmarks are, for example
+此目录包含基于地标进行定位的功能包。
 
-- AR tags detected by camera
-- Boards characterized by intensity detected by LiDAR
+地标可以是：
 
-etc.
+- 相机检测到的 AR 标签
+- 激光雷达通过强度特征检测到的标志板
 
-Since these landmarks are easy to detect and estimate pose, the ego pose can be calculated from the pose of the detected landmark if the pose of the landmark is written on the map in advance.
+等。
 
-Currently, landmarks are assumed to be flat.
+这些地标容易检测并估计位姿，因此，只要提前将地标位姿记录在地图中，就可以根据检测到的地标位姿计算自车位姿。
 
-The following figure shows the principle of localization in the case of `ar_tag_based_localizer`.
+目前假定地标为平面。
 
-![principle](./doc_image/principle.png)
+下图以 `ar_tag_based_localizer` 为例说明定位原理。
 
-This calculated ego pose is passed to the EKF, where it is fused with the twist information and used to estimate a more accurate ego pose.
+![原理](./doc_image/principle.png)
 
-## Node diagram
+计算出的自车位姿传递给 EKF，与速度信息融合，以估计更准确的自车位姿。
 
-![node diagram](./doc_image/node_diagram.drawio.svg)
+<a id="node-diagram"></a>
+
+## 节点图
+
+![节点图](./doc_image/node_diagram.drawio.svg)
 
 ### `landmark_manager`
 
-The definitions of the landmarks written to the map are introduced in the next section. See `Map Specifications`.
+下一节介绍地图中地标的定义，请参阅“地图规范”。
 
-The `landmark_manager` is a utility package to load landmarks from the map.
+`landmark_manager` 是从地图加载地标的工具包。
 
-- Translation : The center of the four vertices of the landmark
-- Rotation : Let the vertex numbers be 1, 2, 3, 4 counterclockwise as shown in the next section. Direction is defined as the cross product of the vector from 1 to 2 and the vector from 2 to 3.
+- 平移：地标四个顶点的中心
+- 旋转：如下节所示，将顶点按逆时针顺序编号为 1、2、3、4。方向定义为从 1 指向 2 的向量与从 2 指向 3 的向量的叉积方向。
 
-Users can define landmarks as Lanelet2 4-vertex polygons.
-In this case, it is possible to define an arrangement in which the four vertices cannot be considered to be on the same plane. The direction of the landmark in that case is difficult to calculate.
-So, if the 4 vertices are considered as forming a tetrahedron and its volume exceeds the `volume_threshold` parameter, the landmark will not publish tf_static.
+用户可以将地标定义为 Lanelet2 的四顶点多边形。
+此时，四个顶点可能并不位于同一平面上，这种情况下很难计算地标方向。
+因此，如果将这四个顶点视为四面体，且其体积超过 `volume_threshold` 参数，便不会为该地标发布 tf_static。
 
-### Landmark based localizer packages
+<a id="landmark-based-localizer-packages"></a>
+
+### 基于地标的定位功能包
 
 - ar_tag_based_localizer
-- etc.
+- 等。
 
-## Map specifications
+<a id="map-specifications"></a>
 
-See <https://github.com/autowarefoundation/autoware_lanelet2_extension/blob/main/autoware_lanelet2_extension/docs/lanelet2_format_extension.md#localization-landmarks>
+## 地图规范
 
-## About `consider_orientation`
+参见 <https://github.com/autowarefoundation/autoware_lanelet2_extension/blob/main/autoware_lanelet2_extension/docs/lanelet2_format_extension.md#localization-landmarks>
 
-The `calculate_new_self_pose` function in the `LandmarkManager` class includes a boolean argument named `consider_orientation`. This argument determines the method used to calculate the new self pose based on detected and mapped landmarks. The following image illustrates the difference between the two methods.
+<a id="about-consider_orientation"></a>
 
-![consider_orientation_figure](./doc_image/consider_orientation.drawio.svg)
+## 关于 `consider_orientation`
+
+`LandmarkManager` 类的 `calculate_new_self_pose` 函数包含一个名为 `consider_orientation` 的布尔参数，用于决定根据检测地标和地图地标计算新自车位姿的方法。下图展示两种方法的区别。
+
+![是否考虑姿态的区别](./doc_image/consider_orientation.drawio.svg)
 
 ### `consider_orientation = true`
 
-In this mode, the new self pose is calculated so that the relative Pose of the "landmark detected from the current self pose" is equal to the relative Pose of the "landmark mapped from the new self pose".
-This method can correct for orientation, but is strongly affected by the orientation error of the landmark detection.
+在此模式下，计算新的自车位姿，使“基于当前自车位姿检测到的地标”的相对位姿，等于“从新自车位姿观察地图地标”的相对位姿。
+此方法可以校正姿态，但容易受到地标检测姿态误差的较大影响。
 
 ### `consider_orientation = false`
 
-In this mode, the new self pose is calculated so that only the relative position is correct for x, y, and z.
+在此模式下，计算新的自车位姿，仅保证 x、y、z 方向上的相对位置正确。
 
-This method can not correct for orientation, but it is not affected by the orientation error of the landmark detection.
+此方法无法校正姿态，但不受地标检测姿态误差的影响。

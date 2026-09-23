@@ -1,5 +1,9 @@
-# Interface API
+<a id="interface-api"></a>
 
-## Overview
+# 接口 API
 
-The interface API simply returns a version number. See the [autoware-documentation](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/ad-api/features/interface/) for AD API specifications.
+<a id="overview"></a>
+
+## 概述
+
+接口 API 仅返回版本号。 AD API 规范请参阅 [Autoware 文档](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/ad-api/features/interface/)。

@@ -1,35 +1,51 @@
 # cuda_voxel_grid_downsample_filter
 
-## Purpose
+<a id="purpose"></a>
 
-This node is a CUDA accelerated version of the `FasterVoxelGridDownsampleFilter` available in [autoware_cuda_pointcloud_preprocessor](../../autoware_pointcloud_preprocessor/README.md).
+## 用途
 
-## Inner-workings / Algorithms
+此节点是 [autoware_cuda_pointcloud_preprocessor](../../autoware_pointcloud_preprocessor/README.md) 中 `FasterVoxelGridDownsampleFilter` 的 CUDA 加速版本。
 
-This node reimplements of the function of `autoware::pointcloud_preprocessor::FasterVoxelGridDownsampleFilter`, which calculates centroids as representative points in each voxels.
+<a id="inner-workings-algorithms"></a>
 
-## Inputs / Outputs
+## 内部机制／算法
 
-### Input
+此节点重新实现了 `autoware::pointcloud_preprocessor::FasterVoxelGridDownsampleFilter` 的功能，计算各体素的质心作为代表点。
 
-| Name                      | Type                                             | Description                               |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------------- | ------------------------------------------------ | ----------------------------------------- |
-| `~/input/pointcloud`      | `sensor_msgs::msg::PointCloud2`                  | Input pointcloud's topic.                 |
-| `~/input/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | Input pointcloud's type negotiation topic |
+| `~/input/pointcloud` | `sensor_msgs::msg::PointCloud2` | 输入点云话题。 |
+| `~/input/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 输入点云的类型协商话题。 |
 
-### Output
+<a id="output"></a>
 
-| Name                       | Type                                             | Description                                             |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------------------- | ------------------------------------------------ | ------------------------------------------------------- |
-| `~/output/pointcloud`      | `sensor_msgs::msg::PointCloud2`                  | Processed pointcloud's topic (in `PointXYZIRC` fashion) |
-| `~/output/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | Processed pointcloud's negotiation topic                |
+| `~/output/pointcloud` | `sensor_msgs::msg::PointCloud2` | 处理后的点云话题（采用 `PointXYZIRC` 格式） |
+| `~/output/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 处理后的点云协商话题 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Core Parameters
+## 参数
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_cuda_pointcloud_preprocessor/schema/cuda_voxel_grid_downsample_filter.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-- This node expects that the input pointcloud is compatible with `autoware::point_types::PointXYZI` ([ref](https://github.com/autowarefoundation/autoware_core/tree/main/common/autoware_point_types)). Here, "compatible" means the pointcloud fields start with XYZI in this order. Multiple data types, including `uint8` and `float`, are supported for the datatype of the `intensity` field.
+## 前提假设／已知限制
+
+- 此节点要求输入点云与 `autoware::point_types::PointXYZI` 兼容（[参考](https://github.com/autowarefoundation/autoware_core/tree/main/common/autoware_point_types)）。这里的“兼容”指点云字段以 XYZI 的顺序开头。`intensity` 字段支持 `uint8` 和 `float` 等多种数据类型。

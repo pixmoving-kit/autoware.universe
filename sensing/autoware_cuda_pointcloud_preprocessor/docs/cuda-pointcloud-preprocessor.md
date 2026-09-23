@@ -1,45 +1,61 @@
 # cuda_pointcloud_preprocessor
 
-## Purpose
+<a id="purpose"></a>
 
-This node implements all standard pointcloud preprocessing algorithms applied to a single LiDAR's pointcloud in CUDA.
-In particular, this node implements:
+## 用途
 
-- box cropping (ego-vehicle and ego-vehicle's mirrors)
-- distortion correction
-- ring-based outlier filtering
+此节点使用 CUDA 实现应用于单个激光雷达点云的所有标准点云预处理算法。
+具体实现包括：
 
-## Inner-workings / Algorithms
+- 包围盒裁剪（自车及自车后视镜）
+- 畸变校正
+- 基于扫描环的离群点过滤
 
-As this node reimplements the functionalities of the CPU-version algorithms, please have a look at the documentations of [crop-box](../../autoware_pointcloud_preprocessor/docs/crop-box-filter.md), [distortion correction](../../autoware_pointcloud_preprocessor/docs/distortion-corrector.md), and [ring-based outlier filter](../../autoware_pointcloud_preprocessor/docs/ring-outlier-filter.md) for more information about these algorithms.
+<a id="inner-workings-algorithms"></a>
 
-In addition to the individual algorithms previously mentioned, this node uses the `cuda_blackboard`, a cuda transport layer that enables a zero-copy mechanism between GPU and GPU memory for both input and output.
+## 内部机制／算法
 
-## Inputs / Outputs
+此节点重新实现了 CPU 版本算法的功能。有关这些算法的更多信息，请参阅[包围盒裁剪](../../autoware_pointcloud_preprocessor/docs/crop-box-filter.md)、[畸变校正](../../autoware_pointcloud_preprocessor/docs/distortion-corrector.md)和[基于扫描环的离群点过滤](../../autoware_pointcloud_preprocessor/docs/ring-outlier-filter.md)文档。
 
-### Input
+除上述各项算法外，此节点还使用 `cuda_blackboard`。这是一个 CUDA 传输层，可在输入和输出中实现 GPU 显存之间的零拷贝。
 
-| Name                      | Type                                             | Description                               |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------------- | ------------------------------------------------ | ----------------------------------------- |
-| `~/input/pointcloud`      | `sensor_msgs::msg::PointCloud2`                  | Input pointcloud's topic.                 |
-| `~/input/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | Input pointcloud's type negotiation topic |
-| `~/input/twist`           | `geometry_msgs::msg::TwistWithCovarianceStamped` | Topic of the twist information.           |
-| `~/input/imu`             | `sensor_msgs::msg::Imu`                          | Topic of the IMU data.                    |
+| `~/input/pointcloud` | `sensor_msgs::msg::PointCloud2` | 输入点云话题。 |
+| `~/input/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 输入点云的类型协商话题。 |
+| `~/input/twist` | `geometry_msgs::msg::TwistWithCovarianceStamped` | 速度信息话题。 |
+| `~/input/imu` | `sensor_msgs::msg::Imu` | IMU 数据话题。 |
 
-### Output
+<a id="output"></a>
 
-| Name                       | Type                                             | Description                              |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------------------- | ------------------------------------------------ | ---------------------------------------- |
-| `~/output/pointcloud`      | `sensor_msgs::msg::PointCloud2`                  | Processed pointcloud's topic             |
-| `~/output/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | Processed pointcloud's negotiation topic |
+| `~/output/pointcloud` | `sensor_msgs::msg::PointCloud2` | 处理后的点云话题 |
+| `~/output/pointcloud/cuda` | `negotiated_interfaces/msg/NegotiatedTopicsInfo` | 处理后的点云协商话题 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Core Parameters
+## 参数
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_cuda_pointcloud_preprocessor/schema/cuda_pointcloud_preprocessor.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-- The CUDA implementations, while following the original CPU ones, will not offer the same numerical results, and small approximations were needed to maximize GPU usage.
-- This node expects that the input pointcloud follows the `autoware::point_types::PointXYZIRCAEDT` layout and the output pointcloud will use the `autoware::point_types::PointXYZIRC` layout defined in the `autoware_point_types` package.
+## 前提假设／已知限制
+
+- CUDA 实现遵循原始 CPU 实现，但不会得到完全相同的数值结果；为充分利用 GPU，需要采用少量近似处理。
+- 此节点要求输入点云符合 `autoware::point_types::PointXYZIRCAEDT` 布局，输出点云则使用 `autoware_point_types` 功能包中定义的 `autoware::point_types::PointXYZIRC` 布局。

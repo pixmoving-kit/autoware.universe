@@ -1,16 +1,22 @@
-# Common
+<a id="common"></a>
 
-## Getting Started
+# 通用组件
 
-The Autoware Universe Common folder consists of common and testing libraries that are used by other Autoware components, as well as useful plugins for visualization in RVIZ2.
+<a id="getting-started"></a>
+
+## 入门
+
+Autoware Universe 的 Common 文件夹包含其他 Autoware 组件使用的通用库和测试库，以及用于 RVIZ2 可视化的实用插件。
 
 !!! note
 
-    In addition to the ones listed in this folder, users can also have a look at some of the add-ons in the `autoware_tools/common` documentation [page](https://autowarefoundation.github.io/autoware_tools/main/common/mission_planner_rviz_plugin/).
+    除了此文件夹中的组件，您还可以查看 `autoware_tools/common` 文档[页面](https://autowarefoundation.github.io/autoware_tools/main/common/mission_planner_rviz_plugin/)中的一些扩展组件。
 
-## Highlights
+<a id="highlights"></a>
 
-Some of the commonly used libraries are:
+## 主要组件
+
+常用的库包括：
 
 1. `autoware_universe_utils`
 2. `autoware_motion_utils`

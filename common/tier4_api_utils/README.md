@@ -1,4 +1,4 @@
 # tier4_api_utils
 
-This is an old implementation of a class that logs when calling a service.
-Please use [component_interface_utils](../autoware_component_interface_utils/README.md) instead.
+这是一个在调用服务时记录日志的类的旧实现。
+请改用 [component_interface_utils](../autoware_component_interface_utils/README.md)。

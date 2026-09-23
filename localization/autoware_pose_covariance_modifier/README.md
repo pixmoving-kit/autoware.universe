@@ -1,58 +1,74 @@
-# Autoware Pose Covariance Modifier Node
+<a id="autoware-pose-covariance-modifier-node"></a>
 
-## Purpose
+# Autoware 位姿协方差调整节点
 
-This package makes it possible to use GNSS and NDT poses together in real time localization.
+<a id="purpose"></a>
 
-## Function
+## 用途
 
-This package takes in GNSS (Global Navigation Satellite System)
-and NDT (Normal Distribution Transform) poses with covariances.
+此功能包使实时定位能够同时使用 GNSS 和 NDT 位姿。
 
-It outputs a single pose with covariance:
+<a id="function"></a>
 
-- Directly the GNSS pose and its covariance.
-- Directly the NDT pose and its covariance.
-- Both GNSS and NDT poses with modified covariances.
+## 功能
 
-> - This package doesn't modify the pose information it receives.
-> - It only modifies NDT covariance values under certain conditions.
+此功能包接收带协方差的 GNSS（全球导航卫星系统）
+和 NDT（正态分布变换）位姿。
 
-## Assumptions
+它输出带协方差的位姿，具体有以下形式：
 
-- The NDT matcher provides a pose with a fixed covariance.
-- The NDT matcher is unable to provide a dynamic, reliable covariance value.
+- 直接输出 GNSS 位姿及其协方差。
+- 直接输出 NDT 位姿及其协方差。
+- 同时输出 GNSS 和 NDT 位姿，并调整协方差。
 
-## Requirements
+> - 此功能包不会修改接收到的位姿信息。
+> - 仅在特定条件下修改 NDT 协方差值。
 
-- The GNSS/INS module must provide standard deviation values (its error / RMSE) for the position and orientation.
-- It probably needs RTK support to provide accurate position and orientation information.
-- You need to have a geo-referenced map.
-- GNSS/INS module and the base_link frame must be calibrated well enough.
-- In an environment where GNSS/INS and NDT systems work well, the `base_link` poses from both systems should be close to
-  each other.
+<a id="assumptions"></a>
 
-## Description
+## 假设
 
-GNSS and NDT nodes provide the pose with covariance data utilized in an Extended Kalman Filter (EKF).
+- NDT 匹配器提供具有固定协方差的位姿。
+- NDT 匹配器无法提供动态、可靠的协方差值。
 
-Accurate covariance values are crucial for the effectiveness of the EKF in estimating the state.
+<a id="requirements"></a>
 
-The GNSS system generates reliable standard deviation values, which can be transformed into covariance measures.
+## 要求
 
-But we currently don't have a reliable way to determine the covariance values for the NDT poses.
-And the NDT matching system in Autoware outputs poses with preset covariance values.
+- GNSS/INS 模块必须提供位置和姿态的标准差值（误差／RMSE）。
+- 可能需要 RTK 支持，才能提供准确的位置和姿态信息。
+- 需要带地理参考的地图。
+- GNSS/INS 模块与 base_link 坐标系之间必须经过足够准确的标定。
+- 在 GNSS/INS 和 NDT 系统均工作良好的环境中，两者得到的 `base_link` 位姿应当
+  接近。
 
-For this reason, this package is designed to manage the selection of the pose source,
-based on the standard deviation values provided by the GNSS system.
+<a id="description"></a>
 
-It also tunes the covariance values of the NDT poses, based on the GNSS standard deviation values.
+## 说明
 
-## Flowcharts
+GNSS 和 NDT 节点提供的带协方差位姿数据用于扩展卡尔曼滤波器（EKF）。
 
-### Without this package
+准确的协方差值对于 EKF 有效估计状态至关重要。
 
-Only NDT pose is used in localization. GNSS pose is only used for initialization.
+GNSS 系统生成可靠的标准差值，可将其转换为协方差。
+
+但目前尚无可靠方法确定 NDT 位姿的协方差值。
+Autoware 中的 NDT 匹配系统输出的是带预设协方差的位姿。
+
+因此，此功能包根据 GNSS 系统提供的标准差值，
+管理位姿来源的选择。
+
+它还会根据 GNSS 标准差调整 NDT 位姿的协方差值。
+
+<a id="flowcharts"></a>
+
+## 流程图
+
+<a id="without-this-package"></a>
+
+### 不使用此功能包时
+
+定位仅使用 NDT 位姿，GNSS 位姿仅用于初始化。
 
 ```mermaid
 graph TD
@@ -64,12 +80,14 @@ class ndt_scan_matcher cl_node;
 class ekf_localizer cl_node;
 ```
 
-### With this package
+<a id="with-this-package"></a>
 
-Both NDT and GNSS poses are used in localization, depending on the standard deviation values coming from the GNSS
-system.
+### 使用此功能包时
 
-Here is a flowchart depicting the process and the predefined thresholds:
+根据 GNSS 系统提供的标准差值，定位会使用 NDT 和 GNSS
+位姿。
+
+以下流程图展示处理过程和预定义阈值：
 
 ```mermaid
 graph TD
@@ -108,106 +126,128 @@ class gnss_pose cl_output;
 class gnss_ndt_pose cl_output;
 ```
 
-## How to use this package
+<a id="how-to-use-this-package"></a>
 
-> **This package is disabled by default in Autoware, you need to manually enable it.**
+## 使用此功能包
 
-To enable this package, you need to change the `use_autoware_pose_covariance_modifier` parameter to `true` within
-the [pose_twist_estimator.launch.xml](../../launch/tier4_localization_launch/launch/pose_twist_estimator/pose_twist_estimator.launch.xml#L3).
+> **Autoware 默认禁用此功能包，需要手动启用。**
 
-### Without this condition (default)
+要启用此功能包，需要将 `use_autoware_pose_covariance_modifier` 参数改为 `true`，该参数位于
+[pose_twist_estimator.launch.xml](../../launch/tier4_localization_launch/launch/pose_twist_estimator/pose_twist_estimator.launch.xml#L3) 中。
 
-- The output of the [ndt_scan_matcher](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ndt_scan_matcher) is directly sent
-  to [ekf_localizer](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ekf_localizer).
-  - It has a preset covariance value.
-  - **topic name:** `/localization/pose_estimator/pose_with_covariance`
-- The GNSS pose does not enter the ekf_localizer.
-- This node does not launch.
+<a id="without-this-condition-default"></a>
 
-### With this condition
+### 未启用时（默认）
 
-- The output of the [ndt_scan_matcher](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ndt_scan_matcher) is renamed
-  - **from:** `/localization/pose_estimator/pose_with_covariance`.
-  - **to:** `/localization/pose_estimator/ndt_scan_matcher/pose_with_covariance`.
-- The `ndt_scan_matcher` output enters the `autoware_pose_covariance_modifier`.
-- The output of this package goes to [ekf_localizer](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ekf_localizer) with:
-  - **topic name:** `/localization/pose_estimator/pose_with_covariance`.
+- [ndt_scan_matcher](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ndt_scan_matcher) 的输出直接发送
+  到 [ekf_localizer](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ekf_localizer)。
+  - 使用预设的协方差值。
+  - **话题名称：** `/localization/pose_estimator/pose_with_covariance`
+- GNSS 位姿不传入 ekf_localizer。
+- 此节点不启动。
 
-## Node
+<a id="with-this-condition"></a>
 
-### Subscribed topics
+### 启用后
 
-| Name                             | Type                                            | Description            |
+- [ndt_scan_matcher](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ndt_scan_matcher) 的输出话题重命名
+  - **原名称：** `/localization/pose_estimator/pose_with_covariance`。
+  - **新名称：** `/localization/pose_estimator/ndt_scan_matcher/pose_with_covariance`。
+- `ndt_scan_matcher` 的输出传入 `autoware_pose_covariance_modifier`。
+- 此功能包的输出通过以下话题传给 [ekf_localizer](https://github.com/autowarefoundation/autoware_core/tree/main/localization/autoware_ekf_localizer)：
+  - **话题名称：** `/localization/pose_estimator/pose_with_covariance`。
+
+<a id="node"></a>
+
+## 节点
+
+<a id="subscribed-topics"></a>
+
+### 订阅的话题
+
+| 名称 | 类型 | 说明 |
 | -------------------------------- | ----------------------------------------------- | ---------------------- |
-| `input_gnss_pose_with_cov_topic` | `geometry_msgs::msg::PoseWithCovarianceStamped` | Input GNSS pose topic. |
-| `input_ndt_pose_with_cov_topic`  | `geometry_msgs::msg::PoseWithCovarianceStamped` | Input NDT pose topic.  |
+| `input_gnss_pose_with_cov_topic` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 输入 GNSS 位姿话题。 |
+| `input_ndt_pose_with_cov_topic` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 输入 NDT 位姿话题。 |
 
-### Published topics
+<a id="published-topics"></a>
 
-| Name                                | Type                                            | Description                                                                                                            |
+### 发布的话题
+
+| 名称 | 类型 | 说明 |
 | ----------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `output_pose_with_covariance_topic` | `geometry_msgs::msg::PoseWithCovarianceStamped` | Output pose topic. This topic is used by the ekf_localizer package.                                                    |
-| `selected_pose_type`                | `std_msgs::msg::String`                         | Declares which pose sources are used in the output of this package                                                     |
-| `output/ndt_position_stddev`        | `std_msgs::msg::Float64`                        | Output pose ndt average standard deviation in position xy. It is published only when the enable_debug_topics is true.  |
-| `output/gnss_position_stddev`       | `std_msgs::msg::Float64`                        | Output pose gnss average standard deviation in position xy. It is published only when the enable_debug_topics is true. |
+| `output_pose_with_covariance_topic` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 输出位姿话题，由 ekf_localizer 功能包使用。 |
+| `selected_pose_type` | `std_msgs::msg::String` | 声明此功能包输出使用的位姿来源 |
+| `output/ndt_position_stddev` | `std_msgs::msg::Float64` | 输出 NDT 位姿在 XY 位置上的平均标准差。仅在 enable_debug_topics 为 true 时发布。 |
+| `output/gnss_position_stddev` | `std_msgs::msg::Float64` | 输出 GNSS 位姿在 XY 位置上的平均标准差。仅在 enable_debug_topics 为 true 时发布。 |
 
-### Parameters
+<a id="parameters"></a>
 
-The parameters are set
-in [config/pose_covariance_modifier.param.yaml](config/pose_covariance_modifier.param.yaml) .
+### 参数
+
+参数设置位于
+[config/pose_covariance_modifier.param.yaml](config/pose_covariance_modifier.param.yaml) 中。
 
 {{ json_to_markdown(
   "localization/autoware_pose_covariance_modifier/schema/pose_covariance_modifier.schema.json") }}
 
-## FAQ
+<a id="faq"></a>
 
-### How are varying frequency rates handled?
+## 常见问题
 
-The GNSS and NDT pose topics may have different frequencies.
-The GNSS pose topic may have a higher frequency than the NDT.
+<a id="how-are-varying-frequency-rates-handled"></a>
 
-Let's assume that the inputs have the following frequencies:
+### 如何处理不同的消息频率？
 
-| Source | Frequency |
+GNSS 和 NDT 位姿话题的频率可能不同。
+GNSS 位姿话题的频率可能高于 NDT。
+
+假设输入频率如下：
+
+| 来源 | 频率 |
 | ------ | --------- |
-| GNSS   | 200 Hz    |
-| NDT    | 10 Hz     |
+| GNSS | 200 Hz |
+| NDT | 10 Hz |
 
-This package publishes the output poses as they come in, depending on the mode.
+此功能包根据当前模式，在收到相应位姿后立即发布输出。
 
-End result:
+最终结果：
 
-| Mode       | Output Freq |
+| 模式 | 输出频率 |
 | ---------- | ----------- |
-| GNSS Only  | 200 Hz      |
-| GNSS + NDT | 210 Hz      |
-| NDT Only   | 10 Hz       |
+| GNSS Only | 200 Hz |
+| GNSS + NDT | 210 Hz |
+| NDT Only | 10 Hz |
 
-### How and when are the NDT covariance values overwritten?
+<a id="how-and-when-are-the-ndt-covariance-values-overwritten"></a>
 
-| Mode       | Outputs, Covariance                         |
+### 何时以及如何覆盖 NDT 协方差值？
+
+| 模式 | 输出及协方差 |
 | ---------- | ------------------------------------------- |
-| GNSS Only  | GNSS, Unmodified                            |
-| GNSS + NDT | **GNSS:** Unmodified, **NDT:** Interpolated |
-| NDT Only   | NDT, Unmodified                             |
+| GNSS Only | GNSS，不修改 |
+| GNSS + NDT | **GNSS：** 不修改，**NDT：** 插值 |
+| NDT Only | NDT，不修改 |
 
-NDT covariance values overwritten only for the `GNSS + NDT` mode.
+仅在 `GNSS + NDT` 模式下覆盖 NDT 协方差值。
 
-This enables a smooth transition between `GNSS Only` and `NDT Only` modes.
+这使系统能够在 `GNSS Only` 和 `NDT Only` 模式之间平滑过渡。
 
-In this mode, both NDT and GNSS poses are published from this node.
+在此模式下，节点同时发布 NDT 和 GNSS 位姿。
 
-#### NDT covariance calculation
+<a id="ndt-covariance-calculation"></a>
 
-As the `gnss_std_dev` increases within its bounds, `ndt_std_dev` should proportionally decrease within its own bounds.
+#### NDT 协方差计算
 
-To achieve this, we first linearly interpolate:
+当 `gnss_std_dev` 在其边界范围内增大时，`ndt_std_dev` 应在自身边界范围内按比例减小。
 
-- Base value: `gnss_std_dev`
-- Base range: [`threshold_gnss_stddev_xy_bound_lower`, `threshold_gnss_stddev_xy_bound_upper`]
-- Target range: [`ndt_std_dev_bound_lower`, `ndt_std_dev_bound_upper`]
-- Target value: `ndt_std_dev_target`
+为此，首先进行线性插值：
 
-- Final value = `ndt_std_dev_bound_lower` + `ndt_std_dev_bound_upper` - `ndt_std_dev_target` (to get the inverse)
+- 基准值：`gnss_std_dev`
+- 基准范围：[`threshold_gnss_stddev_xy_bound_lower`, `threshold_gnss_stddev_xy_bound_upper`]
+- 目标范围：[`ndt_std_dev_bound_lower`, `ndt_std_dev_bound_upper`]
+- 目标值：`ndt_std_dev_target`
+
+- 最终值 = `ndt_std_dev_bound_lower` + `ndt_std_dev_bound_upper` - `ndt_std_dev_target`（用于反向变化）
 
 <img width="300" src="doc/range_lerp.svg" alt="range to range lerp animation">

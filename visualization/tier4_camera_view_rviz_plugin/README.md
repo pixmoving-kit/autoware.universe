@@ -1,12 +1,16 @@
 # tier4_camera_view_rviz_plugin
 
-## ThirdPersonView Tool
+<a id="thirdpersonview-tool"></a>
 
-Add the `tier4_camera_view_rviz_plugin/ThirdPersonViewTool` tool to the RViz. Push the button, the camera will focus on the vehicle and set the target frame to `base_link`. Short cut key 'o'.
+## ThirdPersonView 工具
 
-## BirdEyeView Tool
+在 RViz 中添加 `tier4_camera_view_rviz_plugin/ThirdPersonViewTool` 工具。点击按钮后，相机会聚焦于车辆，并将目标坐标系设为 `base_link`。快捷键为 'o'。
 
-Add the `tier4_camera_view_rviz_plugin/BirdEyeViewTool` tool to the RViz. Push the button, the camera will turn to the BEV view, the target frame is consistent with the latest frame. Short cut key 'r'.
+<a id="birdeyeview-tool"></a>
+
+## BirdEyeView 工具
+
+在 RViz 中添加 `tier4_camera_view_rviz_plugin/BirdEyeViewTool` 工具。点击按钮后，相机会切换到鸟瞰视图（BEV），目标坐标系保持为最近使用的坐标系。快捷键为 'r'。
 
 ## Material Design Icons
 

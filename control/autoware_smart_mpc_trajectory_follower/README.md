@@ -5,11 +5,13 @@
 </p>
 <!-- cspell: ignore numba ipynb LSTM -->
 
-# Smart MPC Trajectory Follower
+<a id="smart-mpc-trajectory-follower"></a>
 
-Smart MPC (Model Predictive Control) is a control algorithm that combines model predictive control and machine learning. While inheriting the advantages of model predictive control, it solves its disadvantage of modeling difficulty with a data-driven method using machine learning.
+# Smart MPC 轨迹跟踪器
 
-This technology makes it relatively easy to operate model predictive control, which is expensive to implement, as long as an environment for collecting data can be prepared.
+Smart MPC（模型预测控制）是一种结合模型预测控制与机器学习的控制算法。它继承了模型预测控制的优点，同时利用基于机器学习的数据驱动方法解决建模困难的问题。
+
+只要能够准备好数据采集环境，这项技术就能使原本实现成本较高的模型预测控制更容易投入使用。
 
 <p align="center">
   <a href="https://youtu.be/j7bgK8m4-zg?si=p3ipJQy_p-5AJHOP)">
@@ -17,56 +19,64 @@ This technology makes it relatively easy to operate model predictive control, wh
   </a>
 </p>
 
-## Requirements
+<a id="requirements"></a>
 
-It's recommended to install these in a virtual environment.
+## 需求
+
+建议在虚拟环境中安装这些依赖。
 
 ```bash
 pip3 install numba==0.58.1 GPy
 ```
 
-## Provided features
+<a id="provided-features"></a>
 
-This package provides smart MPC logic for path-following control as well as mechanisms for learning and evaluation. These features are described below.
+## 提供的功能
 
-### Trajectory following control based on iLQR/MPPI
+本功能包提供用于路径跟踪控制的 Smart MPC 逻辑，以及学习和评估机制。下文介绍这些功能。
 
-The control mode can be selected from "ilqr", "mppi", or "mppi_ilqr", and can be set as `mpc_parameter:system:mode` in [mpc_param.yaml](./autoware_smart_mpc_trajectory_follower/param/mpc_param.yaml).
-In "mppi_ilqr" mode, the initial value of iLQR is given by the MPPI solution.
+<a id="trajectory-following-control-based-on-ilqrmppi"></a>
+
+### 基于 iLQR/MPPI 的轨迹跟踪控制
+
+控制模式可选择 "ilqr"、"mppi" 或 "mppi_ilqr"，通过 [mpc_param.yaml](./autoware_smart_mpc_trajectory_follower/param/mpc_param.yaml) 中的 `mpc_parameter:system:mode` 设置。
+在 "mppi_ilqr" 模式下，MPPI 的解用作 iLQR 的初始值。
 
 > [!NOTE]
-> With the default settings, the performance of "mppi" mode is limited due to an insufficient number of samples. This issue is being addressed with ongoing work to introduce GPU support.
+> 默认设置下，由于采样数量不足，"mppi" 模式的性能受限。目前正在通过引入 GPU 支持来解决此问题。
 
-To perform a simulation, run the following command:
+要运行仿真，请执行以下命令：
 
 ```bash
 ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_data/maps/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit trajectory_follower_mode:=smart_mpc_trajectory_follower
 ```
 
 > [!NOTE]
-> When running with the nominal model set in [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml), set `trained_model_parameter:control_application:use_trained_model` to `false` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml). To run using the trained model, set `trained_model_parameter:control_application:use_trained_model` to `true`, but the trained model must have been generated according to the following procedure.
+> 使用 [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml) 中设置的标称模型运行时，请将 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:control_application:use_trained_model` 设为 `false`。使用训练后的模型运行时，将 `trained_model_parameter:control_application:use_trained_model` 设为 `true`，但必须先按以下流程生成训练模型。
 
-### Training of model and reflection in control
+<a id="training-of-model-and-reflection-in-control"></a>
 
-To obtain training data, start autoware, perform a drive, and record rosbag data with the following commands.
+### 模型训练与控制应用
+
+要获取训练数据，请启动 autoware，进行驾驶，并使用以下命令录制 rosbag 数据。
 
 ```bash
 ros2 bag record /localization/kinematic_state /localization/acceleration /vehicle/status/steering_status /control/command/control_cmd /control/trajectory_follower/control_cmd /control/trajectory_follower/lane_departure_checker_node/debug/deviation/lateral /control/trajectory_follower/lane_departure_checker_node/debug/deviation/yaw /system/operation_mode/state /vehicle/status/control_mode /sensing/imu/imu_data /debug_mpc_x_des /debug_mpc_y_des /debug_mpc_v_des /debug_mpc_yaw_des /debug_mpc_acc_des /debug_mpc_steer_des /debug_mpc_X_des_converted /debug_mpc_x_current /debug_mpc_error_prediction /debug_mpc_max_trajectory_err /debug_mpc_emergency_stop_mode /debug_mpc_goal_stop_mode /debug_mpc_total_ctrl_time /debug_mpc_calc_u_opt_time
 ```
 
-Move [rosbag2.bash](./autoware_smart_mpc_trajectory_follower/training_and_data_check/rosbag2.bash) to the rosbag directory recorded above and execute the following command on the directory
+将 [rosbag2.bash](./autoware_smart_mpc_trajectory_follower/training_and_data_check/rosbag2.bash) 移至上述录制的 rosbag 目录，并在该目录下执行以下命令。
 
 ```bash
 bash rosbag2.bash
 ```
 
-This converts rosbag data into CSV format for training models.
+这会将 rosbag 数据转换为用于模型训练的 CSV 格式。
 
 > [!NOTE]
-> Note that a large number of terminals are automatically opened at runtime, but they are automatically closed after rosbag data conversion is completed.
-> From the time you begin this process until all terminals are closed, autoware should not be running.
+> 请注意，运行时会自动打开大量终端，rosbag 数据转换完成后会自动关闭。
+> 从开始此过程直到所有终端关闭，autoware 都不应运行。
 
-Instead, the same result can be obtained by executing the following command in a python environment:
+也可以在 Python 环境中执行以下命令，得到相同结果：
 
 ```python
 from autoware_smart_mpc_trajectory_follower.training_and_data_check import train_drive_NN_model
@@ -74,14 +84,14 @@ model_trainer = train_drive_NN_model.train_drive_NN_model()
 model_trainer.transform_rosbag_to_csv(rosbag_dir)
 ```
 
-Here, `rosbag_dir` represents the rosbag directory.
-At this time, all CSV files in `rosbag_dir` are automatically deleted first.
+其中，`rosbag_dir` 表示 rosbag 目录。
+此时，首先会自动删除 `rosbag_dir` 中的所有 CSV 文件。
 
-We move on to an explanation of how the model is trained.
-If `trained_model_parameter:memory_for_training:use_memory_for_training` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) is set to `true`, training is performed on models that include LSTM, and if it is set to `false`, training is performed on models that do not include LSTM.
-When using LSTM, cell states and hidden states are updated based on historical time series data and reflected in the prediction.
+接下来介绍模型训练方法。
+如果将 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:memory_for_training:use_memory_for_training` 设为 `true`，则训练包含 LSTM 的模型；设为 `false` 时，则训练不包含 LSTM 的模型。
+使用 LSTM 时，根据历史时间序列数据更新细胞状态和隐藏状态，并将其用于预测。
 
-The paths of the rosbag directories used for training and validation, `dir_0`, `dir_1`, `dir_2`,..., `dir_val_0`, `dir_val_1`, `dir_val_2`,... and the directory `save_dir` where you save the models, the model can be saved in the python environment as follows:
+给定用于训练和验证的 rosbag 目录路径 `dir_0`、`dir_1`、`dir_2`、……、`dir_val_0`、`dir_val_1`、`dir_val_2`、……，以及保存模型的目录 `save_dir`，可以在 Python 环境中按以下方式保存模型：
 
 ```python
 from autoware_smart_mpc_trajectory_follower.training_and_data_check import train_drive_NN_model
@@ -98,168 +108,174 @@ model_trainer.get_trained_model()
 model_trainer.save_models(save_dir)
 ```
 
-If `add_mode` is not specified or validation data is not added, the training data is split to be used for training and validation.
+如果未指定 `add_mode`，或未添加验证数据，则会拆分训练数据，分别用于训练和验证。
 
-After performing the polynomial regression, the NN can be trained on the residuals as follows:
+执行多项式回归后，可以按以下方式针对残差训练神经网络：
 
 ```python
 model_trainer.get_trained_model(use_polynomial_reg=True)
 ```
 
 > [!NOTE]
-> In the default setting, regression is performed by several preselected polynomials.
-> When `use_selected_polynomial=False` is set as the argument of get_trained_model, the `deg` argument allows setting the maximum degree of the polynomial to be used.
+> 默认设置下，使用若干预先选定的多项式进行回归。
+> 将 get_trained_model 的参数 `use_selected_polynomial=False` 时，可以通过 `deg` 设置使用的多项式最高次数。
 
-If only polynomial regression is performed and no NN model is used, run the following command:
+如果只进行多项式回归，不使用神经网络模型，请执行以下命令：
 
 ```python
 model_trainer.get_trained_model(use_polynomial_reg=True,force_NN_model_to_zero=True)
 ```
 
-Move `model_for_test_drive.pth` and `polynomial_reg_info.npz` saved in `save_dir` to the home directory and set `trained_model_parameter:control_application:use_trained_model` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) to `true` to reflect the trained model in the control.
+将 `save_dir` 中保存的 `model_for_test_drive.pth` 和 `polynomial_reg_info.npz` 移至用户主目录，并将 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:control_application:use_trained_model` 设为 `true`，即可将训练模型用于控制。
 
-### Performance evaluation
+<a id="performance-evaluation"></a>
 
-Here, as an example, we describe the verification of the adaptive performance when the wheel base of the sample_vehicle is 2.79 m, but an incorrect value of 2.0 m is given to the controller side.
-To give the controller 2.0 m as the wheel base, set the value of `nominal_parameter:vehicle_info:wheel_base` in [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml) to 2.0, and run the following command:
+### 性能评估
+
+这里以 sample_vehicle 的实际轴距为 2.79 m、但控制器错误使用 2.0 m 的情况为例，说明如何验证自适应性能。
+要让控制器使用 2.0 m 轴距，请将 [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml) 中的 `nominal_parameter:vehicle_info:wheel_base` 设为 2.0，并执行以下命令：
 
 ```bash
 python3 -m smart_mpc_trajectory_follower.clear_pycache
 ```
 
-#### Test on autoware
+<a id="test-on-autoware"></a>
 
-To perform a control test on autoware with the nominal model before training, make sure that `trained_model_parameter:control_application:use_trained_model` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) is `false` and launch autoware in the manner described in "Trajectory following control based on iLQR/MPPI". This time, the following route will be used for the test:
+#### 在 autoware 中测试
+
+要在 autoware 中使用训练前的标称模型进行控制测试，请确认 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:control_application:use_trained_model` 为 `false`，再按“基于 iLQR/MPPI 的轨迹跟踪控制”中的方法启动 autoware。本次测试使用以下路线：
 
 <p><img src="images/test_route.png" width=712pix></p>
 
-Record rosbag and train the model in the manner described in "Training of model and reflection in control", and move the generated files `model_for_test_drive.pth` and `polynomial_reg_info.npz` to the home directory.
-Sample models, which work under the condition that`trained_model_parameter:memory_for_training:use_memory_for_training` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) is set to `true`, can be obtained at [sample_models/wheel_base_changed](./sample_models/wheel_base_changed/).
+按“模型训练与控制应用”中的方法录制 rosbag 并训练模型，将生成的 `model_for_test_drive.pth` 和 `polynomial_reg_info.npz` 移至用户主目录。
+示例模型可从 [sample_models/wheel_base_changed](./sample_models/wheel_base_changed/) 获取，它要求 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:memory_for_training:use_memory_for_training` 设为 `true`。
 
 > [!NOTE]
-> Although the data used for training is small, for the sake of simplicity, we will see how much performance can be improved with this amount of data.
+> 虽然训练数据较少，但为简化演示，我们将观察这点数据能够带来多大的性能提升。
 
-To control using the trained model obtained here, set `trained_model_parameter:control_application:use_trained_model` to `true`, start autoware in the same way, and drive the same route recording rosbag.
-After the driving is complete, convert the rosbag file to CSV format using the method described in "Training of model and reflection in control".
-A plot of the lateral deviation is obtained by running the `lateral_error_visualize` function in `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/training_and_data_check/data_checker.ipynb` for the nominal and training model rosbag files `rosbag_nominal` and `rosbag_trained`, respectively, as follows:
+要使用此处得到的训练模型控制车辆，请将 `trained_model_parameter:control_application:use_trained_model` 设为 `true`，以相同方式启动 autoware，沿同一路线行驶并录制 rosbag。
+行驶完成后，按“模型训练与控制应用”中的方法将 rosbag 文件转换为 CSV 格式。
+对标称模型和训练模型的 rosbag 文件 `rosbag_nominal` 与 `rosbag_trained`，分别按以下方式运行 `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/training_and_data_check/data_checker.ipynb` 中的 `lateral_error_visualize` 函数，即可绘制横向偏差：
 
 ```python
 lateral_error_visualize(dir_name=rosbag_nominal,ylim=[-1.2,1.2])
 lateral_error_visualize(dir_name=rosbag_trained,ylim=[-1.2,1.2])
 ```
 
-The following results were obtained.
+得到以下结果。
 
 <div style="display: flex; justify-content: center; align-items: center;">
     <img src="images/lateral_error_nominal_model.png">
     <img src="images/lateral_error_trained_model.png">
 </div>
 
-#### Test on python simulator
+<a id="test-on-python-simulator"></a>
 
-First, to give wheel base 2.79 m in the python simulator, create the following file and save it in `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator` with the name `sim_setting.json`:
+#### 在 Python 仿真器中测试
+
+首先，为使 Python 仿真器使用 2.79 m 轴距，创建以下文件，以 `sim_setting.json` 为名保存在 `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator` 中：
 
 ```json
 { "wheel_base": 2.79 }
 ```
 
-Next, after moving to `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator`, run the following commands to test the slalom driving on the python simulator with the nominal control:
+然后进入 `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator`，执行以下命令，在 Python 仿真器中使用标称控制测试蛇形行驶：
 
 ```bash
 python3 run_python_simulator.py nominal_test
 ```
 
-The result of the driving is stored in `test_python_nominal_sim`.
+行驶结果保存在 `test_python_nominal_sim` 中。
 
-The following results were obtained.
+得到以下结果。
 
 <p style="text-align: center;">
     <img src="images/python_sim_lateral_error_nominal_model_wheel_base.png" width="712px">
 </p>
 
-The center of the upper row represents the lateral deviation.
+上排中间的图表示横向偏差。
 
-Run the following commands to perform training using figure eight driving data under the control of pure pursuit.
+执行以下命令，使用纯追踪控制下的“8”字行驶数据进行训练。
 
-To perform training using a figure eight driving and driving based on the obtained model, run the following commands:
+要使用“8”字行驶进行训练，并基于得到的模型行驶，请执行以下命令：
 
 ```bash
 python3 run_python_simulator.py
 ```
 
-The result of the driving is stored in `test_python_trined_sim`.
+行驶结果保存在 `test_python_trined_sim` 中。
 
-When `trained_model_parameter:memory_for_training:use_memory_for_training` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) is set to `true`, the following results were obtained.
+将 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:memory_for_training:use_memory_for_training` 设为 `true` 时，得到以下结果。
 
 <p style="text-align: center;">
     <img src="images/python_sim_lateral_error_trained_model_lstm_wheel_base.png" width="712px">
 </p>
 
-When `trained_model_parameter:memory_for_training:use_memory_for_training` in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) is set to `false`, the following results were obtained.
+将 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中的 `trained_model_parameter:memory_for_training:use_memory_for_training` 设为 `false` 时，得到以下结果。
 
 <p style="text-align: center;">
     <img src="images/python_sim_lateral_error_trained_model_wheel_base.png" width="712px">
 </p>
 
-It can be seen that the lateral deviation has improved significantly.
-However, the difference in driving with and without LSTM is not very apparent.
+可以看到，横向偏差显著改善。
+但是否使用 LSTM 的行驶差异并不明显。
 
-To see the difference, for example, we can experiment with parameters such as steer_time_delay.
+为观察差异，可以尝试调整 steer_time_delay 等参数。
 
-First, to restore nominal model settings to default values, set the value of `nominal_parameter:vehicle_info:wheel_base` in [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml) to 2.79, and run the following command:
+首先，将 [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml) 中的 `nominal_parameter:vehicle_info:wheel_base` 设为 2.79，恢复标称模型的默认设置，并执行以下命令：
 
 ```bash
 python3 -m smart_mpc_trajectory_follower.clear_pycache
 ```
 
-Next, modify `sim_setting.json` as follows:
+然后按以下方式修改 `sim_setting.json`：
 
 ```json
 { "steer_time_delay": 1.01 }
 ```
 
-In this way, an experiment is performed when `steer_time_delay` is set to 1.01 sec.
+这样即可在 `steer_time_delay` 为 1.01 秒的条件下进行实验。
 
-The result of the driving using the nominal model is as follows:
+使用标称模型的行驶结果如下：
 
 <p style="text-align: center;">
     <img src="images/python_sim_lateral_error_nominal_model_steer_time_delay.png" width="712px">
 </p>
 
-The result of the driving using the trained model with LSTM is as follows:
+使用包含 LSTM 的训练模型的行驶结果如下：
 
 <p style="text-align: center;">
     <img src="images/python_sim_lateral_error_trained_model_lstm_steer_time_delay.png" width="712px">
 </p>
 
-The result of the driving using the trained model without LSTM is as follows:
+使用不包含 LSTM 的训练模型的行驶结果如下：
 
 <p style="text-align: center;">
     <img src="images/python_sim_lateral_error_trained_model_steer_time_delay.png" width="712px">
 </p>
 
-It can be seen that the performance with the model that includes LSTM is significantly better than with the model that does not.
+可以看到，包含 LSTM 的模型性能明显优于不包含 LSTM 的模型。
 
-The parameters that can be passed to the python simulator are as follows.
+可传给 Python 仿真器的参数如下。
 
-| Parameter                | Type        | Description                                                                                                                                                                                                                                                                                  |
+| 参数 | 类型 | 说明 |
 | ------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| steer_bias               | float       | steer bias [rad]                                                                                                                                                                                                                                                                             |
-| steer_rate_lim           | float       | steer rate limit [rad/s]                                                                                                                                                                                                                                                                     |
-| vel_rate_lim             | float       | acceleration limit [m/s^2]                                                                                                                                                                                                                                                                   |
-| wheel_base               | float       | wheel base [m]                                                                                                                                                                                                                                                                               |
-| steer_dead_band          | float       | steer dead band [rad]                                                                                                                                                                                                                                                                        |
-| adaptive_gear_ratio_coef | list[float] | List of floats of length 6 specifying information on speed-dependent gear ratios from tire angle to steering wheel angle.                                                                                                                                                                    |
-| acc_time_delay           | float       | acceleration time delay [s]                                                                                                                                                                                                                                                                  |
-| steer_time_delay         | float       | steer time delay [s]                                                                                                                                                                                                                                                                         |
-| acc_time_constant        | float       | acceleration time constant [s]                                                                                                                                                                                                                                                               |
-| steer_time_constant      | float       | steer time constant [s]                                                                                                                                                                                                                                                                      |
-| accel_map_scale          | float       | Parameter that magnifies the corresponding distortion from acceleration input values to actual acceleration realizations. <br> Correspondence information is kept in `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator/accel_map.csv`. |
-| acc_scaling              | float       | acceleration scaling                                                                                                                                                                                                                                                                         |
-| steer_scaling            | float       | steer scaling                                                                                                                                                                                                                                                                                |
-| vehicle_type             | int         | Take values from 0 to 4 for pre-designed vehicle types. <br> A description of each vehicle type is given below.                                                                                                                                                                              |
+| steer_bias | float | 转向偏置 [rad] |
+| steer_rate_lim | float | 转向角速度限制 [rad/s] |
+| vel_rate_lim | float | 加速度限制 [m/s^2] |
+| wheel_base | float | 轴距 [m] |
+| steer_dead_band | float | 转向死区 [rad] |
+| adaptive_gear_ratio_coef | list[float] | 长度为 6 的浮点数列表，指定从轮胎转角到方向盘转角的随车速变化的传动比信息。 |
+| acc_time_delay | float | 加速度时间延迟 [s] |
+| steer_time_delay | float | 转向时间延迟 [s] |
+| acc_time_constant | float | 加速度时间常数 [s] |
+| steer_time_constant | float | 转向时间常数 [s] |
+| accel_map_scale | float | 放大加速度输入值与实际加速度之间映射失真的参数。<br> 映射信息保存在 `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator/accel_map.csv` 中。 |
+| acc_scaling | float | 加速度缩放系数 |
+| steer_scaling | float | 转向缩放系数 |
+| vehicle_type | int | 取值为 0 至 4，对应预定义车辆类型。<br> 各车辆类型的说明见下文。 |
 
-For example, to give the simulation side 0.01 [rad] of steer bias and 0.001 [rad] of steer dead band, edit the `sim_setting.json` as follows.
+例如，要在仿真端设置 0.01 [rad] 的转向偏置和 0.001 [rad] 的转向死区，请按以下方式编辑 `sim_setting.json`。
 
 ```json
 { "steer_bias": 0.01, "steer_dead_band": 0.001 }
@@ -267,9 +283,9 @@ For example, to give the simulation side 0.01 [rad] of steer bias and 0.001 [rad
 
 ##### vehicle_type_0
 
-This vehicle type matches the default vehicle type used in the control.
+此车辆类型与控制中使用的默认车辆类型一致。
 
-| Parameter           | value |
+| 参数 | 值 |
 | ------------------- | ----- |
 | wheel_base          | 2.79  |
 | acc_time_delay      | 0.1   |
@@ -280,9 +296,9 @@ This vehicle type matches the default vehicle type used in the control.
 
 ##### vehicle_type_1
 
-This vehicle type is intended for a heavy bus.
+此车辆类型面向重型客车。
 
-| Parameter           | value |
+| 参数 | 值 |
 | ------------------- | ----- |
 | wheel_base          | 4.76  |
 | acc_time_delay      | 1.0   |
@@ -293,9 +309,9 @@ This vehicle type is intended for a heavy bus.
 
 ##### vehicle_type_2
 
-This vehicle type is intended for a light bus.
+此车辆类型面向轻型客车。
 
-| Parameter           | value |
+| 参数 | 值 |
 | ------------------- | ----- |
 | wheel_base          | 4.76  |
 | acc_time_delay      | 0.5   |
@@ -306,9 +322,9 @@ This vehicle type is intended for a light bus.
 
 ##### vehicle_type_3
 
-This vehicle type is intended for a small vehicle.
+此车辆类型面向小型车辆。
 
-| Parameter           | value |
+| 参数 | 值 |
 | ------------------- | ----- |
 | wheel_base          | 1.335 |
 | acc_time_delay      | 0.3   |
@@ -319,9 +335,9 @@ This vehicle type is intended for a small vehicle.
 
 ##### vehicle_type_4
 
-This vehicle type is intended for a small robot.
+此车辆类型面向小型机器人。
 
-| Parameter           | value |
+| 参数 | 值 |
 | ------------------- | ----- |
 | wheel_base          | 0.395 |
 | acc_time_delay      | 0.2   |
@@ -330,126 +346,138 @@ This vehicle type is intended for a small robot.
 | steer_time_constant | 0.2   |
 | acc_scaling         | 1.0   |
 
-#### Auto test on python simulator
+<a id="auto-test-on-python-simulator"></a>
 
-Here, we describe a method for testing adaptive performance by giving the simulation side a predefined range of model parameters while the control side is given constant model parameters.
+#### 在 Python 仿真器中自动测试
 
-To run a driving experiment within the parameter change range set in [run_sim.py](./autoware_smart_mpc_trajectory_follower/python_simulator/run_sim.py), for example, move to `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator` and run the following command:
+本节介绍如何在控制端保持模型参数不变、在仿真端按预设范围改变模型参数，以测试自适应性能。
+
+要在 [run_sim.py](./autoware_smart_mpc_trajectory_follower/python_simulator/run_sim.py) 设定的参数变化范围内进行行驶实验，例如可进入 `control/autoware_smart_mpc_trajectory_follower/autoware_smart_mpc_trajectory_follower/python_simulator`，执行以下命令：
 
 ```bash
 python3 run_sim.py --param_name steer_bias
 ```
 
-Here we described the experimental procedure for steer bias, and the same method can be used for other parameters.
+这里介绍了转向偏置的实验流程，其他参数也可以使用相同方法。
 
-To run the test for all parameters except limits at once, run the following command:
+要一次性测试除限制参数之外的所有参数，请执行以下命令：
 
 ```bash
 python3 run_auto_test.py
 ```
 
-The results are stored in the `auto_test` directory.
-After the executions were completed, the following results were obtained by running [plot_auto_test_result.ipynb](./autoware_smart_mpc_trajectory_follower/python_simulator/plot_auto_test_result.ipynb):
+结果保存在 `auto_test` 目录中。
+执行完成后，运行 [plot_auto_test_result.ipynb](./autoware_smart_mpc_trajectory_follower/python_simulator/plot_auto_test_result.ipynb)，得到以下结果：
 
 <p style="text-align: center;">
     <img src="images/proxima_test_result_with_lstm.png" width="712px">
 </p>
 
-The orange line shows the intermediate model trained using pure pursuit figure eight drive, and the blue line shows the final model trained using data from both the intermediate model and the figure eight drive.
-In most cases, sufficient performance is obtained, but for `vehicle_type_1`, which is intended for a heavy bus, a lateral deviation of about 2 m was observed, which is not satisfactory.
+橙线表示使用纯追踪“8”字行驶数据训练出的中间模型；蓝线表示结合中间模型行驶数据和“8”字行驶数据训练出的最终模型。
+大多数情况下性能足够好，但面向重型客车的 `vehicle_type_1` 出现了约 2 m 的横向偏差，效果不理想。
 
-In `run_sim.py`, the following parameters can be set:
+可以在 `run_sim.py` 中设置以下参数：
 
-| Parameter                 | Type               | Description                                                                                                                                                                                                                                                                                                                                                               |
+| 参数 | 类型 | 说明 |
 | ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| USE_TRAINED_MODEL_DIFF    | bool               | Whether the derivative of the trained model is reflected in the control                                                                                                                                                                                                                                                                                                   |
-| DATA_COLLECTION_MODE      | DataCollectionMode | Which method will be used to collect the training data <br> "DataCollectionMode.ff": Straight line driving with feed-forward input <br> "DataCollectionMode.pp": Figure eight driving with pure pursuit control <br> "DataCollectionMode.mpc": Slalom driving with mpc                                                                                                    |
-| USE_POLYNOMIAL_REGRESSION | bool               | Whether to perform polynomial regression before NN                                                                                                                                                                                                                                                                                                                        |
-| USE_SELECTED_POLYNOMIAL   | bool               | When USE_POLYNOMIAL_REGRESSION is True, perform polynomial regression using only some preselected polynomials. <br> The choice of polynomials is intended to be able to absorb the contribution of some parameter shifts based on the nominal model of the vehicle.                                                                                                       |
-| FORCE_NN_MODEL_TO_ZERO    | bool               | Whether to force the NN model to zero (i.e., erase the contribution of the NN model). <br> When USE_POLYNOMIAL_REGRESSION is True, setting FORCE_MODEL_TO_ZERO to True allows the control to reflect the results of polynomial regression only, without using NN models.                                                                                                  |
-| FIT_INTERCEPT             | bool               | Whether to include bias in polynomial regression. <br> If it is False, perform the regression with a polynomial of the first degree or higher.                                                                                                                                                                                                                            |
-| USE_INTERCEPT             | bool               | When a polynomial regression including bias is performed, whether to use or discard the resulting bias information. <br> It is meaningful only if FIT_INTERCEPT is True.<br> If it is False, discard the bias in the polynomial regression in the hope that the NN model can remove the bias term, even if the polynomial regression is performed with the bias included. |
+| USE_TRAINED_MODEL_DIFF | bool | 是否在控制中使用训练模型的导数 |
+| DATA_COLLECTION_MODE | DataCollectionMode | 采集训练数据所用的方法。<br> "DataCollectionMode.ff"：使用前馈输入直线行驶。<br> "DataCollectionMode.pp"：使用纯追踪控制进行“8”字行驶。<br> "DataCollectionMode.mpc"：使用 MPC 进行蛇形行驶。 |
+| USE_POLYNOMIAL_REGRESSION | bool | 是否在神经网络训练前进行多项式回归 |
+| USE_SELECTED_POLYNOMIAL | bool | USE_POLYNOMIAL_REGRESSION 为 True 时，是否仅使用部分预选多项式进行回归。<br> 这些多项式的选择旨在基于车辆标称模型吸收某些参数偏移的影响。 |
+| FORCE_NN_MODEL_TO_ZERO | bool | 是否强制将神经网络模型置零（即消除神经网络模型的贡献）。<br> USE_POLYNOMIAL_REGRESSION 为 True 时，将 FORCE_MODEL_TO_ZERO 设为 True，可使控制仅使用多项式回归结果，而不使用神经网络模型。 |
+| FIT_INTERCEPT | bool | 多项式回归是否包含偏置。<br> 若为 False，则使用一次或更高次的多项式进行回归。 |
+| USE_INTERCEPT | bool | 执行包含偏置的多项式回归时，是否使用所得偏置信息。<br> 仅当 FIT_INTERCEPT 为 True 时有意义。<br> 若为 False，即使回归时包含偏置，也会丢弃多项式回归中的偏置，期望由神经网络模型消除偏置项。 |
 
 > [!NOTE]
-> When `run_sim.py` is run, the `use_trained_model_diff` set in `run_sim.py` takes precedence over the `trained_model_parameter:control_application:use_trained_model_diff` set in [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml).
+> 运行 `run_sim.py` 时，其中设置的 `use_trained_model_diff` 优先于 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 中设置的 `trained_model_parameter:control_application:use_trained_model_diff`。
 
-#### Kernel density estimation of pure pursuit driving data
+<a id="kernel-density-estimation-of-pure-pursuit-driving-data"></a>
 
-The distribution of data obtained from pure pursuit runs can be displayed using Kernel density estimation. To do this, run [density_estimation.ipynb](./autoware_smart_mpc_trajectory_follower/python_simulator/density_estimation.ipynb).
+#### 纯追踪行驶数据的核密度估计
 
-The correlation between the minimum value of the density estimate and the lateral deviation of the run results is low. A scalar indicator that better predicts the value of lateral deviation is under development.
+可以使用核密度估计展示纯追踪行驶数据的分布。为此，请运行 [density_estimation.ipynb](./autoware_smart_mpc_trajectory_follower/python_simulator/density_estimation.ipynb)。
 
-## Change of nominal parameters and their reloading
+密度估计的最小值与行驶结果的横向偏差相关性较低。目前正在开发能够更好预测横向偏差的标量指标。
 
-The nominal parameters of vehicle model can be changed by editing the file [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml).
-After changing the nominal parameters, the cache must be deleted by running the following command:
+<a id="change-of-nominal-parameters-and-their-reloading"></a>
+
+## 修改并重新加载标称参数
+
+可以通过编辑 [nominal_param.yaml](./autoware_smart_mpc_trajectory_follower/param/nominal_param.yaml) 修改车辆模型的标称参数。
+修改标称参数后，必须运行以下命令删除缓存：
 
 ```bash
 python3 -m smart_mpc_trajectory_follower.clear_pycache
 ```
 
-The nominal parameters include the following:
+标称参数包括：
 
-| Parameter                                        | Type  | Description                    |
+| 参数 | 类型 | 说明 |
 | ------------------------------------------------ | ----- | ------------------------------ |
-| nominal_parameter:vehicle_info:wheel_base        | float | wheel base [m]                 |
-| nominal_parameter:acceleration:acc_time_delay    | float | acceleration time delay [s]    |
-| nominal_parameter:acceleration:acc_time_constant | float | acceleration time constant [s] |
-| nominal_parameter:steering:steer_time_delay      | float | steer time delay [s]           |
-| nominal_parameter:steering:steer_time_constant   | float | steer time constant [s]        |
+| nominal_parameter:vehicle_info:wheel_base | float | 轴距 [m] |
+| nominal_parameter:acceleration:acc_time_delay | float | 加速度时间延迟 [s] |
+| nominal_parameter:acceleration:acc_time_constant | float | 加速度时间常数 [s] |
+| nominal_parameter:steering:steer_time_delay | float | 转向时间延迟 [s] |
+| nominal_parameter:steering:steer_time_constant | float | 转向时间常数 [s] |
 
-## Change of control parameters and their reloading
+<a id="change-of-control-parameters-and-their-reloading"></a>
 
-The control parameters can be changed by editing files [mpc_param.yaml](./autoware_smart_mpc_trajectory_follower/param/mpc_param.yaml) and [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml).
-Although it is possible to reflect parameter changes by restarting autoware, the following command allows us to do so without leaving autoware running:
+## 修改并重新加载控制参数
+
+可以通过编辑 [mpc_param.yaml](./autoware_smart_mpc_trajectory_follower/param/mpc_param.yaml) 和 [trained_model_param.yaml](./autoware_smart_mpc_trajectory_follower/param/trained_model_param.yaml) 修改控制参数。
+可以通过重启 autoware 使参数修改生效，也可以执行以下命令应用修改：
 
 ```bash
 ros2 topic pub /pympc_reload_mpc_param_trigger std_msgs/msg/String "data: ''" --once
 ```
 
-The main parameters among the control parameters are as follows.
+主要控制参数如下。
 
 ### `mpc_param.yaml`
 
-| Parameter                                  | Type        | Description                                                                                                                                                                                                                                        |
+| 参数 | 类型 | 说明 |
 | ------------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| mpc_parameter:system:mode                  | str         | control mode <br>"ilqr": iLQR mode <br> "mppi": MPPI mode <br> "mppi_ilqr": the initial value of iLQR is given by the MPPI solution.                                                                                                               |
-| mpc_parameter:cost_parameters:Q            | list[float] | Stage cost for states. <br> List of length 8, in order: straight deviation, lateral deviation, velocity deviation, yaw angle deviation, acceleration deviation, steer deviation, acceleration input deviation, steer input deviation cost weights. |
-| mpc_parameter:cost_parameters:Q_c          | list[float] | Cost in the horizon corresponding to the following timing_Q_c for the states. <br> The correspondence of the components of the list is the same as for Q.                                                                                          |
-| mpc_parameter:cost_parameters:Q_f          | list[float] | Termination cost for the states. <br> The correspondence of the components of the list is the same as for Q.                                                                                                                                       |
-| mpc_parameter:cost_parameters:R            | list[float] | A list of length 2 where R[0] is weight of cost for the change rate of acceleration input value and R[1] is weight of cost for the change rate of steer input value.                                                                               |
-| mpc_parameter:mpc_setting:timing_Q_c       | list[int]   | Horizon numbers such that the stage cost for the states is set to Q_c.                                                                                                                                                                             |
-| mpc_parameter:compensation:acc_fb_decay    | float       | Coefficient of damping in integrating the error between the observed and predicted acceleration values in the compensator outside the MPC.                                                                                                         |
-| mpc_parameter:compensation:acc_fb_gain     | float       | Gain of acceleration compensation.                                                                                                                                                                                                                 |
-| mpc_parameter:compensation:max_error_acc   | float       | Maximum acceleration compensation (m/s^2)                                                                                                                                                                                                          |
-| mpc_parameter:compensation:steer_fb_decay  | float       | Coefficient of damping in integrating the error between the observed and predicted steering values in the compensator outside the MPC.                                                                                                             |
-| mpc_parameter:compensation:steer_fb_gain   | float       | Gain of steering compensation.                                                                                                                                                                                                                     |
-| mpc_parameter:compensation:max_error_steer | float       | Maximum steering compensation (rad)                                                                                                                                                                                                                |
+| mpc_parameter:system:mode | str | 控制模式。<br> "ilqr"：iLQR 模式。<br> "mppi"：MPPI 模式。<br> "mppi_ilqr"：使用 MPPI 的解作为 iLQR 初始值。 |
+| mpc_parameter:cost_parameters:Q | list[float] | 状态的阶段代价。<br> 长度为 8 的列表，依次为纵向偏差、横向偏差、速度偏差、偏航角偏差、加速度偏差、转向偏差、加速度输入偏差、转向输入偏差的代价权重。 |
+| mpc_parameter:cost_parameters:Q_c | list[float] | 状态在下述 timing_Q_c 对应预测步上的代价。<br> 列表各分量的对应关系与 Q 相同。 |
+| mpc_parameter:cost_parameters:Q_f | list[float] | 状态的终端代价。<br> 列表各分量的对应关系与 Q 相同。 |
+| mpc_parameter:cost_parameters:R | list[float] | 长度为 2 的列表，R[0] 是加速度输入变化率的代价权重，R[1] 是转向输入变化率的代价权重。 |
+| mpc_parameter:mpc_setting:timing_Q_c | list[int] | 将状态阶段代价设为 Q_c 的预测步编号。 |
+| mpc_parameter:compensation:acc_fb_decay | float | MPC 外部补偿器对观测加速度与预测加速度之差积分时的衰减系数。 |
+| mpc_parameter:compensation:acc_fb_gain | float | 加速度补偿增益。 |
+| mpc_parameter:compensation:max_error_acc | float | 最大加速度补偿量（m/s^2） |
+| mpc_parameter:compensation:steer_fb_decay | float | MPC 外部补偿器对观测转向值与预测转向值之差积分时的衰减系数。 |
+| mpc_parameter:compensation:steer_fb_gain | float | 转向补偿增益。 |
+| mpc_parameter:compensation:max_error_steer | float | 最大转向补偿量（rad） |
 
 ### `trained_model_param.yaml`
 
-| Parameter                                                           | Type | Description                                                                                                                                                                                                                                                           |
+| 参数 | 类型 | 说明 |
 | ------------------------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| trained_model_parameter:control_application:use_trained_model       | bool | Whether the trained model is reflected in the control or not.                                                                                                                                                                                                         |
-| trained_model_parameter:control_application:use_trained_model_diff  | bool | Whether the derivative of the trained model is reflected on the control or not. <br> It is meaningful only when use_trained_model is True, and if False, the nominal model is used for the derivative of the dynamics, and trained model is used only for prediction. |
-| trained_model_parameter:memory_for_training:use_memory_for_training | bool | Whether to use the model that includes LSTM for learning or not.                                                                                                                                                                                                      |
-| trained_model_parameter:memory_for_training:use_memory_diff         | bool | Whether the derivative with respect to the cell state and hidden state at the previous time of LSTM is reflected in the control or not.                                                                                                                               |
+| trained_model_parameter:control_application:use_trained_model | bool | 是否在控制中使用训练模型。 |
+| trained_model_parameter:control_application:use_trained_model_diff | bool | 是否在控制中使用训练模型的导数。<br> 仅当 use_trained_model 为 True 时有意义；若为 False，则动力学导数使用标称模型，训练模型仅用于预测。 |
+| trained_model_parameter:memory_for_training:use_memory_for_training | bool | 是否使用包含 LSTM 的模型进行学习。 |
+| trained_model_parameter:memory_for_training:use_memory_diff | bool | 是否在控制中使用相对于 LSTM 上一时刻细胞状态和隐藏状态的导数。 |
 
-## Request to release the slow stop mode
+<a id="request-to-release-the-slow-stop-mode"></a>
 
-If the predicted trajectory deviates too far from the target trajectory, the system enters a slow stop mode and the vehicle stops moving.
-To cancel the slow stop mode and make the vehicle ready to run again, run the following command:
+## 请求解除缓慢停车模式
+
+如果预测轨迹与目标轨迹偏差过大，系统会进入缓慢停车模式，车辆停止运动。
+要取消缓慢停车模式，使车辆重新具备行驶条件，请执行以下命令：
 
 ```bash
 ros2 topic pub /pympc_stop_mode_reset_request std_msgs/msg/String "data: ''" --once
 ```
 
-## Limitation
+<a id="limitation"></a>
 
-- May not be able to start when initial position/posture is far from the target.
+## 局限性
 
-- It may take some time until the end of the planning to compile numba functions at the start of the first control.
+- 初始位置或姿态与目标相差较大时，可能无法起步。
 
-- In the stopping action near the goal our control switches to another simple control law. As a result, the stopping action may not work except near the goal. Stopping is also difficult if the acceleration map is significantly shifted.
+- 首次控制开始时需要编译 numba 函数，因此规划完成前可能需要一些时间。
 
-- If the dynamics deviates too much from the nominal model, as in `vehicle_type_1`, which is intended for heavy buses, it may not be well controlled.
+- 接近目标点停车时，本控制器会切换到另一种简单控制律，因此除目标点附近外，停车功能可能无法正常工作。如果加速度映射存在明显偏移，也很难停车。
+
+- 如果实际动力学与标称模型偏差过大，例如面向重型客车的 `vehicle_type_1`，可能无法实现良好控制。

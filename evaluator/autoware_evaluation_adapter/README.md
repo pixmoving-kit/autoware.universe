@@ -1,6 +1,6 @@
 # autoware_evaluation_adapter
 
-This package provides the following interfaces. Please do not use these as we will create a new evaluation interface in the future.
+此软件包提供以下接口。请勿使用这些接口，后续将创建新的评估接口。
 
 - /api/external/set/engage
 - /api/autoware/set/velocity_limit

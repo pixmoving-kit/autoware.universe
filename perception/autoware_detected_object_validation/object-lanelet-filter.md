@@ -1,65 +1,89 @@
 # object_lanelet_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `object_lanelet_filter` is a node that filters detected object by using vector map.
-The objects only inside of the vector map will be published.
+## 用途
 
-## Inner-workings / Algorithms
+`object_lanelet_filter` 节点使用矢量地图过滤检测目标。
+仅发布位于矢量地图内部的目标。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制／算法
 
-| Name               | Type                                             | Description            |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称               | 类型                                             | 说明            |
 | ------------------ | ------------------------------------------------ | ---------------------- |
-| `input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin`          | vector map             |
-| `input/object`     | `autoware_perception_msgs::msg::DetectedObjects` | input detected objects |
+| `input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin`          | 矢量地图 |
+| `input/object`     | `autoware_perception_msgs::msg::DetectedObjects` | 输入检测目标 |
 
-### Output
+<a id="output"></a>
 
-| Name            | Type                                             | Description               |
+### 输出
+
+| 名称            | 类型                                             | 说明               |
 | --------------- | ------------------------------------------------ | ------------------------- |
-| `output/object` | `autoware_perception_msgs::msg::DetectedObjects` | filtered detected objects |
+| `output/object` | `autoware_perception_msgs::msg::DetectedObjects` | 过滤后的检测目标 |
 
-## Parameters
+<a id="parameters"></a>
 
-Description of the `filter_settings` in the parameters of the `object_lanelet_filter` node.
+## 参数
 
-| Name                                              | Type     | Description                                                                                                                           |
+`object_lanelet_filter` 节点参数中 `filter_settings` 的说明。
+
+| 名称                                              | 类型     | 说明                                                                                                                           |
 | ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `debug`                                           | `bool`   | If `true`, publishes additional debug information, including visualization markers on the `~/debug/marker` topic for tools like RViz. |
-| `lanelet_extra_margin`                            | `double` | If `> 0`, expands the lanelet polygons used for overlap checks by this margin (in meters). If `<= 0`, polygon expansion is disabled.  |
-| `lanelet_xy_overlap_filter.enabled`               | `bool`   | If `true`, enables filtering of objects based on their overlap with lanelet polygons.                                                 |
-| `lanelet_direction_filter.enabled`                | `bool`   | If `true`, enables filtering of objects based on their velocity direction relative to the lanelet.                                    |
-| `lanelet_direction_filter.velocity_yaw_threshold` | `double` | The yaw angle difference threshold (in radians) between the object’s velocity vector and the lanelet direction.                       |
-| `lanelet_direction_filter.object_speed_threshold` | `double` | The minimum speed (in m/s) of an object required for the direction filter to be applied.                                              |
-| `lanelet_object_elevation_filter.enabled`         | `bool`   | If `true`, enables filtering of objects based on their elevation relative to the nearest lanelet surface.                             |
-| `max_elevation_threshold`                         | `double` | The maximum allowable elevation (in meters) of an object relative to the nearest lanelet surface.                                     |
-| `min_elevation_threshold`                         | `double` | The minimum allowable elevation (in meters) of an object relative to the nearest lanelet surface.                                     |
-| `lanelet_extra_margin`                            | `double` | The margin value that will be added to the lanelet boundaries.                                                                        |
+| `debug`                                           | `bool`   | 若为 `true`，发布额外调试信息，包括 `~/debug/marker` 话题上的可视化标记，供 RViz 等工具使用。 |
+| `lanelet_extra_margin`                            | `double` | 若 `> 0`，以此裕量（米）扩张用于重叠检查的 lanelet 多边形；若 `<= 0`，则禁用多边形扩张。 |
+| `lanelet_xy_overlap_filter.enabled`               | `bool`   | 若为 `true`，启用基于目标与 lanelet 多边形重叠情况的过滤。 |
+| `lanelet_direction_filter.enabled`                | `bool`   | 若为 `true`，启用基于目标速度方向相对于 lanelet 方向的过滤。 |
+| `lanelet_direction_filter.velocity_yaw_threshold` | `double` | 目标速度向量与 lanelet 方向之间的偏航角差阈值（弧度）。 |
+| `lanelet_direction_filter.object_speed_threshold` | `double` | 应用方向过滤器所需的目标最低速度（m/s）。 |
+| `lanelet_object_elevation_filter.enabled`         | `bool`   | 若为 `true`，启用基于目标相对于最近 lanelet 表面高程的过滤。 |
+| `max_elevation_threshold`                         | `double` | 目标相对于最近 lanelet 表面的最大允许高程（米）。 |
+| `min_elevation_threshold`                         | `double` | 目标相对于最近 lanelet 表面的最小允许高程（米）。 |
+| `lanelet_extra_margin`                            | `double` | 添加至 lanelet 边界的裕量值。 |
 
-### Core Parameters
+<a id="core-parameters"></a>
 
-| Name                             | Type | Default Value | Description                               |
+### 核心参数
+
+| 名称                             | 类型 | 默认值 | 说明                               |
 | -------------------------------- | ---- | ------------- | ----------------------------------------- |
-| `filter_target_label.UNKNOWN`    | bool | false         | If true, unknown objects are filtered.    |
-| `filter_target_label.CAR`        | bool | false         | If true, car objects are filtered.        |
-| `filter_target_label.TRUCK`      | bool | false         | If true, truck objects are filtered.      |
-| `filter_target_label.BUS`        | bool | false         | If true, bus objects are filtered.        |
-| `filter_target_label.TRAILER`    | bool | false         | If true, trailer objects are filtered.    |
-| `filter_target_label.MOTORCYCLE` | bool | false         | If true, motorcycle objects are filtered. |
-| `filter_target_label.BICYCLE`    | bool | false         | If true, bicycle objects are filtered.    |
-| `filter_target_label.PEDESTRIAN` | bool | false         | If true, pedestrian objects are filtered. |
+| `filter_target_label.UNKNOWN`    | bool | false         | 若为 true，过滤未知目标。 |
+| `filter_target_label.CAR`        | bool | false         | 若为 true，过滤汽车目标。 |
+| `filter_target_label.TRUCK`      | bool | false         | 若为 true，过滤卡车目标。 |
+| `filter_target_label.BUS`        | bool | false         | 若为 true，过滤巴士目标。 |
+| `filter_target_label.TRAILER`    | bool | false         | 若为 true，过滤拖车目标。 |
+| `filter_target_label.MOTORCYCLE` | bool | false         | 若为 true，过滤摩托车目标。 |
+| `filter_target_label.BICYCLE`    | bool | false         | 若为 true，过滤自行车目标。 |
+| `filter_target_label.PEDESTRIAN` | bool | false         | 若为 true，过滤行人目标。 |
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-The lanelet filter is performed based on the shape polygon and bounding box of the objects.
+## 前提假设／已知限制
 
-## (Optional) Error detection and handling
+lanelet 过滤根据目标的形状多边形和包围框进行。
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

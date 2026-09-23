@@ -1,5 +1,9 @@
-## Walkway
+<a id="walkway"></a>
 
-### Role
+## 步行通道
 
-This module decide to stop before the ego will cross the walkway including crosswalk to enter or exit the private area.
+<a id="role"></a>
+
+### 作用
+
+当自车为驶入或驶出私人区域而需要穿过步行通道（包括人行横道）时，此模块决定在穿越前停车。

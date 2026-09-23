@@ -1,6 +1,6 @@
 # yabLoc_particle_filter
 
-This package contains some executable nodes related to particle filter.
+此功能包包含一些与粒子滤波相关的可执行节点。
 
 - [particle_predictor](#particle_predictor)
 - [gnss_particle_corrector](#gnss_particle_corrector)
@@ -8,109 +8,143 @@ This package contains some executable nodes related to particle filter.
 
 ## particle_predictor
 
-### Purpose
+<a id="purpose"></a>
 
-- This node performs predictive updating and resampling of particles.
-- It retroactively reflects the particle weights determined by the corrector node.
+### 用途
 
-### Inputs / Outputs
+- 此节点执行粒子的预测更新和重采样。
+- 它会将校正节点确定的粒子权重追溯应用到粒子状态中。
 
-#### Input
+<a id="inputs-outputs"></a>
 
-| Name                          | Type                                             | Description                                               |
+### 输入／输出
+
+<a id="input"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | ----------------------------- | ------------------------------------------------ | --------------------------------------------------------- |
-| `input/initialpose`           | `geometry_msgs::msg::PoseWithCovarianceStamped`  | to specify the initial position of particles              |
-| `input/twist_with_covariance` | `geometry_msgs::msg::TwistWithCovarianceStamped` | linear velocity and angular velocity of prediction update |
-| `input/height`                | `std_msgs::msg::Float32`                         | ground height                                             |
-| `input/weighted_particles`    | `yabloc_particle_filter::msg::ParticleArray`     | particles weighted by corrector nodes                     |
+| `input/initialpose` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 指定粒子的初始位置 |
+| `input/twist_with_covariance` | `geometry_msgs::msg::TwistWithCovarianceStamped` | 预测更新所用的线速度和角速度 |
+| `input/height` | `std_msgs::msg::Float32` | 地面高度 |
+| `input/weighted_particles` | `yabloc_particle_filter::msg::ParticleArray` | 经校正节点赋权的粒子 |
 
-#### Output
+<a id="output"></a>
 
-| Name                           | Type                                            | Description                                               |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------------------------ | ----------------------------------------------- | --------------------------------------------------------- |
-| `output/pose_with_covariance`  | `geometry_msgs::msg::PoseWithCovarianceStamped` | particle centroid with covariance                         |
-| `output/pose`                  | `geometry_msgs::msg::PoseStamped`               | particle centroid with covariance                         |
-| `output/predicted_particles`   | `yabloc_particle_filter::msg::ParticleArray`    | particles weighted by predictor nodes                     |
-| `debug/init_marker`            | `visualization_msgs::msg::Marker`               | debug visualization of initial position                   |
-| `debug/particles_marker_array` | `visualization_msgs::msg::MarkerArray`          | particles visualization. published if `visualize` is true |
+| `output/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 带协方差的粒子质心 |
+| `output/pose` | `geometry_msgs::msg::PoseStamped` | 带协方差的粒子质心 |
+| `output/predicted_particles` | `yabloc_particle_filter::msg::ParticleArray` | 经预测节点赋权的粒子 |
+| `debug/init_marker` | `visualization_msgs::msg::Marker` | 初始位置的调试可视化 |
+| `debug/particles_marker_array` | `visualization_msgs::msg::MarkerArray` | 粒子可视化，在 `visualize` 为 true 时发布 |
 
-### Parameters
+<a id="parameters"></a>
+
+### 参数
 
 {{ json_to_markdown("localization/yabloc/yabloc_particle_filter/schema/predictor.schema.json") }}
 
-### Services
+<a id="services"></a>
 
-| Name                 | Type                     | Description                                      |
+### 服务
+
+| 名称 | 类型 | 说明 |
 | -------------------- | ------------------------ | ------------------------------------------------ |
-| `yabloc_trigger_srv` | `std_srvs::srv::SetBool` | activation and deactivation of yabloc estimation |
+| `yabloc_trigger_srv` | `std_srvs::srv::SetBool` | 启用或禁用 YabLoc 估计 |
 
 ## gnss_particle_corrector
 
-### Purpose
+<a id="purpose_1"></a>
 
-- This node estimated particles weight using GNSS.
-- It supports two types of input: `ublox_msgs::msg::NavPVT` and `geometry_msgs::msg::PoseWithCovarianceStamped`.
+### 用途
 
-### Inputs / Outputs
+- 此节点利用 GNSS 估计粒子权重。
+- 支持两种输入类型：`ublox_msgs::msg::NavPVT` 和 `geometry_msgs::msg::PoseWithCovarianceStamped`。
 
-#### Input
+<a id="inputs-outputs_1"></a>
 
-| Name                         | Type                                            | Description                                        |
+### 输入／输出
+
+<a id="input_1"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | ---------------------------- | ----------------------------------------------- | -------------------------------------------------- |
-| `input/height`               | `std_msgs::msg::Float32`                        | ground height                                      |
-| `input/predicted_particles`  | `yabloc_particle_filter::msg::ParticleArray`    | predicted particles                                |
-| `input/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | gnss measurement. used if `use_ublox_msg` is false |
-| `input/navpvt`               | `ublox_msgs::msg::NavPVT`                       | gnss measurement. used if `use_ublox_msg` is true  |
+| `input/height` | `std_msgs::msg::Float32` | 地面高度 |
+| `input/predicted_particles` | `yabloc_particle_filter::msg::ParticleArray` | 预测粒子 |
+| `input/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | GNSS 测量值，在 `use_ublox_msg` 为 false 时使用 |
+| `input/navpvt` | `ublox_msgs::msg::NavPVT` | GNSS 测量值，在 `use_ublox_msg` 为 true 时使用 |
 
-#### Output
+<a id="output_1"></a>
 
-| Name                           | Type                                         | Description                                               |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------------------------ | -------------------------------------------- | --------------------------------------------------------- |
-| `output/weighted_particles`    | `yabloc_particle_filter::msg::ParticleArray` | weighted particles                                        |
-| `debug/gnss_range_marker`      | `visualization_msgs::msg::MarkerArray`       | gnss weight distribution                                  |
-| `debug/particles_marker_array` | `visualization_msgs::msg::MarkerArray`       | particles visualization. published if `visualize` is true |
+| `output/weighted_particles` | `yabloc_particle_filter::msg::ParticleArray` | 加权粒子 |
+| `debug/gnss_range_marker` | `visualization_msgs::msg::MarkerArray` | GNSS 权重分布 |
+| `debug/particles_marker_array` | `visualization_msgs::msg::MarkerArray` | 粒子可视化，在 `visualize` 为 true 时发布 |
 
-### Parameters
+<a id="parameters_1"></a>
+
+### 参数
 
 {{ json_to_markdown("localization/yabloc/yabloc_particle_filter/schema/gnss_particle_corrector.schema.json") }}
 
 ## camera_particle_corrector
 
-### Purpose
+<a id="purpose_2"></a>
 
-- This node estimated particles weight using GNSS.
+### 用途
 
-### Inputs / Outputs
+- 此节点利用 GNSS 估计粒子权重。
 
-#### Input
+<a id="inputs-outputs_2"></a>
 
-| Name                                  | Type                                         | Description                                                 |
+### 输入／输出
+
+<a id="input_2"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | ------------------------------------- | -------------------------------------------- | ----------------------------------------------------------- |
-| `input/predicted_particles`           | `yabloc_particle_filter::msg::ParticleArray` | predicted particles                                         |
-| `input/ll2_bounding_box`              | `sensor_msgs::msg::PointCloud2`              | road surface markings converted to line segments            |
-| `input/ll2_road_marking`              | `sensor_msgs::msg::PointCloud2`              | road surface markings converted to line segments            |
-| `input/projected_line_segments_cloud` | `sensor_msgs::msg::PointCloud2`              | projected line segments                                     |
-| `input/pose`                          | `geometry_msgs::msg::PoseStamped`            | reference to retrieve the area map around the self location |
+| `input/predicted_particles` | `yabloc_particle_filter::msg::ParticleArray` | 预测粒子 |
+| `input/ll2_bounding_box` | `sensor_msgs::msg::PointCloud2` | 转换为线段的路面标线 |
+| `input/ll2_road_marking` | `sensor_msgs::msg::PointCloud2` | 转换为线段的路面标线 |
+| `input/projected_line_segments_cloud` | `sensor_msgs::msg::PointCloud2` | 投影后的线段 |
+| `input/pose` | `geometry_msgs::msg::PoseStamped` | 用于检索自车位置周围区域地图的参考位姿 |
 
-#### Output
+<a id="output_2"></a>
 
-| Name                           | Type                                         | Description                                               |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------------------------ | -------------------------------------------- | --------------------------------------------------------- |
-| `output/weighted_particles`    | `yabloc_particle_filter::msg::ParticleArray` | weighted particles                                        |
-| `debug/cost_map_image`         | `sensor_msgs::msg::Image`                    | cost map created from lanelet2                            |
-| `debug/cost_map_range`         | `visualization_msgs::msg::MarkerArray`       | cost map boundary                                         |
-| `debug/match_image`            | `sensor_msgs::msg::Image`                    | projected line segments image                             |
-| `debug/scored_cloud`           | `sensor_msgs::msg::PointCloud2`              | weighted 3d line segments                                 |
-| `debug/scored_post_cloud`      | `sensor_msgs::msg::PointCloud2`              | weighted 3d line segments which are iffy                  |
-| `debug/state_string`           | `std_msgs::msg::String`                      | string describing the node state                          |
-| `debug/particles_marker_array` | `visualization_msgs::msg::MarkerArray`       | particles visualization. published if `visualize` is true |
+| `output/weighted_particles` | `yabloc_particle_filter::msg::ParticleArray` | 加权粒子 |
+| `debug/cost_map_image` | `sensor_msgs::msg::Image` | 根据 Lanelet2 创建的代价地图 |
+| `debug/cost_map_range` | `visualization_msgs::msg::MarkerArray` | 代价地图边界 |
+| `debug/match_image` | `sensor_msgs::msg::Image` | 投影线段图像 |
+| `debug/scored_cloud` | `sensor_msgs::msg::PointCloud2` | 加权三维线段 |
+| `debug/scored_post_cloud` | `sensor_msgs::msg::PointCloud2` | 可信度存疑的加权三维线段 |
+| `debug/state_string` | `std_msgs::msg::String` | 描述节点状态的字符串 |
+| `debug/particles_marker_array` | `visualization_msgs::msg::MarkerArray` | 粒子可视化，在 `visualize` 为 true 时发布 |
 
-### Parameters
+<a id="parameters_2"></a>
+
+### 参数
 
 {{ json_to_markdown("localization/yabloc/yabloc_particle_filter/schema/camera_particle_corrector.schema.json") }}
 
-### Services
+<a id="services_1"></a>
 
-| Name         | Type                     | Description                               |
+### 服务
+
+| 名称 | 类型 | 说明 |
 | ------------ | ------------------------ | ----------------------------------------- |
-| `switch_srv` | `std_srvs::srv::SetBool` | activation and deactivation of correction |
+| `switch_srv` | `std_srvs::srv::SetBool` | 启用或禁用校正 |

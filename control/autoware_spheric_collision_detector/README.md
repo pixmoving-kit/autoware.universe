@@ -1,75 +1,99 @@
 # AUTOWARE_SPHERIC_COLLISION_DETECTOR
 
-## PURPOSE
+<a id="purpose"></a>
 
-A new collision checker, referred to as Spheric Collision Detector (SCD), is proposed. The method approximates the ego-vehicle and its surrounding objects using a set of spheres, thereby simplifying collision detection to a mere distance evaluation.
+## 目的
 
-The proposed algorithm is similar to OCC; However unlike OCC it does not rely on point cloud data for object representation. Instead it uses the length and width of objects to construct the spherical approximation. This approach has proven effective for detecting collisions, particularly in emergency situations.
+本文提出一种新的碰撞检查器，称为球形碰撞检测器（Spheric Collision Detector，SCD）。该方法使用一组球体近似表示自车及周围物体，从而将碰撞检测简化为距离判断。
 
-Experimental results were simulated using CARLA(0.9.15), Autoware(2024.01) and ROS 2 bridges. They indicate that the proposed approach is at least 200 times faster than OCC.
+此算法与 OCC 类似，但不依赖点云表示物体，而是利用物体的长宽构建球体近似。实践证明，该方法能够有效检测碰撞，尤其适用于紧急情况。
 
-To top all this, the algorithm was also tested in PixKit 2.0, an autonomous driving and development vehicle using a 5-foot inflated jumbo beach ball.
+使用 CARLA(0.9.15)、Autoware(2024.01) 和 ROS 2 桥接进行了仿真实验，结果表明该方法的速度至少是 OCC 的 200 倍。
 
-## ALGORITHM
+此外，还在自动驾驶开发车辆 PixKit 2.0 上，使用一个 5 英尺的充气巨型沙滩球测试了该算法。
 
-### Compute ego's stopping distance
+<a id="algorithm"></a>
 
-We start by computing the braking distance, $s_b$, which is the distance the vehicle travels after the brakes are applied. It is defined as $|v|^2/2.0 * a$ - deduced from the equation of motion, where $v$ is the initial velocity of the ego-vehicle and $a$, the maximum deceleration required for the ego to stop. The thinking distance, $s_t$, is the distance the ego travels in the time it takes for the brakes to be applied after realizing that there is a need to stop. It is defined as $v * t_d$, with $t_d$ as the delay time. The stopping distance is the sum of the thinking distance and the braking distance.
+## 算法
 
-### Resample input trajectory
+<a id="compute-egos-stopping-distance"></a>
 
-Next, we select consecutive trajectory points spaced at one sphere diameter apart. This reduces computation cost as collision checks are performed only on these sampled points.
+### 计算自车停车距离
 
-### Cut resampled trajectory
+首先计算制动距离 $s_b$，即车辆开始制动后行驶的距离。根据运动方程，其定义为 $|v|^2/2.0 * a$，其中 $v$ 是自车初速度，$a$ 是自车停车所需的最大减速度。反应距离 $s_t$ 是意识到需要停车后、实际施加制动前车辆行驶的距离，定义为 $v * t_d$，其中 $t_d$ 为延迟时间。停车距离是反应距离与制动距离之和。
 
-In this step only the segment of the resampled trajectory within the stopping distance is considered.
+<a id="resample-input-trajectory"></a>
 
-### Create ego's footprints
+### 对输入轨迹重采样
 
-For each of the trajectory points, their respective footprints are computed using the below expressions:
+接下来，以一个球体直径为间距选取连续轨迹点。仅在这些采样点上进行碰撞检查，可降低计算开销。
+
+<a id="cut-resampled-trajectory"></a>
+
+### 截取重采样轨迹
+
+此步骤仅考虑重采样轨迹中位于停车距离内的部分。
+
+<a id="create-egos-footprints"></a>
+
+### 创建自车轮廓
+
+使用以下表达式计算各轨迹点对应的车辆轮廓：
 (1) x*{front} ={}& h*{front} + wb \\
 (2) x*{center} ={}& wb/2.0 \\
 (3) x*{rear} ={}& -(h*{rear}) \\
 (4) y*{left} ={}& wt/2.0 + h*{left} \\
 (5) y*{right} ={}& -(wt/2.0 + h\_{right})
 
-### Create ego's passing areas
+<a id="create-egos-passing-areas"></a>
 
-Subsequently, we generate spheres, and place them on the ego's footprints.
+### 创建自车经过区域
 
-### Represent objects with spheres
+随后生成球体，并将它们放置在自车轮廓上。
 
-We also approximate the objects surrounding the ego-vehicle using spheres. Each object's footprint is derived from its length and width. Uniform spheres are then generated and placed along an object's center-line, with their relative centers defined as follows:
-$(x_{front}, 0)$, $(x_{front}/2, 0)$, $(0,0)$,
-$(x_{rear}/2, 0)$, $(x_{rear}, 0)$.
+<a id="represent-objects-with-spheres"></a>
 
-We set the radius of each sphere to half the vehicle's width.
+### 使用球体表示物体
 
-### Check collision
+同样使用球体近似表示自车周围的物体。每个物体的轮廓根据其长宽获得，然后生成大小一致的球体，沿物体中心线放置，其相对球心位置定义如下：
+$(x_{front}, 0)$、$(x_{front}/2, 0)$、$(0,0)$、
+$(x_{rear}/2, 0)$、$(x_{rear}, 0)$。
 
-To perform a collision check we execute the following steps:
+将每个球体的半径设为车辆宽度的一半。
 
-- We loop through each distinct sphere pair, $(s_{i}, s_{j})$ of the ego-vehicle and the obstacle, where $1 \leq i \leq m$, $1 \leq j \leq n$. $m$ and $n$ denote the number of spheres of the obstacle and the ego-vehicle respectively.
-- At each iteration, the Euclidean distance, $\varepsilon_{ij}$, between the centers of the spheres, $c_i(x,y,z)$ and $c_j(x,y,z)$, is calculated.
-- We then compare $\varepsilon_{ij}$ with the sum of the radii of the respective spheres, $ \sum r_i r_j$. If this distance is less, the diagnostic status is set to ERROR as a collision is imminent; otherwise, we repeat \textit{step 2} for the next pair of spheres. The diagnostic status is set to OK if no collision is detected.
+<a id="check-collision"></a>
 
-#### INPUT(S)
+### 检查碰撞
 
-| Name                       | Type                                                  | Description                                                                                                           |
+碰撞检查执行以下步骤：
+
+- 遍历自车与障碍物之间每一对不同的球体 $(s_{i}, s_{j})$，其中 $1 \leq i \leq m$、$1 \leq j \leq n$。$m$ 和 $n$ 分别表示障碍物与自车的球体数量。
+- 每次迭代计算球心 $c_i(x,y,z)$ 和 $c_j(x,y,z)$ 之间的欧氏距离 $\varepsilon_{ij}$。
+- 将 $\varepsilon_{ij}$ 与相应球体的半径之和 $ \sum r_i r_j$ 比较。如果距离更小，则表示即将发生碰撞，将诊断状态设为 ERROR；否则对下一对球体重复第 2 步。如果未检测到碰撞，则将诊断状态设为 OK。
+
+<a id="inputs"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | -------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `input/odometry`           | `nav_msgs::msg::Odometry`                             | Current Position, orientation, and velocity of the ego-vehicle.                                                       |
-| `input/trajectory`         | `autoware_auto_planning_msgs::msg::Trajectory`        | Predicted trajectory (sequence of poses of the ego-vehicle over time with corresponding velocities and accelerations) |
-| `input/object_recognition` | `autoware_auto_perception_msgs::msg::DetectedObjects` | Length, width, and height of objects surrounding the ego-vehicle                                                      |
+| `input/odometry` | `nav_msgs::msg::Odometry` | 自车当前位置、朝向和速度。 |
+| `input/trajectory` | `autoware_auto_planning_msgs::msg::Trajectory` | 预测轨迹（自车随时间变化的位姿序列，包含对应的速度和加速度） |
+| `input/object_recognition` | `autoware_auto_perception_msgs::msg::DetectedObjects` | 自车周围物体的长、宽、高 |
 
-### OUTPUT(S)
+<a id="outputs"></a>
 
-| Name           | Type                                   | Description              |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | -------------- | -------------------------------------- | ------------------------ |
-| `debug/marker` | `visualization_msgs::msg::MarkerArray` | Marker for visualization |
+| `debug/marker` | `visualization_msgs::msg::MarkerArray` | 可视化标记 |
 
-### PARAMETERS
+<a id="parameters"></a>
 
-| Name               | Type     | Description                                               | Default value |
+### 参数
+
+| 名称 | 类型 | 说明 | 默认值 |
 | :----------------- | :------- | :-------------------------------------------------------- | :------------ |
-| `delay_time`       | `double` | Delay time of the ego-vehicle [s]                         | 0.3           |
-| `max_deceleration` | `double` | Max deceleration of the ego-vehicle when stopping [m/s^2] | 2.0           |
+| `delay_time` | `double` | 自车延迟时间 [s] | 0.3 |
+| `max_deceleration` | `double` | 自车停车时的最大减速度 [m/s^2] | 2.0 |

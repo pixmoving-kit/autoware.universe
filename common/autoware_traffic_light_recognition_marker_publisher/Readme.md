@@ -1,40 +1,60 @@
-# Traffic Light Recognition Marker Publisher
+<a id="traffic-light-recognition-marker-publisher"></a>
 
-## Purpose
+# 交通信号灯识别标记发布器
 
-This node publishes a marker array for visualizing traffic signal recognition results on Rviz.
+<a id="purpose"></a>
+
+## 用途
+
+此节点发布标记数组，用于在 Rviz 中显示交通信号灯识别结果。
 
 ![sample_img](./images/traffic_light_recognition_visualization_sample.png)
 
-## Inner-workings / Algorithms
+<a id="inner-workings-algorithms"></a>
 
-## Inputs / Outputs
+## 内部机制与算法
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name                                                    | Type                                                    | Description                                       |
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称                                                    | 类型                                                    | 说明                                       |
 | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- |
-| `/map/vector_map`                                       | `autoware_map_msgs::msg::LaneletMapBin`                 | Vector map for getting traffic signal information |
-| `/perception/traffic_light_recognition/traffic_signals` | `autoware_perception_msgs::msg::TrafficLightGroupArray` | The result of traffic signal recognition          |
+| `/map/vector_map`                                       | `autoware_map_msgs::msg::LaneletMapBin`                 | 用于获取交通信号灯信息的矢量地图 |
+| `/perception/traffic_light_recognition/traffic_signals` | `autoware_perception_msgs::msg::TrafficLightGroupArray` | 交通信号灯识别结果          |
 
-### Output
+<a id="output"></a>
 
-| Name                                                           | Type                                   | Description                                                                    |
+### 输出
+
+| 名称                                                           | 类型                                   | 说明                                                                    |
 | -------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------ |
-| `/perception/traffic_light_recognition/traffic_signals_marker` | `visualization_msgs::msg::MarkerArray` | Publish a marker array for visualization of traffic signal recognition results |
+| `/perception/traffic_light_recognition/traffic_signals_marker` | `visualization_msgs::msg::MarkerArray` | 发布用于显示交通信号灯识别结果的标记数组 |
 
-## Parameters
+<a id="parameters"></a>
 
-None.
+## 参数
 
-### Node Parameters
+无。
 
-None.
+<a id="node-parameters"></a>
 
-### Core Parameters
+### 节点参数
 
-None.
+无。
 
-## Assumptions / Known limits
+<a id="core-parameters"></a>
 
-TBD.
+### 核心参数
+
+无。
+
+<a id="assumptions-known-limits"></a>
+
+## 假设与已知限制
+
+待补充。

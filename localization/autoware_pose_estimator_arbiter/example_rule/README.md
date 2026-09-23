@@ -1,16 +1,24 @@
-# example rule
+<a id="example-rule"></a>
 
-The example rule provides a sample rule for controlling the arbiter. By combining the provided rules, it is possible to achieve demonstrations as follows. Users can extend the rules as needed by referencing this code, allowing them to control the arbiter as desired.
+# 示例规则
 
-## Demonstration
+示例规则提供控制仲裁器的参考实现。通过组合所提供的规则，可以实现下述演示。用户可参考这些代码按需扩展规则，从而以期望的方式控制仲裁器。
 
-The following video demonstrates the switching of four different pose estimators.
+<a id="demonstration"></a>
+
+## 演示
+
+以下视频演示了四种不同位姿估计器之间的切换。
 
 <div><video controls src="https://github-production-user-asset-6210df.s3.amazonaws.com/24854875/295755577-62b26fdd-dcf0-4b1c-a1a0-ecd633413196.mp4" muted="false" width="600"></video></div>
 
-## Switching Rules
+<a id="switching-rules"></a>
 
-### Pcd Map Based Rule
+## 切换规则
+
+<a id="pcd-map-based-rule"></a>
+
+### 基于 PCD 地图的规则
 
 ```mermaid
 flowchart LR
@@ -19,7 +27,9 @@ flowchart LR
   A --false--> C[enable YabLoc]
 ```
 
-### Vector Map Based Rule
+<a id="vector-map-based-rule"></a>
+
+### 基于矢量地图的规则
 
 ```mermaid
 flowchart LR
@@ -27,26 +37,32 @@ flowchart LR
   A --whatever --> _A[When the ego vehicle is in a predetermined pose_estimator_area,\n it enables the corresponding pose_estamtor.]
 ```
 
-### Rule helpers
+<a id="rule-helpers"></a>
 
-Rule helpers are auxiliary tools for describing switching rules.
+### 规则辅助工具
 
-- [PCD occupancy](#pcd-occupancy)
-- [Pose estimator area](#pose-estimator-area)
+规则辅助工具用于辅助描述切换规则。
 
-#### PCD occupancy
+- [PCD 占据情况](#pcd-occupancy)
+- [位姿估计器区域](#pose-estimator-area)
+
+<a id="pcd-occupancy"></a>
+
+#### PCD 占据情况
 
 <img src="../media/pcd_occupancy.drawio.svg" alt="drawing" width="600"/>
 
-#### Pose estimator area
+<a id="pose-estimator-area"></a>
 
-The pose_estimator_area is a planar area described by polygon in lanelet2.
-The height of the area is meaningless; it judges if the projection of its self-position is contained within the polygon or not.
+#### 位姿估计器区域
+
+pose_estimator_area 是通过 Lanelet2 多边形描述的平面区域。
+区域高度没有实际意义；判断依据是自车位置的投影是否位于该多边形内。
 
 <img src="../media/pose_estimator_area_in_vector_map.png" alt="drawing" width="600"/>
 
-A sample pose_estimator_area is shown below. The values provided below are placeholders.
-To be correctly read, the area should have the type "pose_estimator_specify" and the subtype should be one of ndt, yabloc, eagleye, or artag.
+以下展示一个 pose_estimator_area 示例，其中给出的值均为占位值。
+为确保正确读取，区域的 type 应为 "pose_estimator_specify"，subtype 应为 ndt、yabloc、eagleye 或 artag 之一。
 
 ```xml
   <node id="1" lat="35.8xxxxx" lon="139.6xxxxx">

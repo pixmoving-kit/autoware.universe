@@ -1,28 +1,38 @@
 # autoware_geo_pose_projector
 
-## Overview
+<a id="overview"></a>
 
-This node is a simple node that subscribes to the geo-referenced pose topic and publishes the pose in the map frame.
+## 概述
 
-## Subscribed Topics
+此节点订阅带地理参考的位姿话题，并发布地图坐标系下的位姿。
 
-| Name                      | Type                                                 | Description         |
+<a id="subscribed-topics"></a>
+
+## 订阅的话题
+
+| 名称 | 类型 | 说明 |
 | ------------------------- | ---------------------------------------------------- | ------------------- |
-| `input_geo_pose`          | `geographic_msgs::msg::GeoPoseWithCovarianceStamped` | geo-referenced pose |
-| `/map/map_projector_info` | `autoware_map_msgs::msg::MapProjectedObjectInfo`     | map projector info  |
+| `input_geo_pose` | `geographic_msgs::msg::GeoPoseWithCovarianceStamped` | 带地理参考的位姿 |
+| `/map/map_projector_info` | `autoware_map_msgs::msg::MapProjectedObjectInfo` | 地图投影信息 |
 
-## Published Topics
+<a id="published-topics"></a>
 
-| Name          | Type                                            | Description                           |
+## 发布的话题
+
+| 名称 | 类型 | 说明 |
 | ------------- | ----------------------------------------------- | ------------------------------------- |
-| `output_pose` | `geometry_msgs::msg::PoseWithCovarianceStamped` | pose in map frame                     |
-| `/tf`         | `tf2_msgs::msg::TFMessage`                      | tf from parent link to the child link |
+| `output_pose` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 地图坐标系下的位姿 |
+| `/tf` | `tf2_msgs::msg::TFMessage` | 从父坐标系到子坐标系的 TF |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("localization/autoware_geo_pose_projector/schema/geo_pose_projector.schema.json") }}
 
-## Limitations
+<a id="limitations"></a>
 
-The covariance conversion may be incorrect depending on the projection type you are using. The covariance of input topic is expressed in (Latitude, Longitude, Altitude) as a diagonal matrix.
-Currently, we assume that the x axis is the east direction and the y axis is the north direction. Thus, the conversion may be incorrect when this assumption breaks, especially when the covariance of latitude and longitude is different.
+## 限制
+
+根据所用投影类型的不同，协方差转换可能不正确。输入话题的协方差以（纬度、经度、高程）表示，为对角矩阵。
+目前假定 X 轴指向东、Y 轴指向北。当这一假设不成立时，转换可能不正确，尤其是在纬度和经度的协方差不同时。

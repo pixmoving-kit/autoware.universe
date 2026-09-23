@@ -1,51 +1,69 @@
 # autoware_path_distance_calculator
 
-## Purpose
+<a id="purpose"></a>
 
-This node publishes the remaining distance from the self-position to the route goal.
-The distance is the arc-length along the route's planned lanelet sequence between the current position and the goal, not the Euclidean distance between the two points.
+## 用途
 
-## Inner-workings / Algorithms
+此节点发布从自车当前位置到路线终点的剩余距离。
+该距离是沿路线规划的 Lanelet 序列，从当前位置到终点的弧长，而不是两点之间的欧氏距离。
 
-On every timer tick (1 Hz):
+<a id="inner-workings-algorithms"></a>
 
-1. If a new map or route message has arrived, it is handed to the calculator.
-   - On a new map, the lanelet2 map is (re)built.
-   - On a new route, the lanelet sequence is cached from `LaneletRoute::segments[].preferred_primitive.id`, looked up directly in the map. This is the lanelet sequence mission_planner actually planned the route through (accounting for lane exclusions, required lane changes, etc.), so it is used as-is instead of re-deriving a path with an independent shortest-path search, which could disagree with the actually planned route.
-2. The self-position is matched to a lanelet in the cached sequence, and the remaining distance is computed as the sum of: the remaining length in the current lanelet, the full length of every lanelet strictly between the current and goal lanelet, and the length up to the goal pose within the goal lanelet.
-3. The result is published. If the map/route are not ready yet, or the self-position cannot be matched to the cached sequence, nothing is published for that tick.
+## 内部机制与算法
 
-The core calculation (`RouteDistanceCalculator` in `src/main.cpp`) has no ROS node dependency; `src/ros_interface.cpp` only wires up polling subscribers, the timer, and the publisher around it.
+每次定时器触发时（1 Hz），执行以下步骤：
 
-## Inputs / Outputs
+1. 如果收到了新的地图或路线消息，则将其交给距离计算器。
+   - 收到新地图时，构建或重新构建 Lanelet2 地图。
+   - 收到新路线时，根据 `LaneletRoute::segments[].preferred_primitive.id` 直接在地图中查找并缓存 Lanelet 序列。该序列是 mission_planner 实际规划的路线所经过的序列，已考虑车道排除、必要的变道等情况。因此直接使用此序列，而不通过独立的最短路径搜索重新推导路径，以免与实际规划的路线不一致。
+2. 将自车位置匹配到缓存序列中的某个 Lanelet，然后计算剩余距离，其值为以下三部分之和：当前 Lanelet 中的剩余长度、当前 Lanelet 与终点 Lanelet 之间所有 Lanelet 的完整长度，以及终点 Lanelet 内到目标位姿的长度。
+3. 发布结果。如果地图或路线尚未就绪，或者无法将自车位置匹配到缓存序列，则本次定时器触发不发布结果。
 
-### Input
+核心计算逻辑（`src/main.cpp` 中的 `RouteDistanceCalculator`）不依赖 ROS 节点；`src/ros_interface.cpp` 仅负责围绕该计算逻辑连接轮询订阅器、定时器和发布器。
 
-| Name            | Type                                        | Description                                                      |
+<a id="inputs-outputs"></a>
+
+## 输入与输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | --------------- | ------------------------------------------- | ---------------------------------------------------------------- |
-| `~/input/route` | `autoware_planning_msgs::msg::LaneletRoute` | Route, used to resolve the goal and the planned lanelet sequence |
-| `~/input/map`   | `autoware_map_msgs::msg::LaneletMapBin`     | Lanelet2 map, used to look up lanelets by ID                     |
-| `/tf`           | `tf2_msgs/TFMessage`                        | TF (self-pose)                                                   |
+| `~/input/route` | `autoware_planning_msgs::msg::LaneletRoute` | 路线，用于解析目标位置和规划的 Lanelet 序列 |
+| `~/input/map` | `autoware_map_msgs::msg::LaneletMapBin` | Lanelet2 地图，用于按 ID 查找 Lanelet |
+| `/tf` | `tf2_msgs/TFMessage` | TF（自车位姿） |
 
-By default (see `launch/path_distance_calculator.launch.xml`), `~/input/route` is remapped to `/planning/mission_planning/route` and `~/input/map` to `/map/vector_map`.
+默认情况下（见 `launch/path_distance_calculator.launch.xml`），`~/input/route` 重映射到 `/planning/mission_planning/route`，`~/input/map` 重映射到 `/map/vector_map`。
 
-### Output
+<a id="output"></a>
 
-| Name         | Type                                                | Description                                                     |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ------------ | --------------------------------------------------- | --------------------------------------------------------------- |
-| `~/distance` | `autoware_internal_debug_msgs::msg::Float64Stamped` | Remaining distance from the self-position to the route goal [m] |
+| `~/distance` | `autoware_internal_debug_msgs::msg::Float64Stamped` | 从自车当前位置到路线终点的剩余距离 [m] |
 
-## Parameters
+<a id="parameters"></a>
 
-### Node Parameters
+## 参数
 
-None.
+<a id="node-parameters"></a>
 
-### Core Parameters
+### 节点参数
 
-None.
+无。
 
-## Assumptions / Known limits
+<a id="core-parameters"></a>
 
-- The lanelet sequence is cached from `LaneletRoute::segments` when a new route message is received; it is not recomputed while driving on that same route. If the vehicle temporarily leaves that cached lanelet sequence without a reroute (e.g. a lane change to pass an obstacle), the self-position cannot be matched to the cached sequence and no distance is published until the vehicle returns to a lanelet on it.
-- No distance is published until both a route and a map have been received and the self-position can be matched to a lanelet on the cached sequence.
+### 核心参数
+
+无。
+
+<a id="assumptions-known-limits"></a>
+
+## 假设与已知限制
+
+- 收到新路线消息时，根据 `LaneletRoute::segments` 缓存 Lanelet 序列；沿同一路线行驶期间不会重新计算此序列。如果车辆在未重新规划路线的情况下暂时离开缓存的 Lanelet 序列（例如变道绕过障碍物），则无法将自车位置匹配到缓存序列。在车辆返回该序列中的某个 Lanelet 之前，不会发布距离。
+- 只有收到路线和地图，且自车位置能够匹配到缓存序列中的某个 Lanelet 后，才会发布距离。

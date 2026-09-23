@@ -1,83 +1,107 @@
 # bytetrack
 
-## Purpose
+<a id="purpose"></a>
 
-The core algorithm, named `ByteTrack`, mainly aims to perform multi-object tracking.
-Because the algorithm associates almost every detection box including ones with low detection scores,
-the number of false negatives is expected to decrease by using it.
+## 用途
 
-## Inner-workings / Algorithms
+核心算法 `ByteTrack` 主要用于多目标跟踪。
+该算法会关联几乎所有检测框，包括检测分数较低的框，
+因此使用它有望减少漏检数量。
 
-### Cite
+<a id="inner-workings-algorithms"></a>
+
+## 内部机制／算法
+
+<a id="cite"></a>
+
+### 引用
 
 <!-- cspell: ignore Yifu Peize Jiang Dongdong Fucheng Weng Zehuan Xinggang -->
 
 - Yifu Zhang, Peize Sun, Yi Jiang, Dongdong Yu, Fucheng Weng, Zehuan Yuan, Ping Luo, Wenyu Liu, and Xinggang Wang,
   "ByteTrack: Multi-Object Tracking by Associating Every Detection Box", in the proc. of the ECCV
   2022, [[ref](https://arxiv.org/abs/2110.06864)]
-- This package is ported version toward Autoware from [this repository](https://github.com/ifzhang/ByteTrack/tree/main/deploy/TensorRT/cpp)
-  (The C++ implementation by the ByteTrack's authors)
+- 此功能包由[此仓库](https://github.com/ifzhang/ByteTrack/tree/main/deploy/TensorRT/cpp) 移植到 Autoware
+  （ByteTrack 作者提供的 C++ 实现）
 
-### 2d tracking modification from original codes
+<a id="2d-tracking-modification-from-original-codes"></a>
 
-The paper just says that the 2d tracking algorithm is a simple Kalman filter.
-Original codes use the `top-left-corner` and `aspect ratio` and `size` as the state vector.
+### 相较原始代码的 2D 跟踪修改
 
-This is sometimes unstable because the aspect ratio can be changed by the occlusion.
-So, we use the `top-left` and `size` as the state vector.
+论文仅说明 2D 跟踪算法采用简单的卡尔曼滤波器。
+原始代码使用 `top-left-corner`、`aspect ratio` 和 `size` 作为状态向量。
 
-Kalman filter settings can be controlled by the parameters in `config/bytetrack_node.param.yaml`.
+由于遮挡可能改变宽高比，这种方式有时不稳定。
+因此我们使用 `top-left` 和 `size` 作为状态向量。
 
-## Inputs / Outputs
+可通过 `config/bytetrack_node.param.yaml` 中的参数控制卡尔曼滤波器设置。
+
+<a id="inputs-outputs"></a>
+
+## 输入／输出
 
 ### bytetrack_node
 
-#### Input
+<a id="input"></a>
 
-| Name      | Type                                               | Description                                 |
+#### 输入
+
+| 名称      | 类型                                               | 说明                                 |
 | --------- | -------------------------------------------------- | ------------------------------------------- |
-| `in/rect` | `tier4_perception_msgs/DetectedObjectsWithFeature` | The detected objects with 2D bounding boxes |
+| `in/rect` | `tier4_perception_msgs/DetectedObjectsWithFeature` | 带有 2D 包围框的检测目标 |
 
-#### Output
+<a id="output"></a>
 
-| Name                     | Type                                               | Description                                               |
+#### 输出
+
+| 名称                     | 类型                                               | 说明                                               |
 | ------------------------ | -------------------------------------------------- | --------------------------------------------------------- |
-| `out/objects`            | `tier4_perception_msgs/DetectedObjectsWithFeature` | The detected objects with 2D bounding boxes               |
-| `out/objects/debug/uuid` | `tier4_perception_msgs/DynamicObjectArray`         | The universally unique identifiers (UUID) for each object |
+| `out/objects`            | `tier4_perception_msgs/DetectedObjectsWithFeature` | 带有 2D 包围框的检测目标               |
+| `out/objects/debug/uuid` | `tier4_perception_msgs/DynamicObjectArray`         | 每个目标的通用唯一标识符（UUID） |
 
 ### bytetrack_visualizer
 
-#### Input
+<a id="input_1"></a>
 
-| Name       | Type                                                 | Description                                               |
+#### 输入
+
+| 名称       | 类型                                                 | 说明                                               |
 | ---------- | ---------------------------------------------------- | --------------------------------------------------------- |
-| `in/image` | `sensor_msgs/Image` or `sensor_msgs/CompressedImage` | The input image on which object detection is performed    |
-| `in/rect`  | `tier4_perception_msgs/DetectedObjectsWithFeature`   | The detected objects with 2D bounding boxes               |
-| `in/uuid`  | `tier4_perception_msgs/DynamicObjectArray`           | The universally unique identifiers (UUID) for each object |
+| `in/image` | `sensor_msgs/Image` or `sensor_msgs/CompressedImage` | 执行目标检测的输入图像    |
+| `in/rect`  | `tier4_perception_msgs/DetectedObjectsWithFeature`   | 带有 2D 包围框的检测目标               |
+| `in/uuid`  | `tier4_perception_msgs/DynamicObjectArray`           | 每个目标的通用唯一标识符（UUID） |
 
-#### Output
+<a id="output_1"></a>
 
-| Name        | Type                | Description                                                       |
+#### 输出
+
+| 名称        | 类型                | 说明                                                       |
 | ----------- | ------------------- | ----------------------------------------------------------------- |
-| `out/image` | `sensor_msgs/Image` | The image that detection bounding boxes and their UUIDs are drawn |
+| `out/image` | `sensor_msgs/Image` | 绘制了检测包围框及其 UUID 的图像 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 ### bytetrack_node
 
-| Name                  | Type | Default Value | Description                                              |
+| 名称                  | 类型 | 默认值 | 说明                                              |
 | --------------------- | ---- | ------------- | -------------------------------------------------------- |
-| `track_buffer_length` | int  | 30            | The frame count that a tracklet is considered to be lost |
+| `track_buffer_length` | int  | 30            | 将轨迹片段视为丢失的帧数 |
 
 ### bytetrack_visualizer
 
-| Name      | Type | Default Value | Description                                                                                   |
+| 名称      | 类型 | 默认值 | 说明                                                                                   |
 | --------- | ---- | ------------- | --------------------------------------------------------------------------------------------- |
-| `use_raw` | bool | false         | The flag for the node to switch `sensor_msgs/Image` or `sensor_msgs/CompressedImage` as input |
+| `use_raw` | bool | false         | 控制节点在 `sensor_msgs/Image` 与 `sensor_msgs/CompressedImage` 输入之间切换的标志 |
 
-## Assumptions/Known limits
+<a id="assumptionsknown-limits"></a>
 
-## Reference repositories
+## 假设与已知限制
+
+<a id="reference-repositories"></a>
+
+## 参考仓库
 
 - <https://github.com/ifzhang/ByteTrack>
 

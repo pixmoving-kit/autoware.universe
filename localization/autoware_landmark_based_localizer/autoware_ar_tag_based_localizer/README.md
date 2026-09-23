@@ -1,42 +1,56 @@
-# AR Tag Based Localizer
+<a id="ar-tag-based-localizer"></a>
 
-**ArTagBasedLocalizer** is a vision-based localization node.
+# 基于 AR 标签的定位器
+
+**ArTagBasedLocalizer** 是基于视觉的定位节点。
 
 <img src="./doc_image/ar_tag_image.png" width="320px" alt="ar_tag_image">
 
-This node uses [the ArUco library](https://index.ros.org/p/aruco/) to detect AR-Tags from camera images and calculates and publishes the pose of the ego vehicle based on these detections.
-The positions and orientations of the AR-Tags are assumed to be written in the Lanelet2 format.
+此节点使用 [ArUco 库](https://index.ros.org/p/aruco/)从相机图像中检测 AR 标签，并根据检测结果计算和发布自车位姿。
+假定 AR 标签的位置和姿态已按 Lanelet2 格式记录。
 
-## Inputs / Outputs
+<a id="inputs-outputs"></a>
 
-### `ar_tag_based_localizer` node
+## 输入／输出
 
-#### Input
+<a id="ar_tag_based_localizer-node"></a>
 
-| Name                   | Type                                            | Description                                                                                                                                                                                                                                                               |
+### `ar_tag_based_localizer` 节点
+
+<a id="input"></a>
+
+#### 输入
+
+| 名称 | 类型 | 说明 |
 | :--------------------- | :---------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `~/input/lanelet2_map` | `autoware_map_msgs::msg::LaneletMapBin`         | Data of lanelet2                                                                                                                                                                                                                                                          |
-| `~/input/image`        | `sensor_msgs::msg::Image`                       | Camera Image                                                                                                                                                                                                                                                              |
-| `~/input/camera_info`  | `sensor_msgs::msg::CameraInfo`                  | Camera Info                                                                                                                                                                                                                                                               |
-| `~/input/ekf_pose`     | `geometry_msgs::msg::PoseWithCovarianceStamped` | EKF Pose without IMU correction. It is used to validate detected AR tags by filtering out False Positives. Only if the EKF Pose and the AR tag-detected Pose are within a certain temporal and spatial range, the AR tag-detected Pose is considered valid and published. |
+| `~/input/lanelet2_map` | `autoware_map_msgs::msg::LaneletMapBin` | Lanelet2 数据 |
+| `~/input/image` | `sensor_msgs::msg::Image` | 相机图像 |
+| `~/input/camera_info` | `sensor_msgs::msg::CameraInfo` | 相机信息 |
+| `~/input/ekf_pose` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 未经 IMU 校正的 EKF 位姿。用于过滤误检，验证检测到的 AR 标签。只有 EKF 位姿与通过 AR 标签检测得到的位姿在时间和空间上均处于一定范围内时，后者才会被视为有效并发布。 |
 
-#### Output
+<a id="output"></a>
 
-| Name                            | Type                                            | Description                                                                               |
+#### 输出
+
+| 名称 | 类型 | 说明 |
 | :------------------------------ | :---------------------------------------------- | :---------------------------------------------------------------------------------------- |
-| `~/output/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | Estimated Pose                                                                            |
-| `~/debug/result`                | `sensor_msgs::msg::Image`                       | [debug topic] Image in which marker detection results are superimposed on the input image |
-| `~/debug/marker`                | `visualization_msgs::msg::MarkerArray`          | [debug topic] Loaded landmarks to visualize in Rviz as thin boards                        |
-| `/tf`                           | `geometry_msgs::msg::TransformStamped`          | [debug topic] TF from camera to detected tag                                              |
-| `/diagnostics`                  | `diagnostic_msgs::msg::DiagnosticArray`         | Diagnostics outputs                                                                       |
+| `~/output/pose_with_covariance` | `geometry_msgs::msg::PoseWithCovarianceStamped` | 估计位姿 |
+| `~/debug/result` | `sensor_msgs::msg::Image` | [调试话题] 在输入图像上叠加标记检测结果的图像 |
+| `~/debug/marker` | `visualization_msgs::msg::MarkerArray` | [调试话题] 已加载的地标，在 RViz 中显示为薄板 |
+| `/tf` | `geometry_msgs::msg::TransformStamped` | [调试话题] 从相机到检测标签的 TF |
+| `/diagnostics` | `diagnostic_msgs::msg::DiagnosticArray` | 诊断输出 |
 
-## Parameters
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("localization/autoware_landmark_based_localizer/autoware_ar_tag_based_localizer/schema/ar_tag_based_localizer.schema.json") }}
 
-## How to launch
+<a id="how-to-launch"></a>
 
-When launching Autoware, set `artag` for `pose_source`.
+## 启动方法
+
+启动 Autoware 时，将 `pose_source` 设为 `artag`。
 
 ```bash
 ros2 launch autoware_launch ... \
@@ -46,18 +60,22 @@ ros2 launch autoware_launch ... \
 
 ### Rosbag
 
-#### [Sample rosbag and map (AWSIM data)](https://drive.google.com/file/d/1ZPsfDvOXFrMxtx7fb1W5sOXdAK1e71hY/view)
+<a id="sample-rosbag-and-map-awsim-data"></a>
 
-This data is simulated data created by [AWSIM](https://tier4.github.io/AWSIM/).
-Essentially, AR tag-based self-localization is not intended for such public road driving, but for driving in a smaller area, so the max driving speed is set at 15 km/h.
+#### [示例 rosbag 和地图（AWSIM 数据）](https://drive.google.com/file/d/1ZPsfDvOXFrMxtx7fb1W5sOXdAK1e71hY/view)
 
-It is a known problem that the timing of when each AR tag begins to be detected can cause significant changes in estimation.
+这些数据由 [AWSIM](https://tier4.github.io/AWSIM/) 仿真生成。
+基于 AR 标签的自定位主要面向较小区域内的行驶，并非此类公共道路驾驶，因此最大行驶速度设为 15 km/h。
 
-![sample_result_in_awsim](./doc_image/sample_result_in_awsim.png)
+一个已知问题是，各 AR 标签开始被检测到的时机会导致估计结果发生明显变化。
 
-#### [Sample rosbag and map (Real world data)](https://drive.google.com/file/d/1VQCQ_qiEZpCMI3-z6SNs__zJ-4HJFQjx/view)
+![AWSIM 中的示例结果](./doc_image/sample_result_in_awsim.png)
 
-Please remap the topic names and play it.
+<a id="sample-rosbag-and-map-real-world-data"></a>
+
+#### [示例 rosbag 和地图（真实场景数据）](https://drive.google.com/file/d/1VQCQ_qiEZpCMI3-z6SNs__zJ-4HJFQjx/view)
+
+请重映射话题名称后播放。
 
 ```bash
 ros2 bag play /path/to/ar_tag_based_localizer_sample_bag/ -r 0.5 -s sqlite3 \
@@ -65,16 +83,18 @@ ros2 bag play /path/to/ar_tag_based_localizer_sample_bag/ -r 0.5 -s sqlite3 \
              /sensing/camera/front/image/info:=/sensing/camera/traffic_light/camera_info
 ```
 
-This dataset contains issues such as missing IMU data, and overall the accuracy is low. Even when running AR tag-based self-localization, significant difference from the true trajectory can be observed.
+此数据集存在 IMU 数据缺失等问题，整体精度较低。即使运行基于 AR 标签的自定位，也能观察到与真实轨迹之间的明显差异。
 
-The image below shows the trajectory when the sample is executed and plotted.
+下图展示了运行示例并绘制得到的轨迹。
 
-![sample_result](./doc_image/sample_result.png)
+![示例结果](./doc_image/sample_result.png)
 
-The pull request video below should also be helpful.
+下方拉取请求中的视频也可供参考。
 
 <https://github.com/autowarefoundation/autoware_universe/pull/4347#issuecomment-1663155248>
 
-## Principle
+<a id="principle"></a>
 
-![principle](../doc_image/principle.png)
+## 原理
+
+![原理](../doc_image/principle.png)

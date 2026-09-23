@@ -1,7 +1,11 @@
-# Routing API
+<a id="routing-api"></a>
 
-## Overview
+# 路线规划 API
 
-Unify the route setting method to the service. This API supports two waypoint formats, poses and lanelet segments. The goal and checkpoint topics from rviz is only subscribed to by adapter node and converted to API call. This API call is forwarded to the mission planner node so it can centralize the state of routing. For other nodes that require route, mission planner node publishes as `/planning/mission_planning/route`. See the [autoware-documentation](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/ad-api/features/routing/) for AD API specifications.
+<a id="overview"></a>
+
+## 概述
+
+将路线设置方式统一为服务。此 API 支持两种途经点格式：位姿和 Lanelet 路段。来自 rviz 的目标点及检查点话题仅由适配节点订阅，并转换为 API 调用。该调用转发给任务规划节点，以集中管理路线状态。对于需要路线的其他节点，任务规划节点通过 `/planning/mission_planning/route` 发布。 AD API 规范请参阅 [Autoware 文档](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/ad-api/features/routing/)。
 
 ![routing-architecture](images/routing.drawio.svg)

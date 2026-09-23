@@ -1,152 +1,172 @@
 # autoware_operation_mode_transition_manager
 
-## Note
+<a id="note"></a>
 
-The state management functionality of this package is currently being moved to the command_mode_decider package.
-When used with the command_mode_decider package, this package is only responsible for determining transition conditions.
-Also, the data `status`, `in_autoware_control`, and `in_transition` contained in the debug topic is not available, so use the `/system/command_mode_decider/debug` topic instead.
+## 说明
 
-- in_autoware_control: True when the current command mode is manual mode (default value 1000).
-- in_transition: See the is_in_transition function in the command_mode_decider package.
-- status:
-  - If in_autoware_control, `DISENGAGE (autoware mode = curr_mode)`
-  - Else if in_transition, `curr_mode (in transition from prev_mode)`
-  - Else `curr_mode`
-  - Note: `curr_mode = current operation mode` and `prev_mode = last operation mode`
+本功能包的状态管理功能目前正在迁移到 command_mode_decider 功能包。
+与 command_mode_decider 配合使用时，本功能包仅负责判断切换条件。
+此外，调试话题中的 `status`、`in_autoware_control` 和 `in_transition` 数据不再可用，请改用 `/system/command_mode_decider/debug` 话题。
 
-## Purpose / Use cases
+- in_autoware_control：当前命令模式为手动模式（默认值 1000）时为 True。
+- in_transition：参见 command_mode_decider 功能包中的 is_in_transition 函数。
+- status：
+  - 如果 in_autoware_control，则为 `DISENGAGE (autoware mode = curr_mode)`。
+  - 否则，如果 in_transition，则为 `curr_mode (in transition from prev_mode)`。
+  - 否则为 `curr_mode`。
+  - 注意：`curr_mode = current operation mode`，`prev_mode = last operation mode`，即当前运行模式和上一次运行模式。
 
-This module is responsible for managing the different modes of operation for the Autoware system. The possible modes are:
+<a id="purpose-use-cases"></a>
 
-- `Autonomous`: the vehicle is fully controlled by the autonomous driving system
-- `Local`: the vehicle is controlled by a physically connected control system such as a joy stick
-- `Remote`: the vehicle is controlled by a remote controller
-- `Stop`: the vehicle is stopped and there is no active control system.
+## 目的与使用场景
 
-There is also an `In Transition` state that occurs during each mode transitions. During this state, the transition to the new operator is not yet complete, and the previous operator is still responsible for controlling the system until the transition is complete. Some actions may be restricted during the `In Transition` state, such as sudden braking or steering. (This is restricted by the `vehicle_cmd_gate`).
+本模块负责管理 Autoware 系统的不同运行模式。可用模式包括：
 
-### Features
+- `Autonomous`：车辆完全由自动驾驶系统控制。
+- `Local`：车辆由物理连接的控制系统控制，例如手柄。
+- `Remote`：车辆由远程控制器控制。
+- `Stop`：车辆已停止，没有活动的控制系统。
 
-- Transit mode between `Autonomous`, `Local`, `Remote` and `Stop` based on the indication command.
-- Check whether the each transition is available (safe or not).
-- Limit some sudden motion control in `In Transition` mode (this is done with `vehicle_cmd_gate` feature).
-- Check whether the transition is completed.
+每次模式切换时还会进入 `In Transition` 状态。在该状态下，向新操作者的切换尚未完成，原操作者仍负责控制系统，直到切换完成。`In Transition` 期间可能限制某些动作，例如急制动或急转向（由 `vehicle_cmd_gate` 限制）。
 
-- Transition between the `Autonomous`, `Local`, `Remote`, and `Stop` modes based on the indicated command.
-- Determine whether each transition is safe to execute.
-- Restrict certain sudden motion controls during the `In Transition` mode (using the `vehicle_cmd_gate` feature).
-- Verify that the transition is complete.
+<a id="features"></a>
 
-## Design
+### 功能
 
-A rough design of the relationship between `autoware_operation_mode_transition_manager`` and the other nodes is shown below.
+- 根据指示命令，在 `Autonomous`、`Local`、`Remote` 和 `Stop` 之间切换模式。
+- 检查各项切换是否可用（是否安全）。
+- 在 `In Transition` 模式中限制某些突变运动控制（通过 `vehicle_cmd_gate` 实现）。
+- 检查切换是否完成。
 
-![transition_rough_structure](image/transition_rough_structure.drawio.svg)
+- 根据指示命令，在 `Autonomous`、`Local`、`Remote` 和 `Stop` 模式之间切换。
+- 判断各项切换是否可以安全执行。
+- 在 `In Transition` 模式中限制某些突变运动控制（使用 `vehicle_cmd_gate` 功能）。
+- 确认切换已完成。
 
-A more detailed structure is below.
+<a id="design"></a>
 
-![transition_detailed_structure](image/transition_detailed_structure.drawio.svg)
+## 设计
 
-Here we see that `autoware_operation_mode_transition_manager` has multiple state transitions as follows
+`autoware_operation_mode_transition_manager`` 与其他节点之间关系的概要设计如下。
+
+![切换模块概要结构](image/transition_rough_structure.drawio.svg)
+
+更详细的结构如下。
+
+![切换模块详细结构](image/transition_detailed_structure.drawio.svg)
+
+可以看到，`autoware_operation_mode_transition_manager` 具有以下多种状态切换：
 
 - **AUTOWARE ENABLED <---> DISABLED**
-  - **ENABLED**: the vehicle is controlled by Autoware.
-  - **DISABLED**: the vehicle is out of Autoware control, expecting the e.g. manual driving.
+  - **ENABLED**：车辆由 Autoware 控制。
+  - **DISABLED**：车辆不受 Autoware 控制，预期由人工驾驶等方式控制。
 - **AUTOWARE ENABLED <---> AUTO/LOCAL/REMOTE/NONE**
-  - **AUTO**: the vehicle is controlled by Autoware, with the autonomous control command calculated by the planning/control component.
-  - **LOCAL**: the vehicle is controlled by Autoware, with the locally connected operator, e.g. joystick controller.
-  - **REMOTE**: the vehicle is controlled by Autoware, with the remotely connected operator.
-  - **NONE**: the vehicle is not controlled by any operator.
+  - **AUTO**：车辆由 Autoware 控制，使用规划和控制组件计算出的自动驾驶控制命令。
+  - **LOCAL**：车辆由 Autoware 控制，使用本地连接的操作者输入，例如手柄控制器。
+  - **REMOTE**：车辆由 Autoware 控制，使用远程连接的操作者输入。
+  - **NONE**：车辆不受任何操作者控制。
 - **IN TRANSITION <---> COMPLETED**
-  - **IN TRANSITION**: the mode listed above is in the transition process, expecting the former operator to have a responsibility to confirm the transition is completed.
-  - **COMPLETED**: the mode transition is completed.
+  - **IN TRANSITION**：上述模式处于切换过程中，原操作者有责任确认切换完成。
+  - **COMPLETED**：模式切换已完成。
 
-## Inputs / Outputs / API
+<a id="inputs-outputs-api"></a>
 
-### Inputs
+## 输入、输出与 API
 
-For the mode transition:
+<a id="inputs"></a>
 
-- /system/operation_mode/change_autoware_control [`autoware_system_msgs/srv/ChangeAutowareControl`]: change operation mode to Autonomous
-- /system/operation_mode/change_operation_mode [`autoware_system_msgs/srv/ChangeOperationMode`]: change operation mode
+### 输入
 
-For the transition availability/completion check:
+用于模式切换：
 
-- /control/command/control_cmd [`autoware_control_msgs/msg/Control`]: vehicle control signal
-- /localization/kinematic_state [`nav_msgs/msg/Odometry`]: ego vehicle state
-- /planning/trajectory [`autoware_planning_msgs/msg/Trajectory`]: planning trajectory
-- /vehicle/status/control_mode [`autoware_vehicle_msgs/msg/ControlModeReport`]: vehicle control mode (autonomous/manual)
-- /control/vehicle_cmd_gate/operation_mode [`autoware_adapi_v1_msgs/msg/OperationModeState`]: the operation mode in the `vehicle_cmd_gate`. (To be removed)
+- /system/operation_mode/change_autoware_control [`autoware_system_msgs/srv/ChangeAutowareControl`]：将运行模式切换为 Autonomous。
+- /system/operation_mode/change_operation_mode [`autoware_system_msgs/srv/ChangeOperationMode`]：切换运行模式。
 
-For the backward compatibility (to be removed):
+用于检查切换可用性及完成情况：
+
+- /control/command/control_cmd [`autoware_control_msgs/msg/Control`]：车辆控制信号。
+- /localization/kinematic_state [`nav_msgs/msg/Odometry`]：自车状态。
+- /planning/trajectory [`autoware_planning_msgs/msg/Trajectory`]：规划轨迹。
+- /vehicle/status/control_mode [`autoware_vehicle_msgs/msg/ControlModeReport`]：车辆控制模式（自动或手动）。
+- /control/vehicle_cmd_gate/operation_mode [`autoware_adapi_v1_msgs/msg/OperationModeState`]：`vehicle_cmd_gate` 中的运行模式。（将移除）
+
+用于向后兼容（将移除）：
 
 - /api/autoware/get/engage [`autoware_vehicle_msgs/msg/Engage`]
 - /control/current_gate_mode [`tier4_control_msgs/msg/GateMode`]
 - /control/external_cmd_selector/current_selector_mode [`tier4_control_msgs/msg/ExternalCommandSelectorMode`]
 
-### Outputs
+<a id="outputs"></a>
 
-- /system/operation_mode/state [`autoware_adapi_v1_msgs/msg/OperationModeState`]: to inform the current operation mode
-- /control/autoware_operation_mode_transition_manager/debug_info [`autoware_operation_mode_transition_manager/msg/OperationModeTransitionManagerDebug`]: detailed information about the operation mode transition
+### 输出
 
-- /control/gate_mode_cmd [`tier4_control_msgs/msg/GateMode`]: to change the `vehicle_cmd_gate` state to use its features (to be removed)
-- /autoware/engage [`autoware_vehicle_msgs/msg/Engage`]:
+- /system/operation_mode/state [`autoware_adapi_v1_msgs/msg/OperationModeState`]：通知当前运行模式。
+- /control/autoware_operation_mode_transition_manager/debug_info [`autoware_operation_mode_transition_manager/msg/OperationModeTransitionManagerDebug`]：运行模式切换的详细信息。
 
-- /control/control_mode_request [`autoware_vehicle_msgs/srv/ControlModeCommand`]: to change the vehicle control mode (autonomous/manual)
-- /control/external_cmd_selector/select_external_command [`tier4_control_msgs/srv/ExternalCommandSelect`]:
+- /control/gate_mode_cmd [`tier4_control_msgs/msg/GateMode`]：更改 `vehicle_cmd_gate` 状态以使用其功能（将移除）。
+- /autoware/engage [`autoware_vehicle_msgs/msg/Engage`]：
 
-## Parameters
+- /control/control_mode_request [`autoware_vehicle_msgs/srv/ControlModeCommand`]：切换车辆控制模式（自动或手动）。
+- /control/external_cmd_selector/select_external_command [`tier4_control_msgs/srv/ExternalCommandSelect`]：
+
+<a id="parameters"></a>
+
+## 参数
 
 {{ json_to_markdown("control/autoware_operation_mode_transition_manager/schema/operation_mode_transition_manager.schema.json") }}
 
-| Name                               | Type     | Description                                                                                                                                                                                                                                                                                                                                                                                                                   | Default value |
+| 名称 | 类型 | 说明 | 默认值 |
 | :--------------------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| `transition_timeout`               | `double` | If the state transition is not completed within this time, it is considered a transition failure.                                                                                                                                                                                                                                                                                                                             | 10.0          |
-| `frequency_hz`                     | `double` | running hz                                                                                                                                                                                                                                                                                                                                                                                                                    | 10.0          |
-| `enable_engage_on_driving`         | `bool`   | Set true if you want to engage the autonomous driving mode while the vehicle is driving. If set to false, it will deny Engage in any situation where the vehicle speed is not zero. Note that if you use this feature without adjusting the parameters, it may cause issues like sudden deceleration. Before using, please ensure the engage condition and the vehicle_cmd_gate transition filter are appropriately adjusted. | 0.1           |
-| `check_engage_condition`           | `bool`   | If false, autonomous transition is always available                                                                                                                                                                                                                                                                                                                                                                           | 0.1           |
-| `nearest_dist_deviation_threshold` | `double` | distance threshold used to find nearest trajectory point                                                                                                                                                                                                                                                                                                                                                                      | 3.0           |
-| `nearest_yaw_deviation_threshold`  | `double` | angle threshold used to find nearest trajectory point                                                                                                                                                                                                                                                                                                                                                                         | 1.57          |
+| `transition_timeout` | `double` | 如果状态切换未在此时间内完成，则认为切换失败。 | 10.0 |
+| `frequency_hz` | `double` | 运行频率，单位 Hz | 10.0 |
+| `enable_engage_on_driving` | `bool` | 若希望车辆行驶时也能启用自动驾驶模式，请设为 true。若为 false，则车速非零时一律拒绝接管。请注意，未经调参就启用此功能可能导致突然减速等问题。使用前，请确保已适当调整接管条件和 vehicle_cmd_gate 切换过滤器。 | 0.1 |
+| `check_engage_condition` | `bool` | 若为 false，则始终允许切换到自动驾驶 | 0.1 |
+| `nearest_dist_deviation_threshold` | `double` | 查找最近轨迹点所用的距离阈值 | 3.0 |
+| `nearest_yaw_deviation_threshold` | `double` | 查找最近轨迹点所用的角度阈值 | 1.57 |
 
-For `engage_acceptable_limits` related parameters:
+`engage_acceptable_limits` 相关参数：
 
-| Name                          | Type     | Description                                                                                                                   | Default value |
+| 名称 | 类型 | 说明 | 默认值 |
 | :---------------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| `allow_autonomous_in_stopped` | `bool`   | If true, autonomous transition is available when the vehicle is stopped even if other checks fail.                            | true          |
-| `dist_threshold`              | `double` | the distance between the trajectory and ego vehicle must be within this distance for `Autonomous` transition.                 | 1.5           |
-| `yaw_threshold`               | `double` | the yaw angle between trajectory and ego vehicle must be within this threshold for `Autonomous` transition.                   | 0.524         |
-| `speed_upper_threshold`       | `double` | the velocity deviation between control command and ego vehicle must be within this threshold for `Autonomous` transition.     | 10.0          |
-| `speed_lower_threshold`       | `double` | the velocity deviation between the control command and ego vehicle must be within this threshold for `Autonomous` transition. | -10.0         |
-| `acc_threshold`               | `double` | the control command acceleration must be less than this threshold for `Autonomous` transition.                                | 1.5           |
-| `lateral_acc_threshold`       | `double` | the control command lateral acceleration must be less than this threshold for `Autonomous` transition.                        | 1.0           |
-| `lateral_acc_diff_threshold`  | `double` | the lateral acceleration deviation between the control command must be less than this threshold for `Autonomous` transition.  | 0.5           |
+| `allow_autonomous_in_stopped` | `bool` | 若为 true，车辆停止时即使其他检查失败，也允许切换到自动驾驶。 | true |
+| `dist_threshold` | `double` | 切换到 `Autonomous` 时，轨迹与自车之间的距离必须在此范围内。 | 1.5 |
+| `yaw_threshold` | `double` | 切换到 `Autonomous` 时，轨迹与自车之间的偏航角差必须在此阈值内。 | 0.524 |
+| `speed_upper_threshold` | `double` | 切换到 `Autonomous` 时，控制命令与自车之间的速度偏差必须在此阈值内。 | 10.0 |
+| `speed_lower_threshold` | `double` | 切换到 `Autonomous` 时，控制命令与自车之间的速度偏差必须在此阈值内。 | -10.0 |
+| `acc_threshold` | `double` | 切换到 `Autonomous` 时，控制命令加速度必须小于此阈值。 | 1.5 |
+| `lateral_acc_threshold` | `double` | 切换到 `Autonomous` 时，控制命令横向加速度必须小于此阈值。 | 1.0 |
+| `lateral_acc_diff_threshold` | `double` | 切换到 `Autonomous` 时，控制命令的横向加速度偏差必须小于此阈值。 | 0.5 |
 
-For `stable_check` related parameters:
+`stable_check` 相关参数：
 
-| Name                    | Type     | Description                                                                                                                       | Default value |
+| 名称 | 类型 | 说明 | 默认值 |
 | :---------------------- | :------- | :-------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| `duration`              | `double` | the stable condition must be satisfied for this duration to complete the transition.                                              | 0.1           |
-| `dist_threshold`        | `double` | the distance between the trajectory and ego vehicle must be within this distance to complete `Autonomous` transition.             | 1.5           |
-| `yaw_threshold`         | `double` | the yaw angle between trajectory and ego vehicle must be within this threshold to complete `Autonomous` transition.               | 0.262         |
-| `speed_upper_threshold` | `double` | the velocity deviation between control command and ego vehicle must be within this threshold to complete `Autonomous` transition. | 2.0           |
-| `speed_lower_threshold` | `double` | the velocity deviation between control command and ego vehicle must be within this threshold to complete `Autonomous` transition. | 2.0           |
+| `duration` | `double` | 稳定条件必须持续满足此时长，才能完成切换。 | 0.1 |
+| `dist_threshold` | `double` | 完成 `Autonomous` 切换时，轨迹与自车之间的距离必须在此范围内。 | 1.5 |
+| `yaw_threshold` | `double` | 完成 `Autonomous` 切换时，轨迹与自车之间的偏航角差必须在此阈值内。 | 0.262 |
+| `speed_upper_threshold` | `double` | 完成 `Autonomous` 切换时，控制命令与自车之间的速度偏差必须在此阈值内。 | 2.0 |
+| `speed_lower_threshold` | `double` | 完成 `Autonomous` 切换时，控制命令与自车之间的速度偏差必须在此阈值内。 | 2.0 |
 
-## Engage check behavior on each parameter setting
+<a id="engage-check-behavior-on-each-parameter-setting"></a>
 
-This matrix describes the scenarios in which the vehicle can be engaged based on the combinations of parameter settings:
+## 各参数设置下的接管检查行为
 
-| `enable_engage_on_driving` | `check_engage_condition` | `allow_autonomous_in_stopped` | Scenarios where engage is permitted                               |
+下表说明不同参数组合下允许车辆接管的场景：
+
+| `enable_engage_on_driving` | `check_engage_condition` | `allow_autonomous_in_stopped` | 允许接管的场景 |
 | :------------------------: | :----------------------: | :---------------------------: | :---------------------------------------------------------------- |
-|             x              |            x             |               x               | Only when the vehicle is stationary.                              |
-|             x              |            x             |               o               | Only when the vehicle is stationary.                              |
-|             x              |            o             |               x               | When the vehicle is stationary and all engage conditions are met. |
-|             x              |            o             |               o               | Only when the vehicle is stationary.                              |
-|             o              |            x             |               x               | At any time (Caution: Not recommended).                           |
-|             o              |            x             |               o               | At any time (Caution: Not recommended).                           |
-|             o              |            o             |               x               | When all engage conditions are met, regardless of vehicle status. |
-|             o              |            o             |               o               | When all engage conditions are met or the vehicle is stationary.  |
+| x | x | x | 仅车辆静止时。 |
+| x | x | o | 仅车辆静止时。 |
+| x | o | x | 车辆静止且满足所有接管条件时。 |
+| x | o | o | 仅车辆静止时。 |
+| o | x | x | 任何时候（注意：不推荐）。 |
+| o | x | o | 任何时候（注意：不推荐）。 |
+| o | o | x | 满足所有接管条件时，与车辆状态无关。 |
+| o | o | o | 满足所有接管条件，或车辆静止时。 |
 
-## Future extensions / Unimplemented parts
+<a id="future-extensions-unimplemented-parts"></a>
 
-- Need to remove backward compatibility interfaces.
-- This node should be merged to the `vehicle_cmd_gate` due to its strong connection.
+## 后续扩展与尚未实现的部分
+
+- 需要移除向后兼容接口。
+- 由于与 `vehicle_cmd_gate` 联系紧密，本节点应合并到其中。

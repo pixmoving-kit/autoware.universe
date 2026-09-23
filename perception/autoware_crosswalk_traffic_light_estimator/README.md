@@ -1,52 +1,66 @@
 # autoware_crosswalk_traffic_light_estimator
 
-## Purpose
+<a id="purpose"></a>
 
-`autoware_crosswalk_traffic_light_estimator` estimates pedestrian traffic signals which can be summarized as the following two tasks:
+## 用途
 
-- Estimate pedestrian traffic signals that are not subject to be detected by perception pipeline.
-- Estimate whether pedestrian traffic signals are flashing and modify the result.
+`autoware_crosswalk_traffic_light_estimator` 估计行人交通信号，可归纳为以下两项任务：
 
-## Inputs / Outputs
+- 估计不属于感知流程检测对象的行人交通信号。
+- 估计行人交通信号是否闪烁，并修改结果。
 
-### Input
+<a id="inputs-outputs"></a>
 
-| Name                                 | Type                                                  | Description        |
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称                                 | 类型                                                  | 说明        |
 | ------------------------------------ | ----------------------------------------------------- | ------------------ |
-| `~/input/vector_map`                 | autoware_map_msgs::msg::LaneletMapBin                 | vector map         |
-| `~/input/classified/traffic_signals` | autoware_perception_msgs::msg::TrafficLightGroupArray | classified signals |
+| `~/input/vector_map`                 | autoware_map_msgs::msg::LaneletMapBin                 | 矢量地图 |
+| `~/input/classified/traffic_signals` | autoware_perception_msgs::msg::TrafficLightGroupArray | 已分类的信号 |
 
-### Output
+<a id="output"></a>
 
-| Name                         | Type                                                  | Description                                               |
+### 输出
+
+| 名称                         | 类型                                                  | 说明                                               |
 | ---------------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
-| `~/output/traffic_signals`   | autoware_perception_msgs::msg::TrafficLightGroupArray | output that contains estimated pedestrian traffic signals |
-| `~/debug/processing_time_ms` | autoware_internal_debug_msgs::msg::Float64Stamped     | pipeline latency time (ms)                                |
+| `~/output/traffic_signals`   | autoware_perception_msgs::msg::TrafficLightGroupArray | 包含估计行人交通信号的输出 |
+| `~/debug/processing_time_ms` | autoware_internal_debug_msgs::msg::Float64Stamped     | 流水线延迟（ms） |
 
-## Parameters
+<a id="parameters"></a>
 
-| Name                           | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Default value |
+## 参数
+
+| 名称                           | 类型   | 说明                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 默认值 |
 | :----------------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------ |
-| `use_last_detect_color`        | bool   | If this parameter is `true`, this module estimates pedestrian's traffic signal as RED not only when vehicle's traffic signal is detected as GREEN/AMBER but also when detection results change GREEN/AMBER to UNKNOWN. (If detection results change RED or AMBER to UNKNOWN, this module estimates pedestrian's traffic signal as UNKNOWN.) If this parameter is `false`, this module use only latest detection results for estimation. (Only when the detection result is GREEN/AMBER, this module estimates pedestrian's traffic signal as RED.) | true          |
-| `use_pedestrian_signal_detect` | bool   | If this parameter is `true`, use the pedestrian's traffic signal estimated by the perception pipeline. If `false`, overwrite it with pedestrian's signals estimated from vehicle traffic signals and HDMap.                                                                                                                                                                                                                                                                                                                                        | true          |
-| `last_detect_color_hold_time`  | double | The time threshold to hold for last detect color. The unit is second.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | 2.0           |
-| `last_colors_hold_time`        | double | The time threshold to hold for history detected pedestrian traffic light color. The unit is second.                                                                                                                                                                                                                                                                                                                                                                                                                                                | 1.0           |
+| `use_last_detect_color`        | bool   | 若此参数为 `true`，不仅在车辆交通信号检测为 GREEN/AMBER 时，而且在检测结果从 GREEN/AMBER 变为 UNKNOWN 时，此模块也会将行人交通信号估计为 RED。（若检测结果从 RED 或 AMBER 变为 UNKNOWN，则此模块将行人交通信号估计为 UNKNOWN。）若此参数为 `false`，则仅使用最新检测结果进行估计。（仅在检测结果为 GREEN/AMBER 时，将行人交通信号估计为 RED。） | true          |
+| `use_pedestrian_signal_detect` | bool   | 若此参数为 `true`，使用感知流程估计的行人交通信号；若为 `false`，则使用车辆交通信号和高精地图估计的行人信号覆盖它。 | true          |
+| `last_detect_color_hold_time`  | double | 保持上次检测颜色的时间阈值，单位为秒。 | 2.0           |
+| `last_colors_hold_time`        | double | 保持历史检测行人交通灯颜色的时间阈值，单位为秒。 | 1.0           |
 
-## Inner-workings / Algorithms
+<a id="inner-workings-algorithms"></a>
 
-When the pedestrian traffic signals **are detected** by perception pipeline
+## 内部机制／算法
 
-- If estimates the pedestrian traffic signals are flashing, overwrite the results
-- Prefer the output from perception pipeline, but overwrite it if the pedestrian traffic signals are invalid(`no detection`, `backlight`, or `occlusion`)
+当感知流程**检测到**行人交通信号时
 
-When the pedestrian traffic signals **are NOT detected** by perception pipeline
+- 如果估计行人交通信号正在闪烁，则覆盖结果
+- 优先使用感知流程的输出，但若行人交通信号无效（`no detection`、`backlight` 或 `occlusion`），则覆盖它
 
-- Estimate the color of pedestrian traffic signals based on detected vehicle traffic signals and HDMap
+当感知流程**未检测到**行人交通信号时
 
-Override rules specific to some traffic lights can also be defined in the lanelet map.
-In that case, the crosswalk traffic light estimation is overridden by these rules.
+- 根据检测到的车辆交通信号和高精地图估计行人交通信号颜色
 
-### Estimate whether pedestrian traffic signals are flashing
+也可在 lanelet 地图中定义针对某些交通灯的覆盖规则。
+此时，人行横道交通灯估计结果将被这些规则覆盖。
+
+<a id="estimate-whether-pedestrian-traffic-signals-are-flashing"></a>
+
+### 估计行人交通信号是否闪烁
 
 ```plantumul
 start
@@ -62,19 +76,25 @@ if (the classification result not exists)
 end
 ```
 
-#### Update flashing flag
+<a id="update-flashing-flag"></a>
+
+#### 更新闪烁标志
 
 <div align="center">
   <img src="images/flashing_state.png" width=50%>
 </div>
 
-#### Update traffic light status
+<a id="update-traffic-light-status"></a>
+
+#### 更新交通灯状态
 
 <div align="center">
   <img src="images/traffic_light.png" width=50%>
 </div>
 
-### Estimate the color of pedestrian traffic signals
+<a id="estimate-the-color-of-pedestrian-traffic-signals"></a>
+
+### 估计行人交通信号颜色
 
 ```plantuml
 
@@ -103,12 +123,14 @@ end
 
 ```
 
-If traffic between pedestrians and vehicles is controlled by traffic signals, the crosswalk traffic signal maybe **RED** in order to prevent pedestrian from crossing when the following conditions are satisfied.
+如果行人和车辆之间的通行由交通信号控制，那么在满足以下条件时，人行横道交通信号可能为**红色**，以阻止行人横穿。
 
-#### Situation1
+<a id="situation1"></a>
 
-- crosswalk conflicts **STRAIGHT** lanelet
-- the lanelet refers **GREEN** or **AMBER** traffic signal (The following pictures show only **GREEN** case)
+#### 场景 1
+
+- 人行横道与**直行** lanelet 冲突
+- 该 lanelet 引用**绿色**或**黄色**交通信号（下图仅显示**绿色**情况）
 
 <div align="center">
   <img src="images/straight.drawio.svg" width=80%>
@@ -117,21 +139,25 @@ If traffic between pedestrians and vehicles is controlled by traffic signals, th
   <img src="images/intersection1.svg" width=80%>
 </div>
 
-#### Situation2
+<a id="situation2"></a>
 
-- crosswalk conflicts different turn direction lanelets (STRAIGHT and LEFT, LEFT and RIGHT, RIGHT and STRAIGHT)
-- the lanelets refer **GREEN** or **AMBER** traffic signal (The following pictures show only **GREEN** case)
+#### 场景 2
+
+- 人行横道与不同转向方向的 lanelet 冲突（直行与左转、左转与右转、右转与直行）
+- 这些 lanelet 引用**绿色**或**黄色**交通信号（下图仅显示**绿色**情况）
 
 <div align="center">
   <img src="images/intersection2.svg" width=80%>
 </div>
 
-### Map-based estimation rules
+<a id="map-based-estimation-rules"></a>
 
-Rules can be defined in the lanelet map to override the normal estimation.
-These rules define the value of a crosswalk traffic light based on the value of a vehicle traffic light.
+### 基于地图的估计规则
 
-For example, a rule to consider the crosswalk traffic light with id X to be `green` when the vehicle traffic light with id Y is `red` can be expressed in the lanelet map as follows:
+可在 lanelet 地图中定义规则，覆盖常规估计结果。
+这些规则根据车辆交通灯的值定义人行横道交通灯的值。
+
+例如，当 ID 为 Y 的车辆交通灯为 `red` 时，将 ID 为 X 的人行横道交通灯视为 `green`，可在 lanelet 地图中按如下方式表示：
 
 ```XML
   <relation id="Y">
@@ -139,9 +165,13 @@ For example, a rule to consider the crosswalk traffic light with id X to be `gre
     <tag k="signal_color_relation:red:green" v="X"/>
 ```
 
-Colors `green`, `amber`, `red`, and `white` are currently supported.
-Multiple crosswalk ids can be listed separated by a comma and without any whitespace (e.g., `v="1,2,3"`).
+当前支持颜色 `green`、`amber`、`red` 和 `white`。
+可列出多个以逗号分隔且不含任何空白的人行横道 ID（例如 `v="1,2,3"`）。
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-## Future extensions / Unimplemented parts
+## 前提假设／已知限制
+
+<a id="future-extensions-unimplemented-parts"></a>
+
+## 后续扩展与尚未实现的部分

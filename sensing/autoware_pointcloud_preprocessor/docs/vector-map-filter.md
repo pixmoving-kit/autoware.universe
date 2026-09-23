@@ -1,38 +1,62 @@
 # vector_map_filter
 
-## Purpose
+<a id="purpose"></a>
 
-The `vector_map_filter` is a node that removes points on the outside of lane by using vector map.
+## 用途
 
-## Inner-workings / Algorithms
+`vector_map_filter` 节点利用矢量地图移除车道外的点。
 
-## Inputs / Outputs
+<a id="inner-workings-algorithms"></a>
 
-### Input
+## 内部机制／算法
 
-| Name                 | Type                                    | Description      |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | -------------------- | --------------------------------------- | ---------------- |
-| `~/input/points`     | `sensor_msgs::msg::PointCloud2`         | reference points |
-| `~/input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | vector map       |
+| `~/input/points` | `sensor_msgs::msg::PointCloud2` | 参考点 |
+| `~/input/vector_map` | `autoware_map_msgs::msg::LaneletMapBin` | 矢量地图 |
 
-### Output
+<a id="output"></a>
 
-| Name              | Type                            | Description     |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | ----------------- | ------------------------------- | --------------- |
-| `~/output/points` | `sensor_msgs::msg::PointCloud2` | filtered points |
+| `~/output/points` | `sensor_msgs::msg::PointCloud2` | 过滤后的点 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Core Parameters
+## 参数
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/lanelet2_map_filter_node.schema.json") }}
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-## (Optional) Error detection and handling
+## 前提假设／已知限制
 
-## (Optional) Performance characterization
+<a id="optional-error-detection-and-handling"></a>
 
-## (Optional) References/External links
+## （可选）错误检测与处理
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
+
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

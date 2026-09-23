@@ -1,15 +1,25 @@
-# Path Smoothing
+<a id="path-smoothing"></a>
 
-## Purpose
+# 路径平滑
 
-This package contains code to smooth a path or trajectory.
+<a id="purpose"></a>
 
-## Features
+## 用途
 
-### Elastic Band
+此软件包包含用于平滑路径或轨迹的代码。
 
-More details about the elastic band can be found [here](docs/eb.md).
+<a id="features"></a>
 
-## Parameter
+## 功能
+
+<a id="elastic-band"></a>
+
+### 弹性带
+
+有关弹性带的更多信息，请参阅[此处](docs/eb.md)。
+
+<a id="parameter"></a>
+
+## 参数
 
 {{ json_to_markdown("planning/autoware_path_smoother/schema/elastic_band_smoother.schema.json") }}

@@ -1,14 +1,20 @@
-# Trajectory Follower Nodes
+<a id="trajectory-follower-nodes"></a>
 
-## Purpose
+# 轨迹跟踪节点
 
-Generate control commands to follow a given Trajectory.
+<a id="purpose"></a>
 
-## Design
+## 目的
 
-This is a node of the functionalities implemented in the controller class derived from [autoware_trajectory_follower_base](../autoware_trajectory_follower_base/README.md#trajectory-follower) package. It has instances of those functionalities, gives them input data to perform calculations, and publishes control commands.
+生成控制命令，以跟踪给定轨迹。
 
-By default, the controller instance with the `Controller` class as follows is used.
+<a id="design"></a>
+
+## 设计
+
+本节点承载通过继承 [autoware_trajectory_follower_base](../autoware_trajectory_follower_base/README.md#trajectory-follower) 功能包中的控制器类所实现的功能。节点持有这些功能的实例，向其提供输入数据进行计算，并发布控制命令。
+
+默认使用如下 `Controller` 类的控制器实例。
 
 ```plantuml
 @startuml
@@ -90,7 +96,7 @@ InputData ..> Controller
 @enduml
 ```
 
-The process flow of `Controller` class is as follows.
+`Controller` 类的处理流程如下。
 
 ```cpp
 // 1. create input data
@@ -118,53 +124,63 @@ lateral_controller_->sync(lon_out.sync_data);
 control_cmd_pub_->publish(out);
 ```
 
-Giving the longitudinal controller information about steer convergence allows it to control steer when stopped if following parameters are `true`
+向纵向控制器提供转向收敛信息后，当以下参数均为 `true` 时，可以在停车期间控制转向。
 
-- lateral controller
+- 横向控制器
   - `keep_steer_control_until_converged`
-- longitudinal controller
+- 纵向控制器
   - `enable_keep_stopped_until_steer_convergence`
 
-### Inputs / Outputs / API
+<a id="inputs-outputs-api"></a>
 
-#### Inputs
+### 输入、输出与 API
 
-- `autoware_planning_msgs/Trajectory` : reference trajectory to follow.
-- `nav_msgs/Odometry`: current odometry
-- `autoware_vehicle_msgs/SteeringReport` current steering
+<a id="inputs"></a>
 
-#### Outputs
+#### 输入
 
-- `autoware_control_msgs/Control`: message containing both lateral and longitudinal commands.
-- `autoware_control_msgs/ControlHorizon`: message containing both lateral and longitudinal horizon commands. this is NOT published by default. by using this, the performance of vehicle control may be improved, and by turning the default on, it can be used as an experimental topic.
+- `autoware_planning_msgs/Trajectory`：需要跟踪的参考轨迹。
+- `nav_msgs/Odometry`：当前里程计。
+- `autoware_vehicle_msgs/SteeringReport`：当前转向状态。
 
-#### Parameter
+<a id="outputs"></a>
 
-- `trajectory_reference_mode`: `spatial` or `temporal` (default: `spatial`)
-  - `spatial`: the reference trajectory is tracked based on distance, calculating the time step of
-    each prediction point from distance and velocity.
-  - `temporal`: the reference trajectory's `time_from_start` field is used directly to track the
-    trajectory based on time steps.
-  - This parameter is declared here and shared with the lateral (MPC) and longitudinal (PID)
-    controllers.
-- `ctrl_period`: control commands publishing period
-- `timeout_thr_sec`: duration in second after which input messages are discarded.
-  - Each time the node receives lateral and longitudinal commands from each controller, it publishes an `Control` if the following two conditions are met.
-    1. Both commands have been received.
-    2. The last received commands are not older than defined by `timeout_thr_sec`.
-- `cyclic_message_timeout_thr_sec`: duration in second for monitoring incoming trajectory messages via diagnostic updater (default: 0.9)
-  - The diagnostic updater will report ERROR status if:
-    1. No trajectory message has been received yet.
-    2. The elapsed time since the last trajectory message exceeds this threshold.
-  - This parameter helps monitor the health of the trajectory input stream.
-- `lateral_controller_mode`: `mpc` or `pure_pursuit`
-  - (currently there is only `PID` for longitudinal controller)
-- `enable_control_cmd_horizon_pub`: publish `ControlHorizon` or not (default: false)
+#### 输出
 
-## Debugging
+- `autoware_control_msgs/Control`：同时包含横向和纵向命令的消息。
+- `autoware_control_msgs/ControlHorizon`：同时包含横向和纵向时域命令的消息。默认不发布。使用此消息可能提升车辆控制性能；启用发布后，可将其作为实验性话题使用。
 
-Debug information are published by the lateral and longitudinal controller using `autoware_internal_debug_msgs/Float32MultiArrayStamped` messages.
+<a id="parameter"></a>
 
-A configuration file for [PlotJuggler](https://github.com/facontidavide/PlotJuggler) is provided in the `config` folder which, when loaded, allow to automatically subscribe and visualize information useful for debugging.
+#### 参数
 
-In addition, the predicted MPC trajectory is published on topic `output/lateral/predicted_trajectory` and can be visualized in Rviz.
+- `trajectory_reference_mode`：`spatial` 或 `temporal`（默认：`spatial`）。
+  - `spatial`：基于距离跟踪参考轨迹，根据距离和速度
+    计算各预测点的时间步长。
+  - `temporal`：直接使用参考轨迹的 `time_from_start` 字段，按时间步
+    跟踪轨迹。
+  - 此参数在这里声明，并与横向（MPC）和纵向（PID）
+    控制器共享。
+- `ctrl_period`：控制命令的发布周期。
+- `timeout_thr_sec`：输入消息超过此时长后将被丢弃，单位秒。
+  - 每当节点收到各控制器的横向和纵向命令时，如果同时满足以下两个条件，就发布 `Control`。
+    1. 两类命令均已收到。
+    2. 最近收到的命令未超过 `timeout_thr_sec` 定义的有效时长。
+- `cyclic_message_timeout_thr_sec`：通过诊断更新器监控输入轨迹消息的时长阈值，单位秒（默认：0.9）。
+  - 出现以下情况时，诊断更新器报告 ERROR 状态：
+    1. 尚未收到任何轨迹消息。
+    2. 距上次收到轨迹消息的时间超过此阈值。
+  - 此参数有助于监控轨迹输入流的健康状况。
+- `lateral_controller_mode`：`mpc` 或 `pure_pursuit`。
+  - （目前纵向控制器只有 `PID`。）
+- `enable_control_cmd_horizon_pub`：是否发布 `ControlHorizon`（默认：false）。
+
+<a id="debugging"></a>
+
+## 调试
+
+横向和纵向控制器通过 `autoware_internal_debug_msgs/Float32MultiArrayStamped` 消息发布调试信息。
+
+`config` 文件夹中提供了 [PlotJuggler](https://github.com/facontidavide/PlotJuggler) 配置文件，加载后可自动订阅并可视化有助于调试的信息。
+
+此外，MPC 预测轨迹通过 `output/lateral/predicted_trajectory` 话题发布，可在 Rviz 中可视化。

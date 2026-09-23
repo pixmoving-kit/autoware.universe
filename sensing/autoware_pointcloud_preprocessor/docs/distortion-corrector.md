@@ -1,64 +1,84 @@
 # distortion_corrector
 
-## Purpose
+<a id="purpose"></a>
 
-The `distortion_corrector` is a node that compensates for pointcloud distortion caused by the ego-vehicle's movement during one scan.
+## 用途
 
-Since the LiDAR sensor scans by rotating an internal laser, the resulting point cloud will be distorted if the ego-vehicle moves during a single scan (as shown by the figure below). The node corrects this by interpolating sensor data using the odometry of the ego-vehicle.
+`distortion_corrector` 节点用于补偿一次扫描期间自车运动引起的点云畸变。
 
-## Inner-workings / Algorithms
+激光雷达通过旋转内部激光束进行扫描。如果自车在一次扫描期间发生移动，生成的点云就会产生畸变（如下图所示）。此节点利用自车里程计信息对传感器数据进行插值，以校正畸变。
 
-The node uses twist information (linear and angular velocity) from the `~/input/twist` topic to correct each point in the point cloud. If the user sets `use_imu` to true, the node will replace the twist's angular velocity with the angular velocity from IMU.
+<a id="inner-workings-algorithms"></a>
 
-The node supports two different modes of distortion correction: 2D distortion correction and 3D distortion correction. The main difference is that the 2D distortion corrector only utilizes the x-axis of linear velocity and the z-axis of angular velocity to correct the point positions. On the other hand, the 3D distortion corrector utilizes all linear and angular velocity components to correct the point positions.
+## 内部机制／算法
 
-Please note that the processing time difference between the two distortion methods is significant; the 3D corrector takes 50% more time than the 2D corrector. Therefore, it is recommended that in general cases, users should set `use_3d_distortion_correction` to `false`. However, in scenarios such as a vehicle going over speed bumps, using the 3D corrector can be beneficial.
+节点使用 `~/input/twist` 话题中的速度信息（线速度和角速度）校正点云中的每个点。如果将 `use_imu` 设为 true，节点会用 IMU 的角速度替代速度消息中的角速度。
 
-![distortion corrector figure](./image/distortion_corrector.jpg)
+节点支持两种畸变校正模式：二维畸变校正和三维畸变校正。主要区别在于，二维校正仅使用 X 轴线速度和 Z 轴角速度校正点的位置，而三维校正使用全部线速度和角速度分量。
 
-## Inputs / Outputs
+请注意，两种校正方式的处理时间差异明显；三维校正比二维校正耗时多 50%。因此，通常建议将 `use_3d_distortion_correction` 设为 `false`。但在车辆经过减速带等场景下，使用三维校正可能更有帮助。
 
-### Input
+![畸变校正示意图](./image/distortion_corrector.jpg)
 
-| Name                 | Type                                             | Description                        |
+<a id="inputs-outputs"></a>
+
+## 输入／输出
+
+<a id="input"></a>
+
+### 输入
+
+| 名称 | 类型 | 说明 |
 | -------------------- | ------------------------------------------------ | ---------------------------------- |
-| `~/input/pointcloud` | `sensor_msgs::msg::PointCloud2`                  | Topic of the distorted pointcloud. |
-| `~/input/twist`      | `geometry_msgs::msg::TwistWithCovarianceStamped` | Topic of the twist information.    |
-| `~/input/imu`        | `sensor_msgs::msg::Imu`                          | Topic of the IMU data.             |
+| `~/input/pointcloud` | `sensor_msgs::msg::PointCloud2` | 畸变点云话题。 |
+| `~/input/twist` | `geometry_msgs::msg::TwistWithCovarianceStamped` | 速度信息话题。 |
+| `~/input/imu` | `sensor_msgs::msg::Imu` | IMU 数据话题。 |
 
-### Output
+<a id="output"></a>
 
-| Name                  | Type                            | Description                         |
+### 输出
+
+| 名称 | 类型 | 说明 |
 | --------------------- | ------------------------------- | ----------------------------------- |
-| `~/output/pointcloud` | `sensor_msgs::msg::PointCloud2` | Topic of the undistorted pointcloud |
+| `~/output/pointcloud` | `sensor_msgs::msg::PointCloud2` | 去畸变后的点云话题 |
 
-## Parameters
+<a id="parameters"></a>
 
-### Core Parameters
+## 参数
+
+<a id="core-parameters"></a>
+
+### 核心参数
 
 {{ json_to_markdown("sensing/autoware_pointcloud_preprocessor/schema/distortion_corrector_node.schema.json") }}
 
-## Launch
+<a id="launch"></a>
+
+## 启动
 
 ```bash
 ros2 launch autoware_pointcloud_preprocessor distortion_corrector.launch.xml
 ```
 
-## Assumptions / Known limits
+<a id="assumptions-known-limits"></a>
 
-- The node requires time synchronization between the topics from lidars, twist, and IMU.
-- If you want to use a 3D distortion corrector without IMU, please check that the linear and angular velocity fields of your twist message are not empty.
-- The node updates the per-point azimuth and distance values based on the undistorted XYZ coordinates when the input point cloud is in the sensor frame (not in the `base_link`) and the `update_azimuth_and_distance` parameter is set to `true`. The azimuth values are calculated using a modified version of OpenCV's `cv::fastAtan2` function.
-- Please note that updating the azimuth and distance fields increases the execution time by approximately 20%. Additionally, due to the `cv::fastAtan2` algorithm's has a maximum error of 0.3 degrees, there is a **possibility of changing the beam order for high azimuth resolution LiDAR**.
-- LiDARs from different vendors have different azimuth coordinates, as shown in the images below. Currently, the coordinate systems listed below have been tested, and the node will update the azimuth based on the input coordinate system.
-  - `velodyne`: (x: 0 degrees, y: 270 degrees)
-  - `hesai`: (x: 90 degrees, y: 0 degrees)
-  - `others`: (x: 0 degrees, y: 90 degrees) and (x: 270 degrees, y: 0 degrees)
+## 前提假设／已知限制
 
-| ![Velodyne Azimuth Coordinate](./image/velodyne.drawio.png) | ![Hesai Azimuth Coordinate](./image/hesai.drawio.png) |
+- 节点要求激光雷达、速度和 IMU 话题之间时间同步。
+- 如果希望在不使用 IMU 的情况下进行三维畸变校正，请确认速度消息中的线速度和角速度字段不为空。
+- 当输入点云位于传感器坐标系（而非 `base_link`）且 `update_azimuth_and_distance` 参数设为 `true` 时，节点会根据去畸变后的 XYZ 坐标更新各点的方位角和距离。方位角通过 OpenCV 的 `cv::fastAtan2` 函数的修改版本计算。
+- 请注意，更新方位角和距离字段会使执行时间增加约 20%。此外，`cv::fastAtan2` 算法的最大误差为 0.3 度，因此**对于方位角分辨率较高的激光雷达，可能会改变光束顺序**。
+- 不同厂商的激光雷达采用不同的方位角坐标定义，如下图所示。目前已测试以下坐标系，节点会根据输入坐标系更新方位角。
+  - `velodyne`：（x：0 度，y：270 度）
+  - `hesai`：（x：90 度，y：0 度）
+  - `others`：（x：0 度，y：90 度）和（x：270 度，y：0 度）
+
+| ![Velodyne 方位角坐标](./image/velodyne.drawio.png) | ![Hesai 方位角坐标](./image/hesai.drawio.png) |
 | :---------------------------------------------------------: | :---------------------------------------------------: |
-|               **Velodyne azimuth coordinate**               |             **Hesai azimuth coordinate**              |
+| **Velodyne 方位角坐标** | **Hesai 方位角坐标** |
 
-## References/External links
+<a id="referencesexternal-links"></a>
+
+## 参考资料／外部链接
 
 <https://docs.opencv.org/3.4/db/de0/group__core__utils.html#ga7b356498dd314380a0c386b059852270>

@@ -1,19 +1,25 @@
-# External Velocity Limit Selector
+<a id="external-velocity-limit-selector"></a>
 
-## Purpose
+# 外部速度限制选择器
 
-The `external_velocity_limit_selector_node` is a node that keeps consistency of external velocity limits. This module subscribes
+<a id="purpose"></a>
 
-1. velocity limit command sent by **API**,
-2. velocity limit command sent by **Autoware internal modules**.
+## 用途
 
-VelocityLimit.msg contains not only **max velocity** but also information about the **acceleration/jerk constraints** on deceleration. The `external_velocity_limit_selector_node` integrates the lowest velocity limit and the highest jerk constraint to calculate the **hardest velocity limit** that protects all the deceleration points and max velocities sent by API and Autoware internal modules.
+`external_velocity_limit_selector_node` 是维护外部速度限制一致性的节点。此模块订阅：
 
-![selector algorithm](./image/external_velocity_limit_selector.png)
+1. **API** 发送的速度限制命令，
+2. **Autoware 内部模块**发送的速度限制命令。
 
-## Inner-workings / Algorithms
+VelocityLimit.msg 不仅包含**最大速度**，还包含减速时的**加速度/加加速度约束**信息。`external_velocity_limit_selector_node` 综合最低速度限制和最高加加速度约束，计算**最严格的速度限制**，满足 API 与 Autoware 内部模块发送的所有减速点和最大速度要求。
 
-WIP
+![选择器算法](./image/external_velocity_limit_selector.png)
+
+<a id="inner-workings-algorithms"></a>
+
+## 内部机制／算法
+
+开发中
 
 <!-- Write how this package works. Flowcharts and figures are great. Add sub-sections as you like.
 

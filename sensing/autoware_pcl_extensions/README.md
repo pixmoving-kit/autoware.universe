@@ -1,35 +1,57 @@
 # autoware_pcl_extensions
 
-## Purpose
+<a id="purpose"></a>
 
-The `autoware_pcl_extensions` is a pcl extension library. The voxel grid filter in this package works with a different algorithm than the original one.
+## 用途
 
-## Inner-workings / Algorithms
+`autoware_pcl_extensions` 是 PCL 扩展库。此功能包中的体素网格滤波器采用与原始实现不同的算法。
 
-### Original Algorithm [1]
+<a id="inner-workings-algorithms"></a>
 
-1. create a 3D voxel grid over the input pointcloud data
-2. calculate centroid in each voxel
-3. all the points are approximated with their centroid
+## 内部机制／算法
 
-### Extended Algorithm
+<a id="original-algorithm-1"></a>
 
-1. create a 3D voxel grid over the input pointcloud data
-2. calculate centroid in each voxel
-3. **all the points are approximated with the closest point to their centroid**
+### 原始算法 [1]
 
-## Inputs / Outputs
+1. 在输入点云数据上创建三维体素网格
+2. 计算每个体素内的质心
+3. 用质心近似替代该体素内的所有点
 
-## Parameters
+<a id="extended-algorithm"></a>
 
-## Assumptions / Known limits
+### 扩展算法
 
-## (Optional) Error detection and handling
+1. 在输入点云数据上创建三维体素网格
+2. 计算每个体素内的质心
+3. **用距离质心最近的点近似替代该体素内的所有点**
 
-## (Optional) Performance characterization
+<a id="inputs-outputs"></a>
 
-## (Optional) References/External links
+## 输入／输出
+
+<a id="parameters"></a>
+
+## 参数
+
+<a id="assumptions-known-limits"></a>
+
+## 前提假设／已知限制
+
+<a id="optional-error-detection-and-handling"></a>
+
+## （可选）错误检测与处理
+
+<a id="optional-performance-characterization"></a>
+
+## （可选）性能特征
+
+<a id="optional-referencesexternal-links"></a>
+
+## （可选）参考资料／外部链接
 
 [1] <https://pointclouds.org/documentation/tutorials/voxel_grid.html>
 
-## (Optional) Future extensions / Unimplemented parts
+<a id="optional-future-extensions-unimplemented-parts"></a>
+
+## （可选）后续扩展／尚未实现的部分

@@ -1,48 +1,62 @@
-# Planning Components
+<a id="planning-components"></a>
 
-## Getting Started
+# 规划组件
 
-The Autoware Universe Planning Modules represent a cutting-edge component within the broader open-source autonomous driving software stack. These modules play a pivotal role in autonomous vehicle navigation, skillfully handling route planning, dynamic obstacle avoidance, and real-time adaptation to varied traffic conditions.
+<a id="getting-started"></a>
 
-- For high level concept of Planning Components, please refer to [Planning Component Design Document](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/components/planning/)
-- To understand how Planning Components interacts with other components, please refer to [Planning Component Interface Document](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/components/planning/)
-- The [Node Diagram](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/node-diagram/) illustrates the interactions, inputs, and outputs of all modules in the Autoware Universe, including planning modules.
+## 入门
 
-## Planning Module
+Autoware Universe 规划模块是整个开源自动驾驶软件栈中的先进组件。这些模块在自动驾驶车辆导航中发挥关键作用，负责路线规划、动态障碍物避让以及对不同交通状况的实时适应。
 
-The **Module** in the Planning Component refers to the various components that collectively form the planning system of the software. These modules cover a range of functionalities necessary for autonomous vehicle planning. Autoware's planning modules are modularized, meaning users can customize which functions are enabled by changing the configuration. This modular design allows for flexibility and adaptability to different scenarios and requirements in autonomous vehicle operations.
+- 有关规划组件的总体概念，请参阅[规划组件设计文档](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/components/planning/)
+- 有关规划组件与其他组件的交互方式，请参阅[规划组件接口文档](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/interfaces/components/planning/)
+- [节点图](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture-v1/node-diagram/)展示了 Autoware Universe 中所有模块（包括规划模块）的交互、输入和输出。
 
-### How to Enable or Disable Planning Module
+<a id="planning-module"></a>
 
-Enabling and disabling modules involves managing settings in key configuration and launch files.
+## 规划模块
 
-### Key Files for Configuration
+规划组件中的**模块**是共同组成软件规划系统的各个组件。这些模块涵盖自动驾驶车辆规划所需的多种功能。Autoware 的规划功能采用模块化设计，用户可以通过修改配置来自定义启用的功能。这种设计可以灵活适应自动驾驶车辆运行中的不同场景和需求。
 
-The `default_preset.yaml` file acts as the primary configuration file, where planning modules can be disabled or enabled. Furthermore, users can also set the type of motion planner across various motion planners. For example:
+<a id="how-to-enable-or-disable-planning-module"></a>
 
-- `launch_avoidance_module`: Set to `true` to enable the avoidance module, or `false` to disable it.
+### 如何启用或禁用规划模块
+
+启用和禁用模块需要管理关键配置文件和启动文件中的设置。
+
+<a id="key-files-for-configuration"></a>
+
+### 关键配置文件
+
+`default_preset.yaml` 是主要配置文件，可用于启用或禁用规划模块。此外，用户还可以从多种运动规划器中选择使用的类型。例如：
+
+- `launch_avoidance_module`：设为 `true` 可启用避让模块，设为 `false` 可禁用该模块。
 
 !!! note
 
-    Click [here](https://github.com/autowarefoundation/autoware_launch/blob/main/autoware_launch/config/planning/preset/default_preset.yaml) to view the `default_preset.yaml`.
+    点击[此处](https://github.com/autowarefoundation/autoware_launch/blob/main/autoware_launch/config/planning/preset/default_preset.yaml)查看 `default_preset.yaml`。
 
-The [launch files](https://github.com/autowarefoundation/autoware_universe/tree/main/launch/tier4_planning_launch/launch/scenario_planning/lane_driving) reference the settings defined in `default_preset.yaml` to apply the configurations when the behavior path planner's node is running. For instance, the parameter `avoidance.enable_module` in
+[启动文件](https://github.com/autowarefoundation/autoware_universe/tree/main/launch/tier4_planning_launch/launch/scenario_planning/lane_driving)引用 `default_preset.yaml` 中定义的设置，在行为路径规划器节点运行时应用配置。例如，以下文件中的参数 `avoidance.enable_module`
 
 ```xml
 <param name="avoidance.enable_module" value="$(var launch_avoidance_module)"/>
 ```
 
-corresponds to launch_avoidance_module from `default_preset.yaml`.
+对应于 `default_preset.yaml` 中的 launch_avoidance_module。
 
-### Parameter Configuration
+<a id="parameter-configuration"></a>
 
-There are multiple parameters available for configuration, and users have the option to modify them in [here](https://github.com/autowarefoundation/autoware_launch/tree/main/autoware_launch/config/planning). It's important to note that not all parameters are adjustable via `rqt_reconfigure`. To ensure the changes are effective, modify the parameters and then restart Autoware. Additionally, detailed information about each parameter is available in the corresponding documents under the planning tab.
+### 参数配置
 
-### Integrating a Custom Module into Autoware: A Step-by-Step Guide
+有多个参数可供配置，用户可以在[此处](https://github.com/autowarefoundation/autoware_launch/tree/main/autoware_launch/config/planning)修改它们。并非所有参数都能通过 `rqt_reconfigure` 调整。为确保修改生效，请修改参数后重新启动 Autoware。此外，规划选项卡下的相应文档提供了各参数的详细信息。
 
-This guide outlines the steps for integrating your custom module into Autoware:
+<a id="integrating-a-custom-module-into-autoware-a-step-by-step-guide"></a>
 
-- Add your modules to the `default_preset.yaml` file. For example:
+### 将自定义模块集成到 Autoware：分步指南
+
+本指南介绍将自定义模块集成到 Autoware 的步骤：
+
+- 将模块添加到 `default_preset.yaml` 文件。例如：
 
 ```yaml
 - arg:
@@ -50,7 +64,7 @@ This guide outlines the steps for integrating your custom module into Autoware:
   default: "true"
 ```
 
-- Incorporate your modules into the [launcher](https://github.com/autowarefoundation/autoware_universe/tree/main/launch/tier4_planning_launch/launch/scenario_planning). For example, in [behavior_planning.launch.xml](https://github.com/autowarefoundation/autoware_universe/blob/main/launch/tier4_planning_launch/launch/scenario_planning/lane_driving/behavior_planning/behavior_planning.launch.xml):
+- 将模块加入[启动器](https://github.com/autowarefoundation/autoware_universe/tree/main/launch/tier4_planning_launch/launch/scenario_planning)。例如，在 [behavior_planning.launch.xml](https://github.com/autowarefoundation/autoware_universe/blob/main/launch/tier4_planning_launch/launch/scenario_planning/lane_driving/behavior_planning/behavior_planning.launch.xml) 中：
 
 ```xml
 <arg name="launch_intersection_module" default="true"/>
@@ -62,14 +76,14 @@ This guide outlines the steps for integrating your custom module into Autoware:
 />
 ```
 
-- If applicable, place your parameter folder within the appropriate existing parameter folder. For example, [intersection_module's parameters](https://github.com/autowarefoundation/autoware_launch/blob/main/autoware_launch/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/intersection.param.yaml) are in [behavior_velocity_planner](https://github.com/autowarefoundation/autoware_launch/tree/main/autoware_launch/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner).
-- Insert the path of your parameters in the [tier4_planning_component.launch.xml](https://github.com/autowarefoundation/autoware_launch/blob/main/autoware_launch/launch/components/tier4_planning_component.launch.xml). For example, `behavior_velocity_planner_intersection_module_param_path` is used.
+- 如适用，将参数文件夹放入相应的现有参数文件夹。例如，[intersection_module 的参数](https://github.com/autowarefoundation/autoware_launch/blob/main/autoware_launch/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/intersection.param.yaml)位于 [behavior_velocity_planner](https://github.com/autowarefoundation/autoware_launch/tree/main/autoware_launch/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner) 中。
+- 在 [tier4_planning_component.launch.xml](https://github.com/autowarefoundation/autoware_launch/blob/main/autoware_launch/launch/components/tier4_planning_component.launch.xml) 中插入参数路径。例如，使用 `behavior_velocity_planner_intersection_module_param_path`。
 
 ```xml
 <arg name="behavior_velocity_planner_intersection_module_param_path" value="$(var behavior_velocity_config_path)/intersection.param.yaml"/>
 ```
 
-- Define your parameter path variable within the corresponding launcher. For example, in [behavior_planning.launch.xml](https://github.com/autowarefoundation/autoware_universe/blob/04aa54bf5fb0c88e70198ca74b9ac343cc3457bf/launch/tier4_planning_launch/launch/scenario_planning/lane_driving/behavior_planning/behavior_planning.launch.xml#L191)
+- 在相应启动器中定义参数路径变量。例如，在 [behavior_planning.launch.xml](https://github.com/autowarefoundation/autoware_universe/blob/04aa54bf5fb0c88e70198ca74b9ac343cc3457bf/launch/tier4_planning_launch/launch/scenario_planning/lane_driving/behavior_planning/behavior_planning.launch.xml#L191) 中
 
 ```xml
 <param from="$(var behavior_velocity_planner_intersection_module_param_path)"/>
@@ -77,34 +91,42 @@ This guide outlines the steps for integrating your custom module into Autoware:
 
 !!! note
 
-    Depending on the specific module you wish to add, the relevant files and steps may vary. This guide provides a general overview and serves as a starting point. It's important to adapt these instructions to the specifics of your module.
+    具体涉及的文件和步骤可能因待添加模块而异。本指南提供总体概述和起点，请根据模块的具体情况调整这些说明。
 
-## Join Our Community-Driven Effort
+<a id="join-our-community-driven-effort"></a>
 
-Autoware thrives on community collaboration. Every contribution, big or small, is invaluable to us. Whether it's reporting bugs, suggesting improvements, offering new ideas, or anything else you can think of – we welcome all contributions with open arms.
+## 加入社区协作
 
-### How to Contribute?
+Autoware 的发展依靠社区协作。无论贡献大小，都非常宝贵。无论是报告缺陷、提出改进建议、分享新想法，还是其他贡献，我们都欢迎。
 
-Ready to contribute? Great! To get started, simply visit our [Contributing Guidelines](https://autowarefoundation.github.io/autoware-documentation/main/contributing/) where you'll find all the information you need to jump in. This includes instructions on submitting bug reports, proposing feature enhancements, and even contributing to the codebase.
+<a id="how-to-contribute"></a>
 
-### Join Our Planning & Control Working Group Meetings
+### 如何贡献？
 
-The Planning & Control working group is an integral part of our community. We meet bi-weekly to discuss our current progress, upcoming challenges, and brainstorm new ideas. These meetings are a fantastic opportunity to directly contribute to our discussions and decision-making processes.
+准备好参与贡献了吗？请先阅读[贡献指南](https://autowarefoundation.github.io/autoware-documentation/main/contributing/)，其中包含入门所需的所有信息，包括提交缺陷报告、提出功能增强建议以及贡献代码的说明。
 
-Meeting Details:
+<a id="join-our-planning-control-working-group-meetings"></a>
 
-- **Frequency:** Bi-weekly
-- **Day:** Thursday
-- **Time:** 08:00 AM UTC (05:00 PM JST)
-- **Agenda:** Discuss current progress, plan future developments. You can view and comment on the minutes of past meetings [here](https://github.com/orgs/autowarefoundation/discussions?discussions_q=is%3Aopen+label%3Ameeting%3Aplanning-control-wg+).
+### 参加规划与控制工作组会议
 
-Interested in joining our meetings? We’d love to have you! For more information on how to participate, visit the following link: [How to participate in the working group](https://github.com/autowarefoundation/autoware-projects/wiki/Autoware-Planning-Control-Working-Group#how-to-participate-in-the-working-group).
+规划与控制工作组是社区的重要组成部分。我们每两周举行一次会议，讨论当前进展、即将面临的挑战，并交流新想法。这些会议是直接参与讨论和决策的良好机会。
 
-### Citations
+会议详情：
 
-Occasionally, we publish papers specific to the Planning Component in Autoware. We encourage you to explore these publications and find valuable insights for your work. If you find them useful and incorporate any of our methodologies or algorithms in your projects, citing our papers would be immensely helpful. This support allows us to reach a broader audience and continue contributing to the field.
+- **频率：**每两周一次
+- **日期：**星期四
+- **时间：** UTC 08:00 AM（JST 05:00 PM）
+- **议程：**讨论当前进展，规划后续开发。您可以在[此处](https://github.com/orgs/autowarefoundation/discussions?discussions_q=is%3Aopen+label%3Ameeting%3Aplanning-control-wg+)查看并评论以往会议纪要。
 
-If you use the Jerk Constrained Velocity Planning algorithm in the [Motion Velocity Smoother](https://autowarefoundation.github.io/autoware_core/main/planning/autoware_velocity_smoother/) module in the Planning Component, we kindly request you cite the relevant paper.
+欢迎参加会议！有关参与方式，请访问以下链接：[如何参与工作组](https://github.com/autowarefoundation/autoware-projects/wiki/Autoware-Planning-Control-Working-Group#how-to-participate-in-the-working-group)。
+
+<a id="citations"></a>
+
+### 引用
+
+我们会不定期发表有关 Autoware 规划组件的论文。欢迎阅读这些论文，为您的工作获取参考。如果这些论文对您有帮助，且您在项目中采用了我们的方法或算法，请引用相关论文。这有助于让更多人了解我们的工作，并支持我们继续为该领域作出贡献。
+
+如果您使用规划组件中[运动速度平滑器](https://autowarefoundation.github.io/autoware_core/main/planning/autoware_velocity_smoother/)模块的加加速度约束速度规划算法，请引用相关论文。
 
 <!-- cspell:ignore Shimizu, Horibe, Watanabe, Kato -->
 

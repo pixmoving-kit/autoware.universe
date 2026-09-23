@@ -1,5 +1,7 @@
 # autoware_cuda_utils
 
-## Purpose
+<a id="purpose"></a>
 
-This package contains a library of common functions related to CUDA.
+## 用途
+
+此软件包包含与 CUDA 相关的通用函数库。
